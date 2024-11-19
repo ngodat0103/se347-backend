@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Mono<AccountDto> create(AccountDto accountDto) {
-    Account account = userMapper.toEntity(accountDto);
+    Account account = userMapper.toDocument(accountDto);
     account.setAccountStatus(Account.AccountStatus.ACTIVE);
     account.setEmailVerified(false);
     account.setPassword(passwordEncoder.encode(account.getPassword()));

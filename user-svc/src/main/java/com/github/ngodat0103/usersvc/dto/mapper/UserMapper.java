@@ -9,5 +9,5 @@ import org.mapstruct.ReportingPolicy;
 public interface UserMapper {
   AccountDto toDto(Account account);
 
-  Account toEntity(AccountDto dto);
+  Account toDocument(AccountDto dto);
 }
