@@ -43,7 +43,7 @@ jobs:
         run: ./mvnw verify
   build-and-push:
     name: Build and Push Docker image for pull request
-    needs: integration-test
+    needs: [integration-test,unit-test]
 #    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-22.04
     steps:
@@ -60,6 +60,10 @@ jobs:
         uses: docker/metadata-action@v5.5.1
         with:
           images: ghcr.io/ngodat0103/se347-backend/user-svc
+      - name: Clone the repository
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 1
       - name: build and push with specific tag
         uses: docker/build-push-action@v6.9.0
         with:
