@@ -13,13 +13,14 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
   private UserService userService;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public Mono<AccountDto> createUser(@Valid @RequestBody AccountDto accountDto) throws ConflictException {
+  public Mono<AccountDto> createUser(@Valid @RequestBody AccountDto accountDto)
+      throws ConflictException {
     return userService.create(accountDto);
   }
 

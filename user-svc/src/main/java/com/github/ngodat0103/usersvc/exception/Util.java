@@ -1,11 +1,10 @@
 package com.github.ngodat0103.usersvc.exception;
 
+import java.security.Principal;
 import org.slf4j.Logger;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import reactor.core.publisher.Mono;
-
-import java.security.Principal;
 
 public final class Util {
   private static final String TEMPLATE_NOT_FOUND = "%s with %s: %s not found";

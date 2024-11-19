@@ -1,14 +1,15 @@
 server.port: 5000
 server:
   forward-headers-strategy: framework
-  servlet:
-    context-path: /api/v1
 management:
   endpoints:
     web:
       exposure:
         include: health
 spring:
+  data:
+    mongodb:
+      auto-index-creation: true
   config:
     import:
       - "optional:dev.yaml"

@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping(path = "/users/auth")
+@RequestMapping(path = "/api/v1/auth")
 public class AuthController {
 
   private final JWK jwk;

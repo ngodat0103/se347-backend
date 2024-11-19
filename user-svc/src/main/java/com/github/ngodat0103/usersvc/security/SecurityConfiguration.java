@@ -40,35 +40,46 @@ public class SecurityConfiguration {
     configureAuthorizeExchange(http);
     configureOauth2ResourceServer(http);
     configureExceptionHandling(http);
-      return http.build();
+    return http.build();
   }
 
-  private void configureCors(ServerHttpSecurity httpSecurity){
-      httpSecurity.cors(cors -> cors.configurationSource(request -> {
-      var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-      corsConfiguration.addAllowedOrigin("http://localhost:4200");
-      corsConfiguration.addAllowedHeader("*");
-      corsConfiguration.addAllowedMethod("*");
-      return corsConfiguration;
-    }));
+  private void configureCors(ServerHttpSecurity httpSecurity) {
+    httpSecurity.cors(
+        cors ->
+            cors.configurationSource(
+                request -> {
+                  var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
+                  corsConfiguration.addAllowedOrigin("http://localhost:4200");
+                  corsConfiguration.addAllowedHeader("*");
+                  corsConfiguration.addAllowedMethod("*");
+                  return corsConfiguration;
+                }));
   }
-  private void configureCsrf(ServerHttpSecurity httpSecurity){
+
+  private void configureCsrf(ServerHttpSecurity httpSecurity) {
     httpSecurity.csrf(ServerHttpSecurity.CsrfSpec::disable);
   }
-  private void configureAuthorizeExchange(ServerHttpSecurity httpSecurity){
-     httpSecurity.authorizeExchange(exchanges -> exchanges.anyExchange().permitAll());
+
+  private void configureAuthorizeExchange(ServerHttpSecurity httpSecurity) {
+    httpSecurity.authorizeExchange(exchanges -> exchanges.anyExchange().permitAll());
   }
-  private void configureOauth2ResourceServer(ServerHttpSecurity httpSecurity){
+
+  private void configureOauth2ResourceServer(ServerHttpSecurity httpSecurity) {
     httpSecurity.oauth2ResourceServer(resource -> resource.jwt(Customizer.withDefaults()));
   }
-  private void configureExceptionHandling(ServerHttpSecurity httpSecurity){
-    httpSecurity.exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
-        .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
-        .accessDeniedHandler((exchange, denied) -> {
-          exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-          return exchange.getResponse().setComplete();
-        }));
+
+  private void configureExceptionHandling(ServerHttpSecurity httpSecurity) {
+    httpSecurity.exceptionHandling(
+        exceptionHandlingSpec ->
+            exceptionHandlingSpec
+                .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
+                .accessDeniedHandler(
+                    (exchange, denied) -> {
+                      exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                      return exchange.getResponse().setComplete();
+                    }));
   }
+
   @Bean
   @ConditionalOnMissingBean
   RSAKey rsaKeyAutoGenerate() throws JOSEException {

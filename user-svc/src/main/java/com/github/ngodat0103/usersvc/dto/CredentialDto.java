@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class CredentialDto {
-  private String username;
+  private String email;
   private String password;
 }
