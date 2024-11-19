@@ -51,7 +51,7 @@ jobs:
         run: echo "TAG=${{needs.build.outputs.TAG}}" > .env
       - name: Pull new Docker image version
         working-directory: user-svc
-        run: docker compose --profile all pull
+        run: sudo docker compose --profile all pull
       - name: Deploy new Docker image
         working-directory: user-svc
-        run: docker compose --profile all up -d
+        run: sudo docker compose --profile all up -d
