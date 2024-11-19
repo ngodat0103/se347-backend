@@ -48,7 +48,7 @@ jobs:
           fetch-depth: 1
       - name: Update dev image tag
         working-directory: user-svc
-        run: echo ${{needs.build.outputs.TAG}} > .env
+        run: echo "TAG=${{needs.build.outputs.TAG}}" > .env
       - name: Pull new Docker image version
         working-directory: user-svc
         run: docker compose --profile all pull
