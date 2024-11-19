@@ -44,10 +44,10 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler({WebExchangeBindException.class})
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
   public ProblemDetail handleMethodArgumentNotValidException(
       Exception e, ServerHttpRequest request) {
-    ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+    ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_ENTITY);
     problemDetails.setType(
         URI.create("https://problems-registry.smartbear.com/invalid-body-property-value/"));
     problemDetails.setDetail("The request body contains an invalid body property value.");
