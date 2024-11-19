@@ -54,7 +54,7 @@ class UserControllerIT {
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.data.mongodb.url", mongoDBContainer::getReplicaSetUrl);
+    registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
   }
 
   @BeforeEach

@@ -13,6 +13,7 @@ spring:
   config:
     import:
       - "optional:dev.yaml"
+      - "optional:IT.yaml"
   application:
     name: user-svc
 springdoc:
