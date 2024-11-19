@@ -38,7 +38,7 @@ jobs:
         run: docker compose --profile all push
   deploy:
     name: Deploy to dev environment
-#    environment: dev
+    environment: dev
     runs-on: dev-docker
     needs: build
     steps:
