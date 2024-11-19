@@ -46,6 +46,10 @@ jobs:
     needs: integration-test
 #    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+        working-directory: user-svc
     steps:
       - name: set up buildx
         uses: docker/setup-buildx-action@v3.7.1
