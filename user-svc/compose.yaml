@@ -1,0 +1,50 @@
+services:
+  mongodb:
+    image: mongodb/mongodb-community-server:7.0.6-ubuntu2204-20241117T082517Z
+    profiles: ['dev','all']
+    hostname: usersvc-mongodb
+    networks:
+      dev:
+        ipv4_address: 172.21.0.10
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=dev
+      - MONGO_INITDB_ROOT_PASSWORD=dev
+      - MONGO_INITDB_DATABASE=dev
+  user-svc:
+    profiles: ['all']
+    image: "ghcr.io/ngodat0103/se347/user-svc:${TAG:-dev-latest}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVER_PORT: 5000
+        SERVICE_NAME: usersvc
+        VERSION: ${TAG:-dev-latest}
+    networks: [ dev ]
+    healthcheck:
+     test: ["CMD","curl","http://localhost:5000/actuator/health"]
+     interval: 3s
+     timeout: 3s
+     retries: 3
+    depends_on:
+      mongodb:
+        condition: service_started
+    ports:
+      - "5000:5000"
+volumes:
+  mongodb-data:
+    name: mongodb-data
+networks:
+  dev:
+    name: dev
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.21.0.0/16"
+          gateway: "172.21.0.1"

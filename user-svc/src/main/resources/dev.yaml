@@ -1,0 +1,28 @@
+management:
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+    com.github.ngodat0103.usersvc.service: DEBUG
+    org.springframework.security.authentication: DEBUG
+    org.springframework.web.reactive: DEBUG
+    org.springframework.data.mongodb: DEBUG
+spring:
+  config:
+    activate:
+      on-profile: 'dev'
+  data:
+    mongodb:
+      username: dev
+      password: dev
+      database: dev
+      host: usersvc-mongodb
+      authentication-database: admin

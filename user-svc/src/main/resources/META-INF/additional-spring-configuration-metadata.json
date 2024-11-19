@@ -1,0 +1,58 @@
+{
+  "properties": [
+    {
+      "name": "vertx.pg.host",
+      "type": "java.lang.String",
+      "description": "Description for vertx.pg.host."
+    },
+    {
+      "name": "vertx.pg.port",
+      "type": "java.lang.String",
+      "description": "Description for vertx.pg.port."
+    },
+    {
+      "name": "vertx.pg.database",
+      "type": "java.lang.String",
+      "description": "Description for vertx.pg.database."
+    },
+    {
+      "name": "vertx.pg.user",
+      "type": "java.lang.String",
+      "description": "Description for vertx.pg.user."
+    },
+    {
+      "name": "vertx.pg.password",
+      "type": "java.lang.String",
+      "description": "Description for vertx.pg.password."
+    },
+    {
+      "name": "springdoc.open-api.info.version",
+      "type": "java.lang.String",
+      "description": "Description for springdoc.open-api.info.version."
+    },
+    {
+      "name": "springdoc.open-api.info.title",
+      "type": "java.lang.String",
+      "description": "Description for springdoc.open-api.info.title."
+    },
+    {
+      "name": "springdoc.open-api.info.description",
+      "type": "java.lang.String",
+      "description": "Description for springdoc.open-api.info.description."
+    },
+    {
+      "name": "springdoc.open-api.info.contact.url",
+      "type": "java.lang.String",
+      "description": "Description for springdoc.open-api.info.contact.url."
+    },
+    {
+      "name": "springdoc.open-api.info.contact.email",
+      "type": "java.lang.String",
+      "description": "Description for springdoc.open-api.info.contact.email."
+    },
+    {
+      "name": "springdoc.open-api.info.contact.name",
+      "type": "java.lang.String",
+      "description": "Description for springdoc.open-api.info.contact.name."
+    }
+  ] }
