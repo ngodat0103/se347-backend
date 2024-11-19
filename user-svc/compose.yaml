@@ -16,7 +16,7 @@ services:
       - MONGO_INITDB_DATABASE=dev
   user-svc:
     profiles: ['all']
-    image: "ghcr.io/ngodat0103/se347/user-svc:${TAG:-dev-latest}"
+    image: "ghcr.io/ngodat0103/se347-backend/user-svc:${TAG:-dev-latest}"
     environment:
       - SPRING_PROFILES_ACTIVE=dev
     build:

@@ -11,7 +11,6 @@ ARG VERSION
 ARG SERVICE_NAME
 ENV JAR_PATH=/build/target/${SERVICE_NAME}-${VERSION}.jar
 RUN ./mvnw clean package -DskipTests -Drevision=${VERSION} && \
-    ls target && \
     java -Djarmode=tools -jar "$JAR_PATH" extract --layers --launcher --destination /build/target/layers
 
 FROM eclipse-temurin:17-jdk-alpine AS jre-builder
@@ -31,7 +30,7 @@ COPY --from=app-builder --chown=app:app --chmod=500 $LAYER_PATH/dependencies/ ./
 COPY --from=app-builder --chown=app:app --chmod=500 $LAYER_PATH/spring-boot-loader/ $LAYER_PATH/snapshot-dependencies $LAYER_PATH/application ./
 EXPOSE ${SERVICE_PORT}
 ARG SERVICE_NAME
-LABEL org.opencontainers.image.source=https://github.com/ngodat0103/NT548.P11.MMCL.git
+LABEL org.opencontainers.image.source=https://github.com/ngodat0103/se347-backend.git
 LABEL  org.opencontainers.image.description="The ${SERVICE_NAME}"
 LABEL  org.opencontainers.image.title=${SERVICE_NAME}
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
