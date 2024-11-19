@@ -32,7 +32,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_READ_WRITE_PACKPAGE}}
       - name: Push Docker image
         working-directory: user-svc
         run: docker compose --profile all push
