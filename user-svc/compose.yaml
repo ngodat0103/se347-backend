@@ -18,6 +18,7 @@ services:
     profiles: ['all']
     image: "ghcr.io/ngodat0103/se347-backend/user-svc:${TAG:-dev-latest}"
     environment:
+      - APP_VERSION=${TAG:-dev-latest}
       - SPRING_PROFILES_ACTIVE=dev
     build:
       context: .

@@ -16,6 +16,15 @@ spring:
   application:
     name: user-svc
 springdoc:
+  open-api:
+    info:
+      version: ${APP_VERSION}
+      title: User Service management API
+      description: Contains endpoints for managing users
+      contact:
+        name: NgoDat0103
+        url: https://github.com/NGODAT0103
+        email: 21521935@gm.uit.edu.vn
   api-docs:
     path: /api/v1/users/api-docs
   swagger-ui:
