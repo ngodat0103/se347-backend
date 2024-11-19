@@ -1,4 +1,4 @@
-name: Pull Request CI for user-svc
+name: PR CI for user-svc
 on:
   workflow_dispatch:
   pull_request:
@@ -65,10 +65,9 @@ jobs:
         with:
           images: ghcr.io/ngodat0103/se347-backend/user-svc
       - name: build and push with specific tag
-        uses: docker/build-push-action@v6.3.0
+        uses: docker/build-push-action@v6.9.0
         with:
-          context: .
-          file: Dockerfile
+          context: ./user-svc
           push: true
           tags: ${{steps.meta.outputs.tags}}
           labels: ${{steps.meta.outputs.labels}}
