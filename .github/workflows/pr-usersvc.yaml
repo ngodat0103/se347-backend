@@ -44,7 +44,7 @@ jobs:
   build-and-push:
     name: Build and Push Docker image for pull request
     needs: [integration-test,unit-test]
-#    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-22.04
     steps:
       - name: set up buildx
