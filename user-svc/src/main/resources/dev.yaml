@@ -10,12 +10,19 @@ management:
         enabled: true
 logging:
   level:
+    org.springframework.kafka: DEBUG
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
     com.github.ngodat0103.usersvc.service: DEBUG
-    org.springframework.security.authentication: DEBUG
+    org.springframework.security: DEBUG
     org.springframework.web.reactive: DEBUG
     org.springframework.data.mongodb: DEBUG
 spring:
+  kafka:
+    producer:
+      client-id: user-svc
+      bootstrap-servers: kafka-svc
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   config:
     activate:
       on-profile: 'dev'

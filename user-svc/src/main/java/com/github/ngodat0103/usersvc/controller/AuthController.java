@@ -26,4 +26,9 @@ public class AuthController {
   public Mono<OAuth2AccessTokenResponse> login(@RequestBody @Valid CredentialDto credentialDto) {
     return userService.login(credentialDto);
   }
+
+  @GetMapping(path = "/verify-email")
+  public Mono<String> verifyEmail(@RequestParam String code) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
 }

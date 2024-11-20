@@ -5,8 +5,10 @@ import static com.github.ngodat0103.usersvc.exception.Util.*;
 import com.github.ngodat0103.usersvc.dto.AccountDto;
 import com.github.ngodat0103.usersvc.dto.CredentialDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
+import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
+import com.github.ngodat0103.usersvc.service.ServiceProducer;
 import com.github.ngodat0103.usersvc.service.UserService;
 import java.time.Duration;
 import java.time.Instant;
@@ -32,6 +34,7 @@ public class UserServiceImpl implements UserService {
   private UserMapper userMapper;
   private PasswordEncoder passwordEncoder;
   private JwtEncoder jwtEncoder;
+  private ServiceProducer serviceProducer;
 
   @Override
   public Mono<AccountDto> getMe() {
@@ -83,6 +86,11 @@ public class UserServiceImpl implements UserService {
                 throw createConflictException(log, "User", "email", account.getEmail());
               }
               log.error("Not expected exception", e);
+            })
+        .doOnNext(
+            a -> {
+              TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(a);
+              serviceProducer.sendRegisteredUser(topicRegisteredUser);
             })
         .map(userMapper::toDto);
   }
