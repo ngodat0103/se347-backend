@@ -3,8 +3,6 @@ package com.github.ngodat0103.usersvc.dto.topic;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 

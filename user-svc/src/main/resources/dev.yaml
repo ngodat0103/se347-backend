@@ -20,7 +20,7 @@ spring:
   kafka:
     producer:
       client-id: user-svc
-      bootstrap-servers: kafka-svc
+      bootstrap-servers: kafka-svc:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   config:
@@ -30,6 +30,6 @@ spring:
     mongodb:
       username: dev
       password: dev
-      database: dev
+      database: user-svc
       host: usersvc-mongodb
       authentication-database: admin
