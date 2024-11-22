@@ -5,6 +5,7 @@ import com.github.ngodat0103.usersvc.service.UserService;
 import com.nimbusds.jose.jwk.JWK;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -25,5 +26,11 @@ public class AuthController {
   @PostMapping(path = "/login")
   public Mono<OAuth2AccessTokenResponse> login(@RequestBody @Valid CredentialDto credentialDto) {
     return userService.login(credentialDto);
+  }
+
+  @GetMapping(path = "/verify-email")
+  @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
+  public Mono<String> verifyEmail(@RequestParam String code) {
+    return Mono.just("Not implemented yet");
   }
 }

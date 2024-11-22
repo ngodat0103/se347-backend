@@ -1,25 +1,62 @@
+name: se347-backend
 services:
-  mongodb:
-    image: mongodb/mongodb-community-server:7.0.6-ubuntu2204-20241117T082517Z
+  kafka-console:
+    extends:
+      file: ../compose.yaml
+      service: kafka-console
+  kafka:
+    extends:
+      file: ../compose.yaml
+      service: kafka
+  zookeeper:
+    extends:
+      file: ../compose.yaml
+      service: zookeeper
+  mongo-primary:
     profiles: ['dev','all']
-    hostname: usersvc-mongodb
-    networks:
-      dev:
-        ipv4_address: 172.21.0.10
-    volumes:
-      - mongodb-data:/data/db
+    image: bitnami/mongodb:8.0.3-debian-12-r1
+    container_name: mongo-primary
+    environment:
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_KEY=replicaSetKey123
+      - MONGODB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD:-root}
+      - MONGODB_ROOT_USER=${MONGODB_ROOT_USER:-root}
+      - MONGODB_USERNAME=${MONGODB_USERNAME:-dev}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
+      - MONGODB_REPLICA_SET_NAME=rs0
+      - MONGODB_PORT_NUMBER=27017
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=dev
-      - MONGO_INITDB_ROOT_PASSWORD=dev
-      - MONGO_INITDB_DATABASE=dev
+    networks: [dev]
+#  mongodb:
+#    image: bitnami/mongodb:8.0.3-debian-12-r1
+#    profiles: ['dev','all']
+#    hostname: usersvc-mongodb
+#    networks:
+#      dev:
+#        ipv4_address: 172.21.0.10
+#    volumes:
+#      - bitnami-mongodb:/bitnami/mongodb
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      - ALLOW_EMPTY_PASSWORD=yes
+#      - MONGODB_USERNAME=${MONGODB_USERNAME:-dev}
+#      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
+#      - MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
+#      - MONGODB_REPLICA_SET_MODE=primary
   user-svc:
     profiles: ['all']
     image: "ghcr.io/ngodat0103/se347-backend/user-svc:${TAG:-dev-latest}"
     environment:
+      - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_DATA_MONGODB_HOST=mongo-primary
+      - SPRING_DATA_MONGODB_USERNAME=${MONGODB_USERNAME:-dev}
+      - SPRING_DATA_MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
+      - SPRING_DATA_MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
       - APP_VERSION=${TAG:-dev-latest}
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=staging
     build:
       context: .
       dockerfile: Dockerfile
@@ -34,18 +71,19 @@ services:
      timeout: 3s
      retries: 3
     depends_on:
-      mongodb:
+      kafka:
+        condition: service_started
+      mongo-primary:
         condition: service_started
     ports:
       - "5000:5000"
 volumes:
-  mongodb-data:
-    name: mongodb-data
+  var-lib-zookeeper-data:
+    name: var-lib-zookeeper-data
+    external: true
+  bitnami-mongodb:
+    name: bitnami-mongodb
 networks:
   dev:
     name: dev
     driver: bridge
-    ipam:
-      config:
-        - subnet: "172.21.0.0/16"
-          gateway: "172.21.0.1"

@@ -1,0 +1,11 @@
+
+server.port: 5001
+spring:
+  config:
+    import:
+      - "optional:dev.yaml"
+  application:
+    name: notification-service
+  data:
+    mongodb:
+      auto-index-creation: true

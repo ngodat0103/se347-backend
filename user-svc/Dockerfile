@@ -33,4 +33,5 @@ ARG SERVICE_NAME
 LABEL org.opencontainers.image.source=https://github.com/ngodat0103/se347-backend.git
 LABEL  org.opencontainers.image.description="The ${SERVICE_NAME}"
 LABEL  org.opencontainers.image.title=${SERVICE_NAME}
+USER app
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

@@ -10,12 +10,16 @@ management:
         enabled: true
 logging:
   level:
+    org.springframework.kafka: DEBUG
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
-    com.github.ngodat0103.usersvc.service: DEBUG
-    org.springframework.security.authentication: DEBUG
+    com.github.ngodat0103.usersvc.service: INFO
+    org.springframework.security: DEBUG
     org.springframework.web.reactive: DEBUG
     org.springframework.data.mongodb: DEBUG
 spring:
+  kafka:
+    producer:
+      bootstrap-servers: kafka-svc:9092
   config:
     activate:
       on-profile: 'dev'
@@ -23,6 +27,5 @@ spring:
     mongodb:
       username: dev
       password: dev
-      database: dev
+      database: user-svc
       host: usersvc-mongodb
-      authentication-database: admin

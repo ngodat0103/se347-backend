@@ -33,7 +33,6 @@ public class SecurityConfiguration {
   }
 
   @Bean
-  @Profile("dev")
   SecurityWebFilterChain httpSecurity(ServerHttpSecurity http) {
     configureCors(http);
     configureCsrf(http);
