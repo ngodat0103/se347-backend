@@ -1,15 +1,14 @@
 name: dev-pipeline
 on:
   workflow_dispatch:
-  push:
-#    paths:
-#      - 'user-svc/src/main/**'
-#      - 'user-svc/compose.yaml'
-#    branches:
-#      - dev
+  pull_request:
+    paths:
+      - 'user-svc/src/main/**'
+      - 'user-svc/compose.yaml'
+    branches:
+      - dev
 jobs:
   build:
-    environment: dev
     name: Build Docker image
     runs-on: builder
     outputs:
