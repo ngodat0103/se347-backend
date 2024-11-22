@@ -1,32 +1,43 @@
 name: se347-backend
 services:
   elastic-search:
-    profiles:
-      - dev
-      - all
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.4
-    networks: [dev]
-    labels:
-      "env": "dev"
+    profiles: [ 'dev','all' ]
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2
     environment:
-      - "discovery.type=single-node"
+      - node.name=node1
+      - cluster.name=elasticsearch-dev
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - path.repo=/usr/share/elasticsearch/backups
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elastic-node1-data:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
-      - "9300:9300"
-  kibana:
-    profiles:
+    networks:
       - dev
-      - all
-    image: kibana:8.15.4
-    depends_on:
-      - elastic-search
-    networks: [dev]
+  kibana:
+    profiles: [ 'dev','all' ]
+    image: docker.elastic.co/kibana/kibana:8.6.2
     environment:
-      - "ELASTICSEARCH_HOSTS=https://elastic-search:9200"
-    labels:
-      "env": "dev"
+      - elasticsearch.hosts=http://elastic-search:9200
+      - xpack.security.enabled=false
+      - csp.strict=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     ports:
       - "5601:5601"
+    networks:
+      - dev
+    depends_on:
+      - elastic-search
   kafka-console:
     profiles: [ 'dev','all' ]
     depends_on:
@@ -37,7 +48,6 @@ services:
     environment:
       - KAFKA_BROKERS=kafka-svc:9092
     image: docker.redpanda.com/redpandadata/console:latest
-
   zookeeper:
     profiles: [ 'dev','all' ]
     container_name: zookeeper
@@ -71,6 +81,8 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 volumes:
+  elastic-node1-data:
+      name: elastic-node1-data
   var-lib-zookeeper-data:
     name: var-lib-zookeeper-data
 networks:
