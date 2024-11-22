@@ -1,52 +1,50 @@
 # User Service (user-svc)
 
-## Project Overview
-The User Service is part of the se347-backend project, which is built using Spring Boot and provides RESTful APIs for user registration, authentication, and account management.
+## Overview
+The User Service is a part of the se347-backend project, built using Spring Boot. It provides RESTful APIs for user registration, authentication, and account management. This service is designed to be reactive and leverages Spring Data MongoDB for data persistence and Spring Security for authentication and authorization.
+
+## Technologies Used
+- **Java**: 17
+- **Spring Boot**: 3.3.5
+- **Spring Data MongoDB Reactive**: 3.3.5
+- **Spring Kafka**: 3.3.5
+- **Spring Security **: 1.3.3
+- **Lombok**: For reducing boilerplate code
+- **MapStruct**: For mapping between DTOs and domain objects
+- **Swagger**: For API documentation
 
 ## Project Structure
-
 ```
 user-svc
 ├── .mvn
-│   └── wrapper - Contains Maven wrapper scripts for managing dependencies and building the project.
+│   └── wrapper - Maven wrapper scripts for managing dependencies and building the project.
 ├── compose.yaml - Docker Compose configuration for the user service.
 ├── mvnw.cmd - Windows script for running Maven commands.
 ├── pom.xml - Maven configuration file for managing project dependencies.
 ├── readme.md - This file, providing an overview of the user service.
 └── src
     ├── main
-    │   ├── resources - Contains configuration files, templates, and other resources used by the application.
-    │   │   ├── application.yaml - Main application configuration file.
+    │   ├── resources - Configuration files and other resources.
+    │   │   ├── application.yaml - Main application configuration.
     │   │   ├── dev.yaml - Development-specific configuration.
-    │   │   └── META-INF - Contains metadata files for the application.
-    │   └── java - Contains the source code for the application.
+    │   │   └── META-INF - Metadata files for the application.
+    │   └── java - Source code for the application.
     │       └── com
     │           └── github
     │               └── ngodat0103
     │                   └── usersvc
     │                       ├── UserServiceApplication.java - Main application class.
-    │                       ├── controller - Contains controllers responsible for handling incoming requests and returning responses.
-    │                       ├── dto - Contains data transfer objects (DTOs) used for data exchange between the application and external services.
-    │                       │   └── mapper - Contains mappers for converting between DTOs and domain objects.
-    │                       ├── exception - Contains custom exception classes for handling errors.
-    │                       ├── security - Contains classes related to security configuration and authentication.
-    │                       ├── service - Contains service classes responsible for business logic.
-    │                       │   └── impl - Contains implementations of service interfaces.
-    │                       ├── swagger - Contains configuration for Swagger documentation.
-    │                       └── persistence - Contains classes related to data persistence.
-    │                           ├── document - Contains domain objects that represent data stored in the database.
-    │                           └── repository - Contains repositories for interacting with the database.
-    └── test - Contains unit and integration tests for the application.
-        └── java
-            └── com
-                └── github
-                    └── ngodat0103
-                        └── usersvc
-                            └── controller - Contains integration tests for the controllers.
+    │                       ├── controller - Controllers for handling requests.
+    │                       ├── dto - Data Transfer Objects (DTOs).
+    │                       ├── exception - Custom exception classes.
+    │                       ├── security - Security configuration classes.
+    │                       ├── service - Business logic services.
+    │                       ├── swagger - Swagger configuration.
+    │                       └── persistence - Data persistence classes.
+    └── test - Unit and integration tests for the application.
 ```
 
 ## API Endpoints
-
 The User Service supports the following API endpoints:
 
 | Endpoint                     | HTTP Method | Description                                           |
@@ -61,3 +59,39 @@ The User Service supports the following API endpoints:
 
 ## Supported APIs
 This service currently supports a total of **7 API endpoints** for user management and authentication.
+
+## How to Run the Project
+
+### Prerequisites
+- Java 17
+- Docker
+- Docker Compose
+
+### Running the Application
+   ```bash
+   docker compose --profile all up -d
+   ```
+### Stopping the Project
+To stop the project, run:
+```bash
+docker compose --profile all stop
+```
+### Removing the Project
+To remove the project, run:
+```bash
+docker compose --profile all down
+```
+## Database Credentials
+If you use the default values in Docker Compose, you can access the MongoDB database using the following credentials:
+- **Username**: dev
+- **Password**: dev
+- **Database**: user-svc
+
+For root credentials, use:
+- **Username**: root
+- **Password**: root
+- **Authentication Database**: admin
+- **Security**: SCRAM-SHA-256
+
+## Conclusion
+This User Service provides a robust foundation for managing user accounts and authentication in a reactive manner. For further details, refer to the API documentation available through the Swagger UI.
