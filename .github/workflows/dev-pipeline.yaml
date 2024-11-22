@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - '.github/workflows/dev-pipeline.yaml'
       - 'user-svc/src/main/**'
       - 'user-svc/compose.yaml'
     branches:
