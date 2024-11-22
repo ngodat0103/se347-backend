@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - '.github/workflows/dev-pipeline.yaml'
       - 'user-svc/src/main/**'
       - 'user-svc/compose.yaml'
     branches:
@@ -53,9 +54,7 @@ jobs:
         working-directory: user-svc
         run: echo "TAG=${{needs.build.outputs.TAG}}" > .env
       - name: Pull new Docker image version
-        working-directory: user-svc
         run: sudo docker compose --profile all pull
-
       - name: Fetch secrets from Vault
         uses: hashicorp/vault-action@v3.0.0
         with:
@@ -63,6 +62,9 @@ jobs:
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
             secrets/data/se347/backend/user-svc MONGODB_PASSWORD
+      - name: Set up credentials
+        run: |
+          echo "MONGODB_PASSWORD=${{ env.MONGODB_PASSWORD }}" >> .env
       - name: Deploy new Docker image
         working-directory: user-svc
         run: sudo docker compose --profile all up -d
