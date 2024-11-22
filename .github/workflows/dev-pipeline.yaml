@@ -63,7 +63,7 @@ jobs:
           url: ${{ secrets.VAULT_ADDR }}
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
-            secrets/data/se347/backend/user-svc | MONGODB_PASSWORD
+            secrets/data/se347/backend/user-svc MONGODB_PASSWORD
       - name: Deploy new Docker image
         working-directory: user-svc
         run: sudo docker compose --profile all up -d
