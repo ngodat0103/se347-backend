@@ -1,46 +1,17 @@
+name: se347-backend
 services:
   kafka-console:
-    profiles: ['dev','all']
-    depends_on:
-      - kafka
-    networks: [ dev ]
-    ports:
-      - "6969:8080"
-    environment:
-      - KAFKA_BROKERS=kafka-svc:9092
-    image: docker.redpanda.com/redpandadata/console:latest
-  zookeeper:
-    profiles: ['dev','all']
-    container_name: zookeeper
-    volumes:
-      - var-lib-zookeeper-data:/var/lib/zookeeper/data
-    image: confluentinc/cp-zookeeper:7.4.6
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181"
-    networks: [ dev ]
+    extends:
+      file: ../compose.yaml
+      service: kafka-console
   kafka:
-    profiles: ['dev','all']
-    restart: unless-stopped
-    networks:
-      dev:
-        ipv4_address: 172.21.0.11
-    container_name: kafka
-    hostname: kafka-svc
-    image: confluentinc/cp-kafka:7.4.6
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka-svc:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    extends:
+      file: ../compose.yaml
+      service: kafka
+  zookeeper:
+    extends:
+      file: ../compose.yaml
+      service: zookeeper
   mongo-primary:
     profiles: ['dev','all']
     image: bitnami/mongodb:8.0.3-debian-12-r1
@@ -83,8 +54,9 @@ services:
       - SPRING_DATA_MONGODB_HOST=mongo-primary
       - SPRING_DATA_MONGODB_USERNAME=${MONGODB_USERNAME:-dev}
       - SPRING_DATA_MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
+      - SPRING_DATA_MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
       - APP_VERSION=${TAG:-dev-latest}
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=staging
     build:
       context: .
       dockerfile: Dockerfile
@@ -108,13 +80,10 @@ services:
 volumes:
   var-lib-zookeeper-data:
     name: var-lib-zookeeper-data
+    external: true
   bitnami-mongodb:
     name: bitnami-mongodb
 networks:
   dev:
     name: dev
     driver: bridge
-    ipam:
-      config:
-        - subnet: "172.21.0.0/16"
-          gateway: "172.21.0.1"

@@ -7,6 +7,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 @Service
 @AllArgsConstructor
@@ -27,6 +28,8 @@ public class AuditService implements ApplicationListener<ApplicationReadyEvent> 
         .doOnNext(
             change -> {
               Account account = change.getBody();
+                Assert.notNull(account, "Account must not be null");
+                account.setPassword("********");
               System.out.println("Change event: " + change);
               int stop = 0;
             })

@@ -1,0 +1,83 @@
+name: se347-backend
+services:
+  elastic-search:
+    profiles:
+      - dev
+      - all
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.4
+    networks: [dev]
+    labels:
+      "env": "dev"
+    environment:
+      - "discovery.type=single-node"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+  kibana:
+    profiles:
+      - dev
+      - all
+    image: kibana:8.15.4
+    depends_on:
+      - elastic-search
+    networks: [dev]
+    environment:
+      - "ELASTICSEARCH_HOSTS=https://elastic-search:9200"
+    labels:
+      "env": "dev"
+    ports:
+      - "5601:5601"
+  kafka-console:
+    profiles: [ 'dev','all' ]
+    depends_on:
+      - kafka
+    networks: [ dev ]
+    ports:
+      - "6969:8080"
+    environment:
+      - KAFKA_BROKERS=kafka-svc:9092
+    image: docker.redpanda.com/redpandadata/console:latest
+
+  zookeeper:
+    profiles: [ 'dev','all' ]
+    container_name: zookeeper
+    volumes:
+      - var-lib-zookeeper-data:/var/lib/zookeeper/data
+    image: confluentinc/cp-zookeeper:7.4.6
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181"
+    networks: [ dev ]
+  kafka:
+    profiles: [ 'dev','all' ]
+    restart: unless-stopped
+    networks:
+      dev:
+        ipv4_address: 172.21.0.11
+    container_name: kafka
+    hostname: kafka-svc
+    image: confluentinc/cp-kafka:7.4.6
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka-svc:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+volumes:
+  var-lib-zookeeper-data:
+    name: var-lib-zookeeper-data
+networks:
+  dev:
+    name: dev
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.21.0.0/16"
+          gateway: "172.21.0.1"
