@@ -107,14 +107,16 @@ public class UserServiceImpl implements UserService {
                         throw new ConflictException(EMAIL_ALREADY_VERIFIED, ConflictException.Type.ALREADY_VERIFIED);
                     }
                 })
-                .doOnNext(account -> {
+                .flatMap(account -> {
+                    String verifyEmailCode = generateVerifyEmailCode();
                     TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(account);
                     topicRegisteredUser.setAction(TopicRegisteredUser.Action.RESEND_EMAIL_VERIFICATION);
-                    String verifyEmailCode = generateVerifyEmailCode();
                     topicRegisteredUser.setVerifyEmailCode(verifyEmailCode);
                     log.info("Sending resend email verification to kafka: {}", topicRegisteredUser);
-                    serviceProducer.sendRegisteredUser(topicRegisteredUser);
+                    return redisTemplate.opsForValue().set(verifyEmailCode, topicRegisteredUser)
+                            .thenReturn(topicRegisteredUser);
                 })
+                .doOnNext(serviceProducer::sendRegisteredUser)
                 .map(account -> "Email verification sent");
     }
 

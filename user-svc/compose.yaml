@@ -45,6 +45,7 @@ services:
       - SPRING_DATA_MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
       - APP_VERSION=${TAG:-dev-latest}
       - SPRING_PROFILES_ACTIVE=staging
+      - SPRING_DATA_REDIS_HOST=redis
     build:
       context: .
       dockerfile: Dockerfile
