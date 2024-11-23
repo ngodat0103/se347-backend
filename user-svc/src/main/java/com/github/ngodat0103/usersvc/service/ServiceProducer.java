@@ -12,9 +12,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ServiceProducer {
   private KafkaTemplate<String, TopicRegisteredUser> producer;
+  private static final String TOPIC = "registered-user";
 
   public void sendRegisteredUser(@Valid TopicRegisteredUser topicRegisteredUser) {
     log.debug("Sending new registered user: {}", topicRegisteredUser);
-    producer.send("new-registered-user", topicRegisteredUser);
+    producer.send(TOPIC, topicRegisteredUser);
   }
 }

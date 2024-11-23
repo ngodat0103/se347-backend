@@ -10,4 +10,6 @@ public interface UserService extends BaseInterface<AccountDto> {
   Mono<AccountDto> getMe();
 
   Mono<OAuth2AccessTokenResponse> login(CredentialDto credentialDto);
+  Mono<String> verifyEmail(String code);
+  Mono<String> resendEmailVerification();
 }

@@ -24,7 +24,8 @@ import reactor.core.scheduler.Schedulers;
 @Configuration
 public class AuditService implements CommandLineRunner {
   private final ReactiveMongoTemplate reactiveMongoTemplate;
-    private final TaskExecutor taskExecutor;
+//  @Qualifier(SimpleAsyncTaskExecutor.class)
+  private final TaskExecutor taskExecutor;
 
   public AuditService(ReactiveMongoTemplate reactiveMongoTemplate) {
     this.reactiveMongoTemplate = reactiveMongoTemplate;

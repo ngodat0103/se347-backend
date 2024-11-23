@@ -33,13 +33,12 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler({ConflictException.class})
   @ResponseStatus(HttpStatus.CONFLICT)
-  public ProblemDetail handleApiException(RuntimeException e, ServerHttpRequest request) {
+  public ProblemDetail handleApiException(ConflictException e, ServerHttpRequest request) {
     ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.CONFLICT);
     problemDetails.setDetail(e.getMessage());
-    problemDetails.setType(URI.create("https://problems-registry.smartbear.com/already-exists"));
-    problemDetails.setTitle("Already exists");
-    problemDetails.setDetail(e.getMessage());
     problemDetails.setInstance(URI.create(request.getPath().toString()));
+    problemDetails.setTitle(e.getType().toString());
+    problemDetails.setType(URI.create("https://problems-registry.smartbear.com/already-exists"));
     return problemDetails;
   }
 
@@ -78,6 +77,16 @@ public class GlobalExceptionHandler {
     problemDetails.setInstance(URI.create(request.getPath().toString()));
     return problemDetails;
   }
+  @ExceptionHandler(InvalidEmailCodeException.class)
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ProblemDetail handleInvalidEmailCodeException(InvalidEmailCodeException e, ServerHttpRequest request) {
+        ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+        problemDetails.setType(URI.create("https://problems-registry.smartbear.com/invalid-request-parameter-value"));
+        problemDetails.setTitle("Invalid Email Code");
+        problemDetails.setDetail(e.getMessage());
+        problemDetails.setInstance(URI.create(request.getPath().toString()));
+        return problemDetails;
+    }
 
   @ExceptionHandler(NotFoundException.class)
   @ResponseStatus(HttpStatus.NOT_FOUND)
