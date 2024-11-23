@@ -49,16 +49,19 @@ The User Service supports the following API endpoints:
 
 | Endpoint                     | HTTP Method | Description                                           |
 |------------------------------|-------------|-------------------------------------------------------|
-| `/api/v1/users`              | POST        | Creates a new user account.                           |
+| `/version`                   | GET         | Retrieves the current version of the application.     |
+| `/api/v1/auth/jwk`           | GET         | Retrieves the JSON Web Key (JWK) used for signing JWTs. |
 | `/api/v1/auth/login`         | POST        | Authenticates a user and returns an access token.    |
-| `/api/v1/users/me`           | GET         | Retrieves the current user's account information.     |
-| `/api/v1/auth/jwk`           | GET         | Retrieves the JSON Web Key (JWK) for verifying JWTs. |
+| `/api/v1/auth/verify-email`  | GET         | Verifies the user's email using a verification code.  |
+| `/api/v1/auth/resend-email`  | GET         | Resends the email verification link to the user (requires authentication). |
+| `/api/v1/users`              | POST        | Creates a new user account.                           |
+| `/api/v1/users/me`           | GET         | Retrieves the current user's account information (requires authentication). |
 | `/api/v1/users/api-docs`     | GET         | Retrieves Swagger API documentation in JSON format.   |
 | `/api/v1/users/ui-docs`      | GET         | Retrieves Swagger UI for interactive API documentation.|
 | `/actuator/health`           | GET         | Checks the health of the application.                 |
 
 ## Supported APIs
-This service currently supports a total of **7 API endpoints** for user management and authentication.
+This service currently supports a total of **10 API endpoints** for user management and authentication.
 
 ## How to Run the Project
 
@@ -92,6 +95,3 @@ For root credentials, use:
 - **Password**: root
 - **Authentication Database**: admin
 - **Security**: SCRAM-SHA-256
-
-## Conclusion
-This User Service provides a robust foundation for managing user accounts and authentication in a reactive manner. For further details, refer to the API documentation available through the Swagger UI.
