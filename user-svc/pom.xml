@@ -32,8 +32,11 @@
 		<springdoc.version>2.6.0</springdoc.version>
 		<spring-cloud.version>2023.0.3</spring-cloud.version>
 		<sonar.host.url>${SONAR_HOST}</sonar.host.url>
-		<sonar.login>${SONAR_TOKEN}</sonar.login>
+		<sonar.token>${SONAR_TOKEN}</sonar.token>
 		<sonar.projectKey>se347-backend</sonar.projectKey>
+		<sonar.sources>${project.basedir}/src/main</sonar.sources>
+		<sonar.tests>${project.basedir}/src/test</sonar.tests>
+		<sonar.qualitygate.wait>true</sonar.qualitygate.wait>
 		<sonar.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.jacoco.xmlReportPaths>
 	</properties>
 	<dependencies>
