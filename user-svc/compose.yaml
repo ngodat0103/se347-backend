@@ -12,6 +12,11 @@ services:
     extends:
       file: ../compose.yaml
       service: zookeeper
+  redis:
+    image: redis:alpine3.20
+    ports:
+      - "6379:6379"
+    networks: [dev]
   mongo-primary:
     profiles: ['dev','all']
     image: bitnami/mongodb:8.0.3-debian-12-r1
@@ -29,26 +34,9 @@ services:
     ports:
       - "27017:27017"
     networks: [dev]
-#  mongodb:
-#    image: bitnami/mongodb:8.0.3-debian-12-r1
-#    profiles: ['dev','all']
-#    hostname: usersvc-mongodb
-#    networks:
-#      dev:
-#        ipv4_address: 172.21.0.10
-#    volumes:
-#      - bitnami-mongodb:/bitnami/mongodb
-#    ports:
-#      - "27017:27017"
-#    environment:
-#      - ALLOW_EMPTY_PASSWORD=yes
-#      - MONGODB_USERNAME=${MONGODB_USERNAME:-dev}
-#      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
-#      - MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
-#      - MONGODB_REPLICA_SET_MODE=primary
   user-svc:
     profiles: ['all']
-    image: "ghcr.io/ngodat0103/se347-backend/user-svc:${TAG:-dev-latest}"
+    image: ${TAG:-ghcr.io/ngodat0103/se347-backend/user-svc:dev-latest}
     environment:
       - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_DATA_MONGODB_HOST=mongo-primary
@@ -57,6 +45,7 @@ services:
       - SPRING_DATA_MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
       - APP_VERSION=${TAG:-dev-latest}
       - SPRING_PROFILES_ACTIVE=staging
+      - SPRING_DATA_REDIS_HOST=redis
     build:
       context: .
       dockerfile: Dockerfile
