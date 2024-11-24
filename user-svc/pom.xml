@@ -31,9 +31,10 @@
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<springdoc.version>2.6.0</springdoc.version>
 		<spring-cloud.version>2023.0.3</spring-cloud.version>
-		<sonar.host.url>${env.SONAR_HOST}</sonar.host.url>
-		<sonar.login>${env.SONAR_TOKEN}</sonar.login>
+		<sonar.host.url>${SONAR_HOST}</sonar.host.url>
+		<sonar.login>${SONAR_TOKEN}</sonar.login>
 		<sonar.projectKey>se347-backend</sonar.projectKey>
+		<sonar.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.jacoco.xmlReportPaths>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -192,13 +193,54 @@
 				<version>5.0.0.4389</version>
 			</plugin>
 			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+				<executions>
+					<!-- Prepare JaCoCo Agent for Unit Tests -->
+					<execution>
+						<id>prepare-unit-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<phase>process-test-classes</phase>
+					</execution>
+					<!-- Prepare JaCoCo Agent for Integration Tests -->
+					<execution>
+						<id>prepare-integration-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<phase>pre-integration-test</phase>
+					</execution>
+					<!-- Generate Report -->
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Maven Failsafe Plugin -->
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>3.2.5</version>
 				<executions>
 					<execution>
+						<id>integration-tests</id>
+						<phase>integration-test</phase>
 						<goals>
 							<goal>integration-test</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>verify-integration-tests</id>
+						<phase>verify</phase>
+						<goals>
 							<goal>verify</goal>
 						</goals>
 					</execution>
