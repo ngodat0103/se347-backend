@@ -16,10 +16,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Map;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -111,7 +111,8 @@ public class UserServiceImpl implements UserService {
                     String verifyEmailCode = generateVerifyEmailCode();
                     TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(account);
                     topicRegisteredUser.setAction(TopicRegisteredUser.Action.RESEND_EMAIL_VERIFICATION);
-                    topicRegisteredUser.setVerifyEmailCode(verifyEmailCode);
+
+                    topicRegisteredUser.setAdditionalProperties(Map.of("verifyEmailCode", verifyEmailCode));
                     log.info("Sending resend email verification to kafka: {}", topicRegisteredUser);
                     return redisTemplate.opsForValue().set(verifyEmailCode, topicRegisteredUser)
                             .thenReturn(topicRegisteredUser);
@@ -146,7 +147,7 @@ public class UserServiceImpl implements UserService {
         TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(account);
         topicRegisteredUser.setAction(TopicRegisteredUser.Action.NEW_USER);
         String verifyEmailCode = generateVerifyEmailCode();
-        topicRegisteredUser.setVerifyEmailCode(verifyEmailCode);
+        topicRegisteredUser.setAdditionalProperties(Map.of("verifyEmailCode", verifyEmailCode));
         log.info("Sending new registered user to kafka: {}", topicRegisteredUser);
         serviceProducer.sendRegisteredUser(topicRegisteredUser);
         return redisTemplate.opsForValue().set(verifyEmailCode, topicRegisteredUser)
@@ -158,8 +159,7 @@ public class UserServiceImpl implements UserService {
         byte[] randomBytes = new byte[32];
         SecureRandom random = new SecureRandom();
         random.nextBytes(randomBytes);
-        return Base64.getEncoder().encodeToString(randomBytes);
-
+        return  Base64.getEncoder().encodeToString(randomBytes);
     }
     @Override
     public Mono<AccountDto> update(AccountDto accountDto) {

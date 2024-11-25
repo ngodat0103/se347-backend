@@ -20,8 +20,7 @@ logging:
     web: debug
 spring:
   kafka:
-    producer:
-      bootstrap-servers: kafka-svc:9092
+    bootstrap-servers: kafka-svc:9092
   config:
     activate:
       on-profile: 'dev'

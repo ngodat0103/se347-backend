@@ -96,7 +96,7 @@ class ControllerIT {
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.kafka.producer.bootstrap-servers", kafkaContainer::getBootstrapServers);
+    registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
     registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
     registry.add("spring.data.redis.port", redisContainer::getRedisPort);
   }
@@ -140,7 +140,7 @@ class ControllerIT {
     String accountId = JsonPath.read(value, "$.accountId");
     String email = JsonPath.read(value, "$.email");
     Assertions.assertEquals(TopicRegisteredUser.Action.NEW_USER.toString(), JsonPath.read(value, "$.action"));
-    Assertions.assertNotNull(JsonPath.read(value,"$.verifyEmailCode"));
+    Assertions.assertNotNull(JsonPath.read(value,"$.additionalProperties.verifyEmailCode"));
     Assertions.assertEquals(fakeAccountDto.getEmail(), email);
     Assertions.assertNotNull(accountId);
   }
@@ -305,7 +305,7 @@ class ControllerIT {
 
         TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(fakeAccount);
         String randomCode = RandomStringUtils.randomNumeric(32);
-        topicRegisteredUser.setVerifyEmailCode(randomCode);
+        topicRegisteredUser.setAdditionalProperties(Map.of("verifyEmailCode", randomCode));
         redisTemplate.opsForValue().set(randomCode,topicRegisteredUser).block();
         String accessToken = createTemporaryAccessToken(fakeAccount);
         webTestClient
