@@ -1,30 +1,22 @@
 package com.github.ngodat0103.usersvc.service;
 
 import com.github.ngodat0103.usersvc.persistence.document.Account;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.config.Task;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import reactor.core.scheduler.Schedulers;
 
 @Service
 @Slf4j
 @Configuration
 public class AuditService implements CommandLineRunner {
   private final ReactiveMongoTemplate reactiveMongoTemplate;
-    private final TaskExecutor taskExecutor;
+//  @Qualifier(SimpleAsyncTaskExecutor.class)
+  private final TaskExecutor taskExecutor;
 
   public AuditService(ReactiveMongoTemplate reactiveMongoTemplate) {
     this.reactiveMongoTemplate = reactiveMongoTemplate;
@@ -42,14 +34,14 @@ public class AuditService implements CommandLineRunner {
               Account account = change.getBody();
                 Assert.notNull(account, "Account must not be null");
                 account.setPassword("********");
-              System.out.println("Change event: " + change);
-              int stop = 0;
+              log.info("Change event: {}", change);
             })
+            .doOnTerminate(() -> Thread.currentThread().interrupt())
             .blockLast();
   }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         taskExecutor.execute(this::listenToChanges);
     }
 }

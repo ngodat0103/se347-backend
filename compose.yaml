@@ -63,9 +63,7 @@ services:
   kafka:
     profiles: [ 'dev','all' ]
     restart: unless-stopped
-    networks:
-      dev:
-        ipv4_address: 172.21.0.11
+    networks: [ dev ]
     container_name: kafka
     hostname: kafka-svc
     image: confluentinc/cp-kafka:7.4.6
