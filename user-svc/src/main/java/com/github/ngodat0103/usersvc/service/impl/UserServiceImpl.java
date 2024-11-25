@@ -86,10 +86,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<String> verifyEmail(String code) {
-        return redisTemplate.opsForValue().get(code)
+        return redisTemplate.opsForValue().getAndDelete(code)
                 .switchIfEmpty(Mono.defer(() -> Mono.error(InvalidEmailCodeException::new)))
-                .flatMap(topicRegisteredUser -> userRepository.findById(topicRegisteredUser.getAccountId()))
-                .doOnNext(account -> account.setEmailVerified(true))
+                .flatMap(topicRegisteredUser ->  {
+                    log.info("Fetching user with AccountId: {}", topicRegisteredUser.getAccountId());
+                    return userRepository.findById(topicRegisteredUser.getAccountId());
+                })
+                .doOnNext(account -> {
+                    log.info("Set email verified for user {}", account.getAccountId());
+                    account.setEmailVerified(true);
+                })
                 .flatMap(userRepository::save)
                 .map(account -> {
                     log.info("Email verified for user {}", account.getAccountId());
@@ -156,7 +162,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public static String generateVerifyEmailCode() {
-        byte[] randomBytes = new byte[32];
+        byte[] randomBytes = new byte[16];
         SecureRandom random = new SecureRandom();
         random.nextBytes(randomBytes);
         return  Base64.getEncoder().encodeToString(randomBytes);
