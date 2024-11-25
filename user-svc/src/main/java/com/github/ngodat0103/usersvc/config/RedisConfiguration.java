@@ -1,9 +1,8 @@
-package com.github.ngodat0103.usersvc.redis;
+package com.github.ngodat0103.usersvc.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;

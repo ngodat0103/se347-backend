@@ -9,6 +9,7 @@ import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
 import com.github.ngodat0103.usersvc.exception.ConflictException;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
+import com.github.ngodat0103.usersvc.service.impl.UserServiceImpl;
 import com.jayway.jsonpath.JsonPath;
 import java.io.IOException;
 import java.time.Duration;
@@ -19,7 +20,6 @@ import java.util.Map;
 
 import com.redis.testcontainers.RedisContainer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -134,8 +134,8 @@ class ControllerIT {
 
     var records = consumer.poll(Duration.ofSeconds(3));
     Assertions.assertEquals(1, records.count());
-    var record = records.iterator().next();
-    var value = record.value();
+    var recordKafka = records.iterator().next();
+    var value = recordKafka.value();
     log.debug(value);
     String accountId = JsonPath.read(value, "$.accountId");
     String email = JsonPath.read(value, "$.email");
@@ -288,8 +288,8 @@ class ControllerIT {
         .isEqualTo(HttpStatus.ACCEPTED);
     var records = consumer.poll(Duration.ofSeconds(5));
     Assertions.assertEquals(1, records.count());
-    var record = records.iterator().next();
-    var value = record.value();
+    var recordKafka = records.iterator().next();
+    var value = recordKafka.value();
     log.debug(value);
     String accountId = JsonPath.read(value, "$.accountId");
     String email = JsonPath.read(value, "$.email");
@@ -304,7 +304,7 @@ class ControllerIT {
         fakeAccount =  userRepository.save(fakeAccount).block();
 
         TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(fakeAccount);
-        String randomCode = RandomStringUtils.randomNumeric(32);
+        String randomCode = UserServiceImpl.generateVerifyEmailCode();
         topicRegisteredUser.setAdditionalProperties(Map.of("verifyEmailCode", randomCode));
         redisTemplate.opsForValue().set(randomCode,topicRegisteredUser).block();
         String accessToken = createTemporaryAccessToken(fakeAccount);
