@@ -1,8 +1,13 @@
 package com.github.ngodat0103.usersvc.controller;
 
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.javafaker.Faker;
 import com.github.ngodat0103.usersvc.dto.AccountDto;
 import com.github.ngodat0103.usersvc.dto.CredentialDto;
+import com.github.ngodat0103.usersvc.dto.EmailDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapperImpl;
 import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
@@ -13,6 +18,7 @@ import com.github.ngodat0103.usersvc.service.impl.UserServiceImpl;
 import com.jayway.jsonpath.JsonPath;
 import com.redis.testcontainers.RedisContainer;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -26,6 +32,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -46,36 +53,44 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.MapperFeature;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.testcontainers.utility.DockerImageName;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 @SpringBootTest
 @AutoConfigureWebTestClient
 @ActiveProfiles("IT")
 @Slf4j
 class ControllerIT {
-  @Autowired private WebTestClient webTestClient;
-  @Autowired private UserRepository userRepository;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  @Autowired
+  private WebTestClient webTestClient;
+  @Autowired
+  private UserRepository userRepository;
+  private ObjectMapper objectMapper = new ObjectMapper();
+  @Autowired
+  private ApplicationContext applicationContext;
   private static final String API_PATH = "/api/v1";
   private static final String USER_PATH = API_PATH + "/users";
   private static final String LOGIN_PATH = API_PATH + "/auth/login";
   private static final String AUTH_PATH = API_PATH + "/auth";
   private static final String MONGODB_DOCKER_IMAGE =
-      "mongodb/mongodb-community-server:7.0.6-ubuntu2204-20241117T082517Z";
+          "mongodb/mongodb-community-server:7.0.6-ubuntu2204-20241117T082517Z";
   private static final MongoDBContainer mongoDBContainer =
-      new MongoDBContainer(MONGODB_DOCKER_IMAGE);
+          new MongoDBContainer(MONGODB_DOCKER_IMAGE);
 
   private static final RedisContainer redisContainer =
-      new RedisContainer(DockerImageName.parse("redis:alpine3.20"));
+          new RedisContainer(DockerImageName.parse("redis:alpine3.20"));
 
   private static final String KAFKA_DOCKER_IMAGE = "confluentinc/cp-kafka:7.4.6";
 
   private static final ConfluentKafkaContainer kafkaContainer =
-      new ConfluentKafkaContainer(KAFKA_DOCKER_IMAGE);
+          new ConfluentKafkaContainer(KAFKA_DOCKER_IMAGE);
   private final UserMapper userMapper = new UserMapperImpl();
   private AccountDto fakeAccountDto;
   private Account fakeAccount;
   private KafkaConsumer<String, String> consumer;
-  @Autowired private JwtEncoder jwtEncoder;
-  @Autowired private ReactiveRedisTemplate<String, TopicRegisteredUser> redisTemplate;
+  @Autowired
+  private JwtEncoder jwtEncoder;
+  @Autowired
+  private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
   @BeforeAll
   static void setUpAll() {
@@ -100,14 +115,15 @@ class ControllerIT {
 
   @BeforeEach
   void setUp() {
+    this.objectMapper.configure(MapperFeature.USE_ANNOTATIONS, false);
     Faker faker = new Faker();
     String emailFake = faker.internet().emailAddress();
     String nickNameFake = faker.name().username();
     String passwordFake = faker.internet().password();
-    objectMapper.configure(MapperFeature.USE_ANNOTATIONS, false);
     this.fakeAccountDto =
-        AccountDto.builder().email(emailFake).nickName(nickNameFake).password(passwordFake).build();
+            AccountDto.builder().email(emailFake).nickName(nickNameFake).password(passwordFake).build();
     this.fakeAccount = userMapper.toDocument(fakeAccountDto);
+    this.fakeAccount.setAccountStatus(Account.AccountStatus.ACTIVE);
     this.consumer = new KafkaConsumer<>(getConsumerProps());
     this.consumer.subscribe(List.of("registered-user"));
   }
@@ -120,32 +136,42 @@ class ControllerIT {
 
   @Test
   void createAccountWhenNotExists() throws IOException {
-
     webTestClient
-        .post()
-        .uri(USER_PATH)
-        .header("Content-Type", "application/json")
-        .bodyValue(objectMapper.writeValueAsString(fakeAccountDto))
-        .exchange()
-        .expectStatus()
-        .isCreated();
+            .post()
+            .uri(USER_PATH)
+            .header("Content-Type", "application/json")
+            .bodyValue(fakeAccount)
+            .exchange()
+            .expectStatus()
+            .isCreated();
 
     var records = consumer.poll(Duration.ofSeconds(3));
-    Assertions.assertEquals(1, records.count());
+    assertEquals(1, records.count());
     var recordKafka = records.iterator().next();
     var value = recordKafka.value();
-    log.debug(value);
-    String accountId = JsonPath.read(value, "$.accountId");
-    String email = JsonPath.read(value, "$.email");
-    Assertions.assertEquals(
-        TopicRegisteredUser.Action.NEW_USER.toString(), JsonPath.read(value, "$.action"));
-    Assertions.assertNotNull(JsonPath.read(value, "$.additionalProperties.verifyEmailCode"));
-    Assertions.assertEquals(fakeAccountDto.getEmail(), email);
-    Assertions.assertNotNull(accountId);
+    assertNotNull(JsonPath.read(value, "$.createdDate"));
+    assertEquals(TopicRegisteredUser.Action.NEW_USER.toString(), JsonPath.read(value, "$.action"));
+
+    // accountDto assertions
+    assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.accountId"));
+    assertEquals(fakeAccount.getNickName(), JsonPath.read(value, "$.additionalProperties.accountDto.nickName"));
+    assertEquals(fakeAccount.getEmail(), JsonPath.read(value, "$.additionalProperties.accountDto.email"));
+    assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.zoneInfo"));
+    assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.pictureUrl"));
+    assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.locale"));
+    assertEquals(Boolean.FALSE,JsonPath.read(value, "$.additionalProperties.accountDto.emailVerified"));
+    assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.lastUpdatedDate"));
+    assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.createdDate"));
+
+    // emailDto assertions
+    assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.accountId"));
+    assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.emailVerificationCode"));
+    assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.emailVerificationEndpoint"));
+    assertEquals(fakeAccount.getEmail(), JsonPath.read(value, "$.additionalProperties.emailDto.email"));
   }
 
   @Test
-  void createAccountWhenAlreadyExists() throws JsonProcessingException {
+  void createAccountWhenAlreadyExists() throws JsonProcessingException, com.fasterxml.jackson.core.JsonProcessingException {
     userRepository.save(fakeAccount).block();
 
     webTestClient
@@ -159,19 +185,19 @@ class ControllerIT {
         .expectBody(ProblemDetail.class)
         .value(
             problemDetail -> {
-              Assertions.assertEquals(
+              assertEquals(
                   ConflictException.Type.ALREADY_EXISTS.toString(), problemDetail.getTitle());
-              Assertions.assertEquals(
+              assertEquals(
                   "https://problems-registry.smartbear.com/already-exists",
                   problemDetail.getType().toString());
               String expectedDetail =
                   "User with email: " + fakeAccountDto.getEmail() + " already exists";
-              Assertions.assertEquals(expectedDetail, problemDetail.getDetail());
+              assertEquals(expectedDetail, problemDetail.getDetail());
             });
   }
 
   @Test
-  void givenBadCredential_whenLogin_thenReturn401() throws JsonProcessingException {
+  void givenBadCredential_whenLogin_thenReturn401() throws com.fasterxml.jackson.core.JsonProcessingException, JsonProcessingException {
     CredentialDto credentialDto =
         CredentialDto.builder()
             .email(fakeAccountDto.getEmail())
@@ -188,12 +214,12 @@ class ControllerIT {
         .expectBody(ProblemDetail.class)
         .value(
             problemDetail -> {
-              Assertions.assertEquals("Unauthorized", problemDetail.getTitle());
-              Assertions.assertEquals(
+              assertEquals("Unauthorized", problemDetail.getTitle());
+              assertEquals(
                   "https://problems-registry.smartbear.com/unauthorized",
                   problemDetail.getType().toString());
               String expectedDetail = "Invalid email or password";
-              Assertions.assertEquals(expectedDetail, problemDetail.getDetail());
+              assertEquals(expectedDetail, problemDetail.getDetail());
             });
   }
 
@@ -227,29 +253,21 @@ class ControllerIT {
   }
 
   @Test
-  @Disabled(value = "Temporarily disabled because have problem with ObjectMapper")
   void GivenValidToken_whenGetMe_thenReturnAccount() {
     fakeAccount = userRepository.save(fakeAccount).block();
     String accessToken = createTemporaryAccessToken(fakeAccount);
     webTestClient
-        .get()
-        .uri(USER_PATH + "/me")
-        .header("Authorization", "Bearer " + accessToken)
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody(AccountDto.class)
-        .value(
-            accountDto -> {
-              Assertions.assertEquals(fakeAccount.getAccountId(), accountDto.getAccountId());
-              Assertions.assertEquals(fakeAccount.getEmail(), accountDto.getEmail());
-              Assertions.assertEquals(fakeAccount.getNickName(), accountDto.getNickName());
-              Assertions.assertEquals(fakeAccount.getZoneInfo(), accountDto.getZoneInfo());
-              Assertions.assertEquals(fakeAccount.getPictureUrl(), accountDto.getPictureUrl());
-              Assertions.assertEquals(fakeAccount.getLocale(), accountDto.getLocale());
-              Assertions.assertEquals(
-                  fakeAccount.getLastUpdatedDate(), accountDto.getLastUpdatedDate());
-            });
+            .get()
+            .uri(USER_PATH + "/me")
+            .header("Authorization", "Bearer " + accessToken)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .expectBody()
+            .jsonPath("$.accountId").isNotEmpty()
+            .jsonPath("$.nickName").isEqualTo(fakeAccount.getNickName())
+            .jsonPath("$.email").isEqualTo(fakeAccount.getEmail())
+            .jsonPath("$.emailVerified").isEqualTo(fakeAccount.isEmailVerified());
   }
 
   @Test
@@ -267,13 +285,13 @@ class ControllerIT {
         .expectBody(ProblemDetail.class)
         .value(
             problemDetail -> {
-              Assertions.assertEquals(
+              assertEquals(
                   ConflictException.Type.ALREADY_VERIFIED.toString(), problemDetail.getTitle());
-              Assertions.assertEquals(
+              assertEquals(
                   "https://problems-registry.smartbear.com/already-exists",
                   problemDetail.getType().toString());
               String expectedDetail = "Email already verified";
-              Assertions.assertEquals(expectedDetail, problemDetail.getDetail());
+              assertEquals(expectedDetail, problemDetail.getDetail());
             });
   }
 
@@ -290,15 +308,15 @@ class ControllerIT {
         .expectStatus()
         .isEqualTo(HttpStatus.ACCEPTED);
     var records = consumer.poll(Duration.ofSeconds(5));
-    Assertions.assertEquals(1, records.count());
+    assertEquals(1, records.count());
     var recordKafka = records.iterator().next();
     var value = recordKafka.value();
     log.debug(value);
-    String accountId = JsonPath.read(value, "$.accountId");
-    String email = JsonPath.read(value, "$.email");
-    Assertions.assertEquals(fakeAccountDto.getEmail(), email);
+    String accountId = JsonPath.read(value, "$.additionalProperties.emailDto.accountId");
+    String email = JsonPath.read(value, "$.additionalProperties.emailDto.email");
+    assertEquals(fakeAccountDto.getEmail(), email);
     Assertions.assertNotNull(accountId);
-    Assertions.assertEquals(
+    assertEquals(
         TopicRegisteredUser.Action.RESEND_EMAIL_VERIFICATION.toString(),
         JsonPath.read(value, "$.action"));
   }
@@ -308,10 +326,8 @@ class ControllerIT {
     fakeAccount.setEmailVerified(false);
     fakeAccount = userRepository.save(fakeAccount).block();
 
-    TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUser(fakeAccount);
     String randomCode = UserServiceImpl.generateVerifyEmailCode();
-    topicRegisteredUser.setAdditionalProperties(Map.of("verifyEmailCode", randomCode));
-    redisTemplate.opsForValue().set(randomCode, topicRegisteredUser).block();
+    reactiveRedisTemplate.opsForValue().set(randomCode, fakeAccount.getAccountId()).block();
     String accessToken = createTemporaryAccessToken(fakeAccount);
     webTestClient
         .get()
@@ -325,7 +341,7 @@ class ControllerIT {
         .expectBody(String.class)
         .value(
             message -> {
-              Assertions.assertEquals("Email verified", message);
+              assertEquals("Email verified", message);
             });
   }
 

@@ -189,7 +189,7 @@ public class UserServiceImpl implements UserService {
 
   private EmailDto createEmailDto(Account account, String verifyEmailCode) {
     String emailEndpoint =
-        UriComponentsBuilder.fromUriString("http://localhost:8080/api/v1/users/verify-email")
+        UriComponentsBuilder.fromUriString("http://localhost:5000/api/v1/users/verify-email")
             .queryParam("code", verifyEmailCode)
             .build()
             .toUriString();
