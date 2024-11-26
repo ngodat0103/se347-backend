@@ -19,12 +19,17 @@ logging:
     org.springframework.data.redis: DEBUG
     web: debug
 spring:
+  elasticsearch:
+    uris: http://localhost:9200
   kafka:
     bootstrap-servers: kafka-svc:9092
   config:
     activate:
       on-profile: 'dev'
   data:
+    elasticsearch:
+      repositories:
+        enabled: false
     redis:
       repositories:
         enabled: false
