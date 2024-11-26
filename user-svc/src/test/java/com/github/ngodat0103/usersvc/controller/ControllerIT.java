@@ -308,7 +308,7 @@ class ControllerIT {
     fakeAccount.setEmailVerified(false);
     fakeAccount = userRepository.save(fakeAccount).block();
 
-    TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(fakeAccount);
+    TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUser(fakeAccount);
     String randomCode = UserServiceImpl.generateVerifyEmailCode();
     topicRegisteredUser.setAdditionalProperties(Map.of("verifyEmailCode", randomCode));
     redisTemplate.opsForValue().set(randomCode, topicRegisteredUser).block();
