@@ -77,16 +77,19 @@ public class GlobalExceptionHandler {
     problemDetails.setInstance(URI.create(request.getPath().toString()));
     return problemDetails;
   }
+
   @ExceptionHandler(InvalidEmailCodeException.class)
   @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    public ProblemDetail handleInvalidEmailCodeException(InvalidEmailCodeException e, ServerHttpRequest request) {
-        ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_ENTITY);
-        problemDetails.setType(URI.create("https://problems-registry.smartbear.com/invalid-request-parameter-value"));
-        problemDetails.setTitle("Invalid Email Code");
-        problemDetails.setDetail(e.getMessage());
-        problemDetails.setInstance(URI.create(request.getPath().toString()));
-        return problemDetails;
-    }
+  public ProblemDetail handleInvalidEmailCodeException(
+      InvalidEmailCodeException e, ServerHttpRequest request) {
+    ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+    problemDetails.setType(
+        URI.create("https://problems-registry.smartbear.com/invalid-request-parameter-value"));
+    problemDetails.setTitle("Invalid Email Code");
+    problemDetails.setDetail(e.getMessage());
+    problemDetails.setInstance(URI.create(request.getPath().toString()));
+    return problemDetails;
+  }
 
   @ExceptionHandler(NotFoundException.class)
   @ResponseStatus(HttpStatus.NOT_FOUND)

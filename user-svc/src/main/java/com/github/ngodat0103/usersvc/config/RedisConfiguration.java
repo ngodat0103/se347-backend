@@ -13,18 +13,19 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfiguration {
 
-    @Bean
-    ReactiveRedisTemplate<String, TopicRegisteredUser> reactiveRedisTemplate(ReactiveRedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper) {
-        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-        Jackson2JsonRedisSerializer<TopicRegisteredUser> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(objectMapper, TopicRegisteredUser.class);
-        RedisSerializationContext<String, TopicRegisteredUser> serializationContext = RedisSerializationContext
-                .<String, TopicRegisteredUser>newSerializationContext()
-                .key(stringRedisSerializer)
-                .hashKey(stringRedisSerializer)
-                .hashValue(jackson2JsonRedisSerializer)
-                .value(jackson2JsonRedisSerializer)
-                .build();
-        return new ReactiveRedisTemplate<>(redisConnectionFactory, serializationContext);
-    }
-
+  @Bean
+  ReactiveRedisTemplate<String, TopicRegisteredUser> reactiveRedisTemplate(
+      ReactiveRedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper) {
+    StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+    Jackson2JsonRedisSerializer<TopicRegisteredUser> jackson2JsonRedisSerializer =
+        new Jackson2JsonRedisSerializer<>(objectMapper, TopicRegisteredUser.class);
+    RedisSerializationContext<String, TopicRegisteredUser> serializationContext =
+        RedisSerializationContext.<String, TopicRegisteredUser>newSerializationContext()
+            .key(stringRedisSerializer)
+            .hashKey(stringRedisSerializer)
+            .hashValue(jackson2JsonRedisSerializer)
+            .value(jackson2JsonRedisSerializer)
+            .build();
+    return new ReactiveRedisTemplate<>(redisConnectionFactory, serializationContext);
+  }
 }

@@ -22,6 +22,7 @@ spring:
   config:
     import:
       - "optional:dev.yaml"
+      - "optional:IT.yaml"
       - "optional:staging.yaml"
   application:
     name: user-svc

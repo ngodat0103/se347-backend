@@ -19,16 +19,10 @@ public class TopicRegisteredUser {
     DATA_UPDATE
   }
 
-  @NotNull
-  private final String accountId;
-  @Email
-  private final String email;
-  @NotNull
-  private final LocalDateTime createdDate;
+  @NotNull private final String accountId;
+  @Email private final String email;
+  @NotNull private final LocalDateTime createdDate;
 
-
-  @Setter
-  private Action action;
-  @Setter
-  private Map<String,Object> additionalProperties;
+  @Setter private Action action;
+  @Setter private Map<String, Object> additionalProperties;
 }

@@ -1,0 +1,7 @@
+spring:
+  config:
+    activate:
+      on-profile: "IT"
+logging:
+  level:
+    com.github.ngodat0103.usersvc.service: INFO

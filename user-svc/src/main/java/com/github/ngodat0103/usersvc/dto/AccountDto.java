@@ -40,6 +40,7 @@ public class AccountDto {
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private LocalDateTime lastUpdatedDate;
+
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private LocalDateTime createdDate;
 }
