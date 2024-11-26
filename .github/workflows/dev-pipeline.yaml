@@ -114,7 +114,7 @@ jobs:
           url: ${{ secrets.VAULT_ADDR }}
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
-            secrets/data/se347/backend/user-svc MONGODB_PASSWORD
+            secrets/data/se347/backend/dev/user-svc MONGODB_PASSWORD
       - name: Set up credentials
         run: |
           echo "MONGODB_PASSWORD=${{ env.MONGODB_PASSWORD }}" >> .env
