@@ -1,4 +1,4 @@
-name: se347-backend
+name: se347-deps
 services:
   elastic-search:
     profiles: [ 'dev','all' ]
@@ -86,6 +86,7 @@ services:
 volumes:
   elastic-node1-data:
       name: elastic-node1-data
+      external: true
   var-lib-zookeeper-data:
     name: var-lib-zookeeper-data
     external: true

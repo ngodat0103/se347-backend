@@ -4,6 +4,7 @@ import static com.github.ngodat0103.usersvc.exception.Util.*;
 
 import com.github.ngodat0103.usersvc.dto.AccountDto;
 import com.github.ngodat0103.usersvc.dto.CredentialDto;
+import com.github.ngodat0103.usersvc.dto.EmailDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
 import com.github.ngodat0103.usersvc.exception.ConflictException;
@@ -12,12 +13,14 @@ import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.service.ServiceProducer;
 import com.github.ngodat0103.usersvc.service.UserService;
+import com.nimbusds.jose.util.Base64URL;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Base64;
+import java.time.ZoneOffset;
 import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -31,6 +34,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -49,7 +53,7 @@ public class UserServiceImpl implements UserService {
   private final PasswordEncoder passwordEncoder;
   private final JwtEncoder jwtEncoder;
   private final ServiceProducer serviceProducer;
-  private final ReactiveRedisTemplate<String, TopicRegisteredUser> redisTemplate;
+  private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
   @Override
   public Mono<AccountDto> getMe() {
@@ -86,14 +90,14 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Mono<String> verifyEmail(String code) {
-    return redisTemplate
+    return reactiveRedisTemplate
         .opsForValue()
         .getAndDelete(code)
         .switchIfEmpty(Mono.defer(() -> Mono.error(InvalidEmailCodeException::new)))
         .flatMap(
-            topicRegisteredUser -> {
-              log.info("Fetching user with AccountId: {}", topicRegisteredUser.getAccountId());
-              return userRepository.findById(topicRegisteredUser.getAccountId());
+            accountId -> {
+              log.info("Fetching user with AccountId: {}", accountId);
+              return userRepository.findById(accountId);
             })
         .doOnNext(
             account -> {
@@ -122,15 +126,18 @@ public class UserServiceImpl implements UserService {
         .flatMap(
             account -> {
               String verifyEmailCode = generateVerifyEmailCode();
-              TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(account);
-              topicRegisteredUser.setAction(TopicRegisteredUser.Action.RESEND_EMAIL_VERIFICATION);
-
-              topicRegisteredUser.setAdditionalProperties(
-                  Map.of("verifyEmailCode", verifyEmailCode));
+              account.setPassword(null);
+              EmailDto emailDto = createEmailDto(account, verifyEmailCode);
+              Map<String, Object> additionalProperties = Map.of("emailDto",emailDto);
+              TopicRegisteredUser topicRegisteredUser =
+                  userMapper.toTopicRegisteredUser(
+                      account,
+                      TopicRegisteredUser.Action.RESEND_EMAIL_VERIFICATION,
+                      additionalProperties);
               log.info("Sending resend email verification to kafka: {}", topicRegisteredUser);
-              return redisTemplate
+              return reactiveRedisTemplate
                   .opsForValue()
-                  .set(verifyEmailCode, topicRegisteredUser)
+                  .set(verifyEmailCode, account.getAccountId())
                   .thenReturn(topicRegisteredUser);
             })
         .doOnNext(serviceProducer::sendRegisteredUser)
@@ -144,8 +151,8 @@ public class UserServiceImpl implements UserService {
     account.setAccountStatus(Account.AccountStatus.ACTIVE);
     account.setEmailVerified(false);
     account.setPassword(passwordEncoder.encode(account.getPassword()));
-    account.setCreatedDate(LocalDateTime.now());
-    account.setLastUpdatedDate(LocalDateTime.now());
+    account.setCreatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    account.setLastUpdatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
     return userRepository
         .save(account)
         .doOnError(e -> handleSaveError(e, account))
@@ -161,24 +168,43 @@ public class UserServiceImpl implements UserService {
   }
 
   private Mono<AccountDto> handlePostSave(Account account) {
-    TopicRegisteredUser topicRegisteredUser = userMapper.toTopicRegisteredUse(account);
-    topicRegisteredUser.setAction(TopicRegisteredUser.Action.NEW_USER);
     String verifyEmailCode = generateVerifyEmailCode();
-    topicRegisteredUser.setAdditionalProperties(Map.of("verifyEmailCode", verifyEmailCode));
+    EmailDto emailDto = createEmailDto(account, verifyEmailCode);
+    AccountDto accountDto = userMapper.toDto(account);
+    Map<String, Object> additionalProperties =
+        Map.of("accountDto", accountDto, "emailDto", emailDto);
+    TopicRegisteredUser topicRegisteredUser =
+        userMapper.toTopicRegisteredUser(
+            account, TopicRegisteredUser.Action.NEW_USER, additionalProperties);
     log.info("Sending new registered user to kafka: {}", topicRegisteredUser);
     serviceProducer.sendRegisteredUser(topicRegisteredUser);
-    return redisTemplate
+    log.info("Store Email verification code in redis: {}", verifyEmailCode);
+    return reactiveRedisTemplate
         .opsForValue()
-        .set(verifyEmailCode, topicRegisteredUser)
+        .set(verifyEmailCode, account.getAccountId())
         .thenReturn(account)
         .map(userMapper::toDto);
+  }
+
+  private EmailDto createEmailDto(Account account, String verifyEmailCode) {
+    String emailEndpoint =
+        UriComponentsBuilder.fromUriString("http://localhost:5000/api/v1/users/verify-email")
+            .queryParam("code", verifyEmailCode)
+            .build()
+            .toUriString();
+    return EmailDto.builder()
+        .accountId(account.getAccountId())
+        .emailVerificationCode(verifyEmailCode)
+        .emailVerificationEndpoint(emailEndpoint)
+        .email(account.getEmail())
+        .build();
   }
 
   public static String generateVerifyEmailCode() {
     byte[] randomBytes = new byte[16];
     SecureRandom random = new SecureRandom();
     random.nextBytes(randomBytes);
-    return Base64.getEncoder().encodeToString(randomBytes);
+    return Base64URL.encode(randomBytes).toString();
   }
 
   @Override

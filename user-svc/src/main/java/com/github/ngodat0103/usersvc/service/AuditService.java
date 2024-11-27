@@ -2,6 +2,7 @@ package com.github.ngodat0103.usersvc.service;
 
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -55,7 +56,7 @@ public class AuditService implements ApplicationListener<ApplicationReadyEvent> 
   }
 
   @Override
-  public void onApplicationEvent(ApplicationReadyEvent event) {
+  public void onApplicationEvent(@NonNull ApplicationReadyEvent event) {
     taskExecutor.execute(this::listenToChanges);
   }
 }

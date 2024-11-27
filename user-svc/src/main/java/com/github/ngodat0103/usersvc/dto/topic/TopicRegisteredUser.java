@@ -1,28 +1,29 @@
 package com.github.ngodat0103.usersvc.dto.topic;
 
-import jakarta.validation.constraints.Email;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TopicRegisteredUser {
   public enum Action {
-    REGISTER,
     NEW_USER,
     RESET_PASSWORD,
     RESEND_EMAIL_VERIFICATION,
     DATA_UPDATE
   }
 
-  @NotNull private final String accountId;
-  @Email private final String email;
-  @NotNull private final LocalDateTime createdDate;
-
-  @Setter private Action action;
-  @Setter private Map<String, Object> additionalProperties;
+  @NotNull private Instant createdDate;
+  private Action action;
+  private Map<String, Object> additionalProperties;
+  private static final int VERSION = 1; // for schema evolution
 }

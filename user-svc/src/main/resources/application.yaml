@@ -5,10 +5,23 @@ server.port: 5000
 server:
   forward-headers-strategy: framework
 management:
+  endpoint:
+    health:
+      show-details: always
+      group:
+        readiness:
+          include: mongo,redis
+        liveness:
+          include: mongo,redis
   endpoints:
     web:
       exposure:
         include: health
+  health: # I use custom health check
+    mongo:
+      enabled: true
+    redis:
+      enabled: true
 spring:
   kafka:
     producer:
