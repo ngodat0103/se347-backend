@@ -69,6 +69,14 @@ This service currently supports a total of **10 API endpoints** for user managem
 - Java 17
 - Docker
 - Docker Compose
+### Need to run some dependent services which have defined in docker-compose file root directory
+- Kafka
+- redis
+- elasticsearch
+```shell 
+cd ../
+docker compose  up -d
+```
 
 ### Running the Application
    ```bash

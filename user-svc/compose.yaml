@@ -32,7 +32,7 @@ services:
     networks: [dev]
   user-svc:
     profiles: ['all']
-    image: ${TAG:-ghcr.io/ngodat0103/se347-backend/user-svc:dev-latest}
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${IMAGE:-ngodat0103/se347-backend/user-svc}:${TAG:-dev-latest}
     environment:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_DATA_MONGODB_HOST=mongo-primary
