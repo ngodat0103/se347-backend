@@ -4,7 +4,6 @@ import com.github.ngodat0103.usersvc.dto.CredentialDto;
 import com.github.ngodat0103.usersvc.service.UserService;
 import com.nimbusds.jose.jwk.JWK;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,7 +32,7 @@ public class AuthController {
 
   @GetMapping(path = "/verify-email")
   public Mono<String> verifyEmail(@RequestParam String code) {
-    return  userService.verifyEmail(code);
+    return userService.verifyEmail(code);
   }
 
   @PreAuthorize("isAuthenticated()")

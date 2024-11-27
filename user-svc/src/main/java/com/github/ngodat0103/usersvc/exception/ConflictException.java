@@ -8,9 +8,10 @@ public class ConflictException extends RuntimeException {
     ALREADY_EXISTS,
     ALREADY_VERIFIED,
   }
+
   private final Type type;
 
-  public ConflictException(String message,Type type) {
+  public ConflictException(String message, Type type) {
     super(message);
     this.type = type;
   }

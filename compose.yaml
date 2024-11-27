@@ -1,4 +1,4 @@
-name: se347-backend
+name: se347-deps
 services:
   elastic-search:
     profiles: [ 'dev','all' ]
@@ -78,11 +78,18 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  redis:
+    image: redis:alpine3.20
+    ports:
+      - "6379:6379"
+    networks: [ dev ]
 volumes:
   elastic-node1-data:
       name: elastic-node1-data
+      external: true
   var-lib-zookeeper-data:
     name: var-lib-zookeeper-data
+    external: true
 networks:
   dev:
     name: dev

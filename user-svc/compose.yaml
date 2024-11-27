@@ -1,22 +1,18 @@
-name: se347-backend
+name: se347-user-svc
 services:
-  kafka-console:
-    extends:
-      file: ../compose.yaml
-      service: kafka-console
-  kafka:
-    extends:
-      file: ../compose.yaml
-      service: kafka
-  zookeeper:
-    extends:
-      file: ../compose.yaml
-      service: zookeeper
-  redis:
-    image: redis:alpine3.20
-    ports:
-      - "6379:6379"
-    networks: [dev]
+#  kafka-console:
+#    extends:
+#      file: ../compose.yaml
+#      service: kafka-console
+#  kafka:
+#    extends:
+#      file: ../compose.yaml
+#      service: kafka
+#  zookeeper:
+#    extends:
+#      file: ../compose.yaml
+#      service: zookeeper
+
   mongo-primary:
     profiles: ['dev','all']
     image: bitnami/mongodb:8.0.3-debian-12-r1
@@ -38,7 +34,7 @@ services:
     profiles: ['all']
     image: ${TAG:-ghcr.io/ngodat0103/se347-backend/user-svc:dev-latest}
     environment:
-      - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_DATA_MONGODB_HOST=mongo-primary
       - SPRING_DATA_MONGODB_USERNAME=${MONGODB_USERNAME:-dev}
       - SPRING_DATA_MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
@@ -46,6 +42,7 @@ services:
       - APP_VERSION=${TAG:-dev-latest}
       - SPRING_PROFILES_ACTIVE=staging
       - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_ELASTICSEARCH_URIS=http://elastic-search:9200
     build:
       context: .
       dockerfile: Dockerfile
@@ -55,24 +52,19 @@ services:
         VERSION: ${TAG:-dev-latest}
     networks: [ dev ]
     healthcheck:
-     test: ["CMD","curl","http://localhost:5000/actuator/health"]
+     test: ["CMD","curl","http://localhost:5000/actuator/health/readiness"]
      interval: 3s
      timeout: 3s
      retries: 3
     depends_on:
-      kafka:
-        condition: service_started
       mongo-primary:
         condition: service_started
     ports:
       - "5000:5000"
 volumes:
-  var-lib-zookeeper-data:
-    name: var-lib-zookeeper-data
-    external: true
   bitnami-mongodb:
     name: bitnami-mongodb
 networks:
   dev:
     name: dev
-    driver: bridge
+    external: true
