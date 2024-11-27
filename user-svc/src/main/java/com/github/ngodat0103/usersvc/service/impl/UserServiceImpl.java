@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -95,7 +96,6 @@ public class UserServiceImpl implements UserService {
         .switchIfEmpty(Mono.defer(() -> Mono.error(InvalidEmailCodeException::new)))
         .flatMap(
             accountId -> {
-
               log.info("Fetching user with AccountId: {}", accountId);
               return userRepository.findById(accountId);
             })
@@ -128,8 +128,7 @@ public class UserServiceImpl implements UserService {
               String verifyEmailCode = generateVerifyEmailCode();
               account.setPassword(null);
               EmailDto emailDto = createEmailDto(account, verifyEmailCode);
-              Map<String, Object> additionalProperties =
-                  Map.of("emailDto", emailDto);
+              Map<String, Object> additionalProperties = Map.of("emailDto",emailDto);
               TopicRegisteredUser topicRegisteredUser =
                   userMapper.toTopicRegisteredUser(
                       account,
@@ -194,7 +193,7 @@ public class UserServiceImpl implements UserService {
             .build()
             .toUriString();
     return EmailDto.builder()
-            .accountId(account.getAccountId())
+        .accountId(account.getAccountId())
         .emailVerificationCode(verifyEmailCode)
         .emailVerificationEndpoint(emailEndpoint)
         .email(account.getEmail())

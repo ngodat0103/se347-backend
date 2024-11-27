@@ -1,13 +1,10 @@
 package com.github.ngodat0103.usersvc.controller;
 
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.github.javafaker.Faker;
 import com.github.ngodat0103.usersvc.dto.AccountDto;
 import com.github.ngodat0103.usersvc.dto.CredentialDto;
-import com.github.ngodat0103.usersvc.dto.EmailDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapperImpl;
 import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
@@ -17,8 +14,6 @@ import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.service.impl.UserServiceImpl;
 import com.jayway.jsonpath.JsonPath;
 import com.redis.testcontainers.RedisContainer;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -32,7 +27,6 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -53,44 +47,36 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.MapperFeature;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.testcontainers.utility.DockerImageName;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @AutoConfigureWebTestClient
 @ActiveProfiles("IT")
 @Slf4j
 class ControllerIT {
-  @Autowired
-  private WebTestClient webTestClient;
-  @Autowired
-  private UserRepository userRepository;
-  private ObjectMapper objectMapper = new ObjectMapper();
-  @Autowired
-  private ApplicationContext applicationContext;
+  @Autowired private WebTestClient webTestClient;
+  @Autowired private UserRepository userRepository;
+  private final ObjectMapper objectMapper = new ObjectMapper();
   private static final String API_PATH = "/api/v1";
   private static final String USER_PATH = API_PATH + "/users";
   private static final String LOGIN_PATH = API_PATH + "/auth/login";
   private static final String AUTH_PATH = API_PATH + "/auth";
   private static final String MONGODB_DOCKER_IMAGE =
-          "mongodb/mongodb-community-server:7.0.6-ubuntu2204-20241117T082517Z";
+      "mongodb/mongodb-community-server:7.0.6-ubuntu2204-20241117T082517Z";
   private static final MongoDBContainer mongoDBContainer =
-          new MongoDBContainer(MONGODB_DOCKER_IMAGE);
+      new MongoDBContainer(MONGODB_DOCKER_IMAGE);
 
   private static final RedisContainer redisContainer =
-          new RedisContainer(DockerImageName.parse("redis:alpine3.20"));
+      new RedisContainer(DockerImageName.parse("redis:alpine3.20"));
 
   private static final String KAFKA_DOCKER_IMAGE = "confluentinc/cp-kafka:7.4.6";
 
   private static final ConfluentKafkaContainer kafkaContainer =
-          new ConfluentKafkaContainer(KAFKA_DOCKER_IMAGE);
+      new ConfluentKafkaContainer(KAFKA_DOCKER_IMAGE);
   private final UserMapper userMapper = new UserMapperImpl();
   private AccountDto fakeAccountDto;
   private Account fakeAccount;
   private KafkaConsumer<String, String> consumer;
-  @Autowired
-  private JwtEncoder jwtEncoder;
-  @Autowired
-  private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
+  @Autowired private JwtEncoder jwtEncoder;
+  @Autowired private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
   @BeforeAll
   static void setUpAll() {
@@ -121,7 +107,7 @@ class ControllerIT {
     String nickNameFake = faker.name().username();
     String passwordFake = faker.internet().password();
     this.fakeAccountDto =
-            AccountDto.builder().email(emailFake).nickName(nickNameFake).password(passwordFake).build();
+        AccountDto.builder().email(emailFake).nickName(nickNameFake).password(passwordFake).build();
     this.fakeAccount = userMapper.toDocument(fakeAccountDto);
     this.fakeAccount.setAccountStatus(Account.AccountStatus.ACTIVE);
     this.consumer = new KafkaConsumer<>(getConsumerProps());
@@ -135,15 +121,15 @@ class ControllerIT {
   }
 
   @Test
-  void createAccountWhenNotExists() throws IOException {
+  void createAccountWhenNotExists() {
     webTestClient
-            .post()
-            .uri(USER_PATH)
-            .header("Content-Type", "application/json")
-            .bodyValue(fakeAccount)
-            .exchange()
-            .expectStatus()
-            .isCreated();
+        .post()
+        .uri(USER_PATH)
+        .header("Content-Type", "application/json")
+        .bodyValue(fakeAccount)
+        .exchange()
+        .expectStatus()
+        .isCreated();
 
     var records = consumer.poll(Duration.ofSeconds(3));
     assertEquals(1, records.count());
@@ -154,24 +140,31 @@ class ControllerIT {
 
     // accountDto assertions
     assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.accountId"));
-    assertEquals(fakeAccount.getNickName(), JsonPath.read(value, "$.additionalProperties.accountDto.nickName"));
-    assertEquals(fakeAccount.getEmail(), JsonPath.read(value, "$.additionalProperties.accountDto.email"));
+    assertEquals(
+        fakeAccount.getNickName(),
+        JsonPath.read(value, "$.additionalProperties.accountDto.nickName"));
+    assertEquals(
+        fakeAccount.getEmail(), JsonPath.read(value, "$.additionalProperties.accountDto.email"));
     assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.zoneInfo"));
     assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.pictureUrl"));
     assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.locale"));
-    assertEquals(Boolean.FALSE,JsonPath.read(value, "$.additionalProperties.accountDto.emailVerified"));
+    assertEquals(
+        Boolean.FALSE, JsonPath.read(value, "$.additionalProperties.accountDto.emailVerified"));
     assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.lastUpdatedDate"));
     assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.createdDate"));
 
     // emailDto assertions
     assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.accountId"));
     assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.emailVerificationCode"));
-    assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.emailVerificationEndpoint"));
-    assertEquals(fakeAccount.getEmail(), JsonPath.read(value, "$.additionalProperties.emailDto.email"));
+    assertNotNull(
+        JsonPath.read(value, "$.additionalProperties.emailDto.emailVerificationEndpoint"));
+    assertEquals(
+        fakeAccount.getEmail(), JsonPath.read(value, "$.additionalProperties.emailDto.email"));
   }
 
   @Test
-  void createAccountWhenAlreadyExists() throws JsonProcessingException, com.fasterxml.jackson.core.JsonProcessingException {
+  void createAccountWhenAlreadyExists()
+      throws JsonProcessingException {
     userRepository.save(fakeAccount).block();
 
     webTestClient
@@ -197,7 +190,8 @@ class ControllerIT {
   }
 
   @Test
-  void givenBadCredential_whenLogin_thenReturn401() throws com.fasterxml.jackson.core.JsonProcessingException, JsonProcessingException {
+  void givenBadCredential_whenLogin_thenReturn401()
+      throws JsonProcessingException {
     CredentialDto credentialDto =
         CredentialDto.builder()
             .email(fakeAccountDto.getEmail())
@@ -257,17 +251,21 @@ class ControllerIT {
     fakeAccount = userRepository.save(fakeAccount).block();
     String accessToken = createTemporaryAccessToken(fakeAccount);
     webTestClient
-            .get()
-            .uri(USER_PATH + "/me")
-            .header("Authorization", "Bearer " + accessToken)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody()
-            .jsonPath("$.accountId").isNotEmpty()
-            .jsonPath("$.nickName").isEqualTo(fakeAccount.getNickName())
-            .jsonPath("$.email").isEqualTo(fakeAccount.getEmail())
-            .jsonPath("$.emailVerified").isEqualTo(fakeAccount.isEmailVerified());
+        .get()
+        .uri(USER_PATH + "/me")
+        .header("Authorization", "Bearer " + accessToken)
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.accountId")
+        .isNotEmpty()
+        .jsonPath("$.nickName")
+        .isEqualTo(fakeAccount.getNickName())
+        .jsonPath("$.email")
+        .isEqualTo(fakeAccount.getEmail())
+        .jsonPath("$.emailVerified")
+        .isEqualTo(fakeAccount.isEmailVerified());
   }
 
   @Test

@@ -56,8 +56,6 @@ services:
      timeout: 3s
      retries: 3
     depends_on:
-      kafka:
-        condition: service_started
       mongo-primary:
         condition: service_started
     ports:

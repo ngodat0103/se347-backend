@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,8 +22,8 @@ public class TopicRegisteredUser {
     DATA_UPDATE
   }
 
-  @NotNull private  Instant createdDate;
-  private  Action action;
+  @NotNull private Instant createdDate;
+  private Action action;
   private Map<String, Object> additionalProperties;
   private static final int VERSION = 1; // for schema evolution
 }
