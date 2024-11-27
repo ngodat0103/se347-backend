@@ -14,6 +14,8 @@ import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.service.ServiceProducer;
 import com.github.ngodat0103.usersvc.service.UserService;
 import com.nimbusds.jose.util.Base64URL;
+
+import java.net.URI;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
@@ -23,7 +25,10 @@ import java.util.Map;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -34,6 +39,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.ForwardedHeaderUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
@@ -54,6 +60,9 @@ public class UserServiceImpl implements UserService {
   private final JwtEncoder jwtEncoder;
   private final ServiceProducer serviceProducer;
   private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
+
+
+  private final static URI verifyEmailEndpoint = URI.create("http://localhost:5000/api/v1/auth/verify-email");
 
   @Override
   public Mono<AccountDto> getMe() {
@@ -113,7 +122,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Mono<String> resendEmailVerification() {
+  public Mono<String> resendEmailVerification(ServerHttpRequest request) {
     return getUserIdFromAuthentication()
         .flatMap(userRepository::findById)
         .doOnNext(
@@ -127,7 +136,7 @@ public class UserServiceImpl implements UserService {
             account -> {
               String verifyEmailCode = generateVerifyEmailCode();
               account.setPassword(null);
-              EmailDto emailDto = createEmailDto(account, verifyEmailCode);
+              EmailDto emailDto = createEmailDto(account, verifyEmailCode,request.getHeaders());
               Map<String, Object> additionalProperties = Map.of("emailDto",emailDto);
               TopicRegisteredUser topicRegisteredUser =
                   userMapper.toTopicRegisteredUser(
@@ -146,7 +155,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  public Mono<AccountDto> create(AccountDto accountDto) {
+  public Mono<AccountDto> create(AccountDto accountDto, ServerHttpRequest request) {
+
     Account account = userMapper.toDocument(accountDto);
     account.setAccountStatus(Account.AccountStatus.ACTIVE);
     account.setEmailVerified(false);
@@ -155,8 +165,9 @@ public class UserServiceImpl implements UserService {
     account.setLastUpdatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
     return userRepository
         .save(account)
+            .map(a -> Pair.of(account, request.getHeaders()))
         .doOnError(e -> handleSaveError(e, account))
-        .flatMap(this::handlePostSave);
+        .flatMap(pair -> handlePostSave(pair.getLeft(),pair.getRight()));
   }
 
   private void handleSaveError(Throwable e, Account account) {
@@ -167,9 +178,9 @@ public class UserServiceImpl implements UserService {
     log.error("Unexpected exception", e);
   }
 
-  private Mono<AccountDto> handlePostSave(Account account) {
+  private Mono<AccountDto> handlePostSave(Account account,HttpHeaders headers) {
     String verifyEmailCode = generateVerifyEmailCode();
-    EmailDto emailDto = createEmailDto(account, verifyEmailCode);
+    EmailDto emailDto = createEmailDto(account, verifyEmailCode,headers);
     AccountDto accountDto = userMapper.toDto(account);
     Map<String, Object> additionalProperties =
         Map.of("accountDto", accountDto, "emailDto", emailDto);
@@ -186,16 +197,15 @@ public class UserServiceImpl implements UserService {
         .map(userMapper::toDto);
   }
 
-  private EmailDto createEmailDto(Account account, String verifyEmailCode) {
-    String emailEndpoint =
-        UriComponentsBuilder.fromUriString("http://localhost:5000/api/v1/users/verify-email")
-            .queryParam("code", verifyEmailCode)
-            .build()
-            .toUriString();
+  private EmailDto createEmailDto(Account account, String verifyEmailCode, HttpHeaders forwardedHeaders) {
+
+ String  emailEndpointUrl = ForwardedHeaderUtils.adaptFromForwardedHeaders(verifyEmailEndpoint,forwardedHeaders)
+         .query("code=" + verifyEmailCode)
+         .build().toUriString();
     return EmailDto.builder()
         .accountId(account.getAccountId())
         .emailVerificationCode(verifyEmailCode)
-        .emailVerificationEndpoint(emailEndpoint)
+        .emailVerificationEndpoint(emailEndpointUrl)
         .email(account.getEmail())
         .build();
   }

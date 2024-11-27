@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -19,9 +20,9 @@ public class UserController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public Mono<AccountDto> createUser(@Valid @RequestBody AccountDto accountDto)
+  public Mono<AccountDto> createUser(@Valid @RequestBody AccountDto accountDto, ServerHttpRequest request)
       throws ConflictException {
-    return userService.create(accountDto);
+    return userService.create(accountDto,request);
   }
 
   //  @GetMapping(path = "/{id}")

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +40,7 @@ public class AuthController {
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping(path = "/resend-email")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  public Mono<String> resendEmailVerification() {
-    return userService.resendEmailVerification();
+  public Mono<String> resendEmailVerification(ServerHttpRequest request) {
+    return userService.resendEmailVerification(request);
   }
 }
