@@ -52,7 +52,7 @@ services:
         VERSION: ${TAG:-dev-latest}
     networks: [ dev ]
     healthcheck:
-     test: ["CMD","curl","http://localhost:5000/actuator/health"]
+     test: ["CMD","curl","http://localhost:5000/actuator/health/readiness"]
      interval: 3s
      timeout: 3s
      retries: 3
