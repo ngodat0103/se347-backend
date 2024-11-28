@@ -213,12 +213,13 @@ public class UserServiceImpl implements UserService {
             .query("code=" + verifyEmailCode)
             .build()
             .toUriString();
-    return EmailDto.builder()
-        .accountId(account.getAccountId())
-        .emailVerificationCode(verifyEmailCode)
-        .emailVerificationEndpoint(emailEndpointUrl)
-        .email(account.getEmail())
-        .build();
+
+    EmailDto emailDto = new EmailDto();
+    emailDto.setAccountId(account.getAccountId());
+    emailDto.setEmailVerificationCode(verifyEmailCode);
+    emailDto.setEmailVerificationEndpoint(emailEndpointUrl);
+    emailDto.setEmail(account.getEmail());
+    return emailDto;
   }
 
   public static String generateVerifyEmailCode() {

@@ -6,8 +6,8 @@ import java.time.Instant;
 import java.util.Locale;
 import lombok.*;
 
-@Builder
-@Getter
+@Data
+@NoArgsConstructor
 public class AccountDto {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String accountId;

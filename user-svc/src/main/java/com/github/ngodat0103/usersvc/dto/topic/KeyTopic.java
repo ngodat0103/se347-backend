@@ -7,5 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class KeyTopic {
   private String documentName;
-  private String userId;
+  private String accountId;
 }

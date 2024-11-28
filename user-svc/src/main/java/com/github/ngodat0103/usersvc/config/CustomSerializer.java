@@ -7,7 +7,7 @@ import org.apache.kafka.common.serialization.Serializer;
 public class CustomSerializer implements Serializer<KeyTopic> {
   @Override
   public byte[] serialize(String s, KeyTopic keyTopic) {
-    String key = keyTopic.getDocumentName() + "::" + keyTopic.getUserId();
+    String key = keyTopic.getDocumentName() + "::" + keyTopic.getAccountId();
     return key.getBytes(StandardCharsets.UTF_8);
   }
 }
