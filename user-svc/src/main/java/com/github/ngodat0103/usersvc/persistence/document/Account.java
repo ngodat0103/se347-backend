@@ -3,7 +3,7 @@ package com.github.ngodat0103.usersvc.persistence.document;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Locale;
 import lombok.Builder;
 import lombok.Data;
@@ -39,6 +39,6 @@ public class Account {
   private String zoneInfo;
   private String pictureUrl;
   private Locale locale;
-  private LocalDateTime createdDate;
-  private LocalDateTime lastUpdatedDate;
+  private Instant createdDate;
+  private Instant lastUpdatedDate;
 }

@@ -16,16 +16,30 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.web.reactive: DEBUG
     org.springframework.data.mongodb: DEBUG
+    org.springframework.data.redis: DEBUG
+    web: debug
 spring:
+  elasticsearch:
+    uris: http://localhost:9200
   kafka:
-    producer:
-      bootstrap-servers: kafka-svc:9092
+    bootstrap-servers: kafka-svc:9092
   config:
     activate:
       on-profile: 'dev'
   data:
+    elasticsearch:
+      repositories:
+        enabled: false
+    redis:
+      repositories:
+        enabled: false
+      host: 127.0.0.1
+#      username: dev
+#      password: dev
+      client-name: usersvc
+      client-type: lettuce
     mongodb:
       username: dev
       password: dev
       database: user-svc
-      host: usersvc-mongodb
+      host: 127.0.0.1

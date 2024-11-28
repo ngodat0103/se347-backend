@@ -1,33 +1,35 @@
 package com.github.ngodat0103.usersvc.service;
 
+import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
-import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.config.Task;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import reactor.core.scheduler.Schedulers;
 
 @Service
 @Slf4j
 @Configuration
-public class AuditService implements CommandLineRunner {
+public class AuditService implements ApplicationListener<ApplicationReadyEvent> {
   private final ReactiveMongoTemplate reactiveMongoTemplate;
-    private final TaskExecutor taskExecutor;
+  private final ReactiveElasticsearchTemplate reactiveElasticsearchTemplate;
+  private final TaskExecutor taskExecutor;
+  private final UserMapper userMapper;
 
-  public AuditService(ReactiveMongoTemplate reactiveMongoTemplate) {
+  public AuditService(
+      ReactiveMongoTemplate reactiveMongoTemplate,
+      UserMapper userMapper,
+      ReactiveElasticsearchTemplate reactiveElasticsearchTemplate) {
     this.reactiveMongoTemplate = reactiveMongoTemplate;
+    this.reactiveElasticsearchTemplate = reactiveElasticsearchTemplate;
+    this.userMapper = userMapper;
     this.taskExecutor = new SimpleAsyncTaskExecutor();
   }
 
@@ -36,20 +38,25 @@ public class AuditService implements CommandLineRunner {
         .changeStream(Account.class)
         .watchCollection("account")
         .listen()
-            .doOnSubscribe(s -> log.info("Subscribed to changes on 'account' collection..."))
-        .doOnNext(
+        .doOnSubscribe(s -> log.info("Subscribed to changes on 'account' collection..."))
+        .map(
             change -> {
+              Assert.notNull(change.getBody(), "Change body must not be null");
               Account account = change.getBody();
-                Assert.notNull(account, "Account must not be null");
-                account.setPassword("********");
-              System.out.println("Change event: " + change);
-              int stop = 0;
+              account.setPassword(null);
+              return userMapper.toDto(account);
             })
-            .blockLast();
+        .flatMap(
+            accountDto -> {
+              log.info("Push data change to elasticsearch: {}", accountDto);
+              return reactiveElasticsearchTemplate.save(accountDto);
+            })
+        .doOnTerminate(() -> Thread.currentThread().interrupt())
+        .blockLast();
   }
 
-    @Override
-    public void run(String... args) throws Exception {
-        taskExecutor.execute(this::listenToChanges);
-    }
+  @Override
+  public void onApplicationEvent(@NonNull ApplicationReadyEvent event) {
+    taskExecutor.execute(this::listenToChanges);
+  }
 }

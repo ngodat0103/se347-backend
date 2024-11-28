@@ -1,24 +1,41 @@
+logging:
+  structured:
+      file: ecs
 server.port: 5000
 server:
-  forward-headers-strategy: framework
+  forward-headers-strategy: native
 management:
+  endpoint:
+    health:
+      show-details: always
+      group:
+        readiness:
+          include: mongo,redis
+        liveness:
+          include: mongo,redis
   endpoints:
     web:
       exposure:
         include: health
+  health: # I use custom health check
+    mongo:
+      enabled: true
+    redis:
+      enabled: true
 spring:
   kafka:
     producer:
       client-id: user-svc
       bootstrap-servers: kafka-svc:9092
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   data:
     mongodb:
       auto-index-creation: true
   config:
     import:
       - "optional:dev.yaml"
+      - "optional:IT.yaml"
       - "optional:staging.yaml"
   application:
     name: user-svc
