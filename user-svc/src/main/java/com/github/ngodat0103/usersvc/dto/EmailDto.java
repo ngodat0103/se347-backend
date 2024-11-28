@@ -8,12 +8,10 @@ import lombok.NonNull;
 @Getter
 @Builder
 public class EmailDto {
-  @NonNull
-  private String accountId;
-  @NonNull
-  private String emailVerificationCode;
-  @NonNull
-  private String emailVerificationEndpoint;
+  @NonNull private String accountId;
+  @NonNull private String emailVerificationCode;
+  @NonNull private String emailVerificationEndpoint;
+
   @NonNull
   @Email(message = "Invalid email address")
   private String email;

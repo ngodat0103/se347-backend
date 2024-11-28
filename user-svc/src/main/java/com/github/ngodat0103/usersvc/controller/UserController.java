@@ -20,9 +20,10 @@ public class UserController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public Mono<AccountDto> createUser(@Valid @RequestBody AccountDto accountDto, ServerHttpRequest request)
+  public Mono<AccountDto> createUser(
+      @Valid @RequestBody AccountDto accountDto, ServerHttpRequest request)
       throws ConflictException {
-    return userService.create(accountDto,request);
+    return userService.create(accountDto, request);
   }
 
   //  @GetMapping(path = "/{id}")

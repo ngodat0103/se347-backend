@@ -14,7 +14,6 @@ import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.service.ServiceProducer;
 import com.github.ngodat0103.usersvc.service.UserService;
 import com.nimbusds.jose.util.Base64URL;
-
 import java.net.URI;
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -22,7 +21,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -40,7 +38,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.ForwardedHeaderUtils;
-import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -61,8 +58,8 @@ public class UserServiceImpl implements UserService {
   private final ServiceProducer serviceProducer;
   private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
-
-  private final static URI verifyEmailEndpoint = URI.create("http://localhost:5000/api/v1/auth/verify-email");
+  private static final URI verifyEmailEndpoint =
+      URI.create("http://localhost:5000/api/v1/auth/verify-email");
 
   @Override
   public Mono<AccountDto> getMe() {
@@ -136,8 +133,8 @@ public class UserServiceImpl implements UserService {
             account -> {
               String verifyEmailCode = generateVerifyEmailCode();
               account.setPassword(null);
-              EmailDto emailDto = createEmailDto(account, verifyEmailCode,request.getHeaders());
-              Map<String, Object> additionalProperties = Map.of("emailDto",emailDto);
+              EmailDto emailDto = createEmailDto(account, verifyEmailCode, request.getHeaders());
+              Map<String, Object> additionalProperties = Map.of("emailDto", emailDto);
               TopicRegisteredUser topicRegisteredUser =
                   userMapper.toTopicRegisteredUser(
                       account,
@@ -165,9 +162,9 @@ public class UserServiceImpl implements UserService {
     account.setLastUpdatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
     return userRepository
         .save(account)
-            .map(a -> Pair.of(account, request.getHeaders()))
+        .map(a -> Pair.of(account, request.getHeaders()))
         .doOnError(e -> handleSaveError(e, account))
-        .flatMap(pair -> handlePostSave(pair.getLeft(),pair.getRight()));
+        .flatMap(pair -> handlePostSave(pair.getLeft(), pair.getRight()));
   }
 
   private void handleSaveError(Throwable e, Account account) {
@@ -178,9 +175,9 @@ public class UserServiceImpl implements UserService {
     log.error("Unexpected exception", e);
   }
 
-  private Mono<AccountDto> handlePostSave(Account account,HttpHeaders headers) {
+  private Mono<AccountDto> handlePostSave(Account account, HttpHeaders headers) {
     String verifyEmailCode = generateVerifyEmailCode();
-    EmailDto emailDto = createEmailDto(account, verifyEmailCode,headers);
+    EmailDto emailDto = createEmailDto(account, verifyEmailCode, headers);
     AccountDto accountDto = userMapper.toDto(account);
     Map<String, Object> additionalProperties =
         Map.of("accountDto", accountDto, "emailDto", emailDto);
@@ -197,11 +194,14 @@ public class UserServiceImpl implements UserService {
         .map(userMapper::toDto);
   }
 
-  private EmailDto createEmailDto(Account account, String verifyEmailCode, HttpHeaders forwardedHeaders) {
+  private EmailDto createEmailDto(
+      Account account, String verifyEmailCode, HttpHeaders forwardedHeaders) {
 
- String  emailEndpointUrl = ForwardedHeaderUtils.adaptFromForwardedHeaders(verifyEmailEndpoint,forwardedHeaders)
-         .query("code=" + verifyEmailCode)
-         .build().toUriString();
+    String emailEndpointUrl =
+        ForwardedHeaderUtils.adaptFromForwardedHeaders(verifyEmailEndpoint, forwardedHeaders)
+            .query("code=" + verifyEmailCode)
+            .build()
+            .toUriString();
     return EmailDto.builder()
         .accountId(account.getAccountId())
         .emailVerificationCode(verifyEmailCode)

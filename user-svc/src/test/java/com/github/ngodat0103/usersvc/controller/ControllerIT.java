@@ -163,8 +163,7 @@ class ControllerIT {
   }
 
   @Test
-  void createAccountWhenAlreadyExists()
-      throws JsonProcessingException {
+  void createAccountWhenAlreadyExists() throws JsonProcessingException {
     userRepository.save(fakeAccount).block();
 
     webTestClient
@@ -190,8 +189,7 @@ class ControllerIT {
   }
 
   @Test
-  void givenBadCredential_whenLogin_thenReturn401()
-      throws JsonProcessingException {
+  void givenBadCredential_whenLogin_thenReturn401() throws JsonProcessingException {
     CredentialDto credentialDto =
         CredentialDto.builder()
             .email(fakeAccountDto.getEmail())
