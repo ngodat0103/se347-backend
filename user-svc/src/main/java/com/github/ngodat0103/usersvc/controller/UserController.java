@@ -25,12 +25,6 @@ public class UserController {
       throws ConflictException {
     return userService.create(accountDto, request);
   }
-
-  //  @GetMapping(path = "/{id}")
-  //  public UserDto getUser(@PathVariable(value = "id") String id) {
-  //    return userService.findById(id);
-  //  }
-
   @PreAuthorize("isAuthenticated()")
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping(path = "/me")
