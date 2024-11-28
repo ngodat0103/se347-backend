@@ -3,7 +3,6 @@ package com.github.ngodat0103.usersvc.dto.mapper;
 import com.github.ngodat0103.usersvc.dto.AccountDto;
 import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
-import java.util.Map;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -15,14 +14,17 @@ public interface UserMapper {
 
   TopicRegisteredUser toTopicRegisteredUser(Account account);
 
-  default TopicRegisteredUser toTopicRegisteredUser(
-      Account account,
-      TopicRegisteredUser.Action action,
-      Map<String, Object> additionalProperties) {
-    return TopicRegisteredUser.builder()
-        .createdDate(account.getCreatedDate())
-        .action(action)
-        .additionalProperties(additionalProperties)
-        .build();
-  }
+  //  default TopicRegisteredUser toTopicRegisteredUser(
+  //      Account account,
+  //      TopicRegisteredUser.Action action,
+  //      Map<String, Object> additionalProperties) {
+  //
+  //    AccountDto accountDto = toDto(account);
+  //    additionalProperties.put("accountDto", accountDto);
+  //    return TopicRegisteredUser.builder()
+  //        .createdDate(LocalDateTime.now().toInstant(ZoneOffset.UTC))
+  //        .action(action)
+  //        .additionalProperties(additionalProperties)
+  //        .build();
+  //  }
 }

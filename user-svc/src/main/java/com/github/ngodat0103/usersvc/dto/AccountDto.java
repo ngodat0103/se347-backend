@@ -5,11 +5,9 @@ import jakarta.validation.constraints.*;
 import java.time.Instant;
 import java.util.Locale;
 import lombok.*;
-import org.springframework.data.elasticsearch.annotations.Document;
 
 @Builder
 @Getter
-@Document(indexName = "account")
 public class AccountDto {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String accountId;

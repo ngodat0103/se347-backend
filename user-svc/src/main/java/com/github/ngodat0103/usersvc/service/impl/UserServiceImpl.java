@@ -6,6 +6,8 @@ import com.github.ngodat0103.usersvc.dto.AccountDto;
 import com.github.ngodat0103.usersvc.dto.CredentialDto;
 import com.github.ngodat0103.usersvc.dto.EmailDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
+import com.github.ngodat0103.usersvc.dto.topic.Action;
+import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;
 import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
 import com.github.ngodat0103.usersvc.exception.ConflictException;
 import com.github.ngodat0103.usersvc.exception.InvalidEmailCodeException;
@@ -136,17 +138,17 @@ public class UserServiceImpl implements UserService {
               EmailDto emailDto = createEmailDto(account, verifyEmailCode, request.getHeaders());
               Map<String, Object> additionalProperties = Map.of("emailDto", emailDto);
               TopicRegisteredUser topicRegisteredUser =
-                  userMapper.toTopicRegisteredUser(
-                      account,
-                      TopicRegisteredUser.Action.RESEND_EMAIL_VERIFICATION,
-                      additionalProperties);
+                  TopicRegisteredUser.builder()
+                      .createdDate(LocalDateTime.now().toInstant(ZoneOffset.UTC))
+                      .action(Action.RESEND_EMAIL_VERIFICATION)
+                      .additionalProperties(additionalProperties)
+                      .build();
               log.info("Sending resend email verification to kafka: {}", topicRegisteredUser);
               return reactiveRedisTemplate
                   .opsForValue()
                   .set(verifyEmailCode, account.getAccountId())
                   .thenReturn(topicRegisteredUser);
             })
-        .doOnNext(serviceProducer::sendRegisteredUser)
         .map(account -> "Email verification sent");
   }
 
@@ -181,11 +183,17 @@ public class UserServiceImpl implements UserService {
     AccountDto accountDto = userMapper.toDto(account);
     Map<String, Object> additionalProperties =
         Map.of("accountDto", accountDto, "emailDto", emailDto);
+
     TopicRegisteredUser topicRegisteredUser =
-        userMapper.toTopicRegisteredUser(
-            account, TopicRegisteredUser.Action.NEW_USER, additionalProperties);
+        TopicRegisteredUser.builder()
+            .createdDate(LocalDateTime.now().toInstant(ZoneOffset.UTC))
+            .action(Action.INSERT)
+            .additionalProperties(additionalProperties)
+            .build();
+
     log.info("Sending new registered user to kafka: {}", topicRegisteredUser);
-    serviceProducer.sendRegisteredUser(topicRegisteredUser);
+    KeyTopic keyTopic = new KeyTopic("account", account.getAccountId());
+    serviceProducer.sendBusinessLogicTopic(keyTopic, topicRegisteredUser);
     log.info("Store Email verification code in redis: {}", verifyEmailCode);
     return reactiveRedisTemplate
         .opsForValue()

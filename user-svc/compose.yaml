@@ -32,6 +32,8 @@ services:
     networks: [dev]
   user-svc:
     profiles: ['all']
+    mem_limit: 512m
+    cpus: 1
     image: ${DOCKER_REGISTRY:-ghcr.io}/${IMAGE:-ngodat0103/se347-backend/user-svc}:${TAG:-dev-latest}
     environment:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
