@@ -143,7 +143,10 @@ public class UserServiceImpl implements UserService {
                       .action(Action.RESEND_EMAIL_VERIFICATION)
                       .additionalProperties(additionalProperties)
                       .build();
+
               log.info("Sending resend email verification to kafka: {}", topicRegisteredUser);
+              KeyTopic keyTopic = new KeyTopic("account", account.getAccountId());
+              serviceProducer.sendBusinessLogicTopic(keyTopic, topicRegisteredUser);
               return reactiveRedisTemplate
                   .opsForValue()
                   .set(verifyEmailCode, account.getAccountId())

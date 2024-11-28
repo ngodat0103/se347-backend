@@ -42,11 +42,16 @@ public class CdcService implements ApplicationListener<ApplicationReadyEvent> {
         .map(this::mapToAccountAndActionPair)
         .map(this::mapToKafkaMessage)
         .doOnNext(pair -> serviceProducer.sendCDC(pair.getLeft(), pair.getRight()))
+        .doOnError(
+            throwable -> {
+              log.error("Error occurred while listening to changes: ", throwable);
+            })
         .doOnTerminate(() -> Thread.currentThread().interrupt())
         .blockLast();
   }
 
   private Pair<Account, Action> mapToAccountAndActionPair(ChangeStreamEvent<Account> change) {
+    log.debug("Change event: {}", change);
     Assert.notNull(change.getOperationType(), "Operation type must not be null");
     Action action = Action.valueOf(change.getOperationType().getValue().toUpperCase());
     if (action.equals(Action.DELETE)) {
@@ -64,6 +69,7 @@ public class CdcService implements ApplicationListener<ApplicationReadyEvent> {
   }
 
   private Pair<KeyTopic, TopicRegisteredUser> mapToKafkaMessage(Pair<Account, Action> pair) {
+    log.debug("Mapping to Kafka message: {}", pair);
     var keyTopic = new KeyTopic("account", pair.getLeft().getAccountId());
     var topicRegisteredUser =
         TopicRegisteredUser.builder()
