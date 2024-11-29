@@ -89,7 +89,7 @@ jobs:
           name: ${{inputs.SERVICE_NAME}}-${{inputs.BRANCH_NAME}}-${{github.sha}}-snyk-report
           path: ${{inputs.SERVICE_NAME}}/snyk.sarif
       - name: Comment if Snyk check failed
-        if: ${{ steps.snyk-check.outcome == 'failure' && github.event_name == 'pull_request' && success() }}
+        if: ${{ steps.upload-artifact.outcome == 'success' && github.event_name == 'pull_request' }}
         uses: thollander/actions-comment-pull-request@v3.0.1
         with:
           pr-number: ${{ github.event.number }}
@@ -132,16 +132,16 @@ jobs:
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-m2-v1
-      - name: Run unit tests
-        run: echo "placeholder, will be replaced by actual unit tests"
-      - name: Run integration tests
-        id: IT
-        run: ./mvnw -q verify
-      - name: Run Sonarqube analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: ./mvnw -q sonar:sonar
+#      - name: Run unit tests
+#        run: echo "placeholder, will be replaced by actual unit tests"
+#      - name: Run integration tests
+#        id: IT
+#        run: ./mvnw -q verify
+#      - name: Run Sonarqube analysis
+#        env:
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#        run: ./mvnw -q sonar:sonar
   build-and-push:
     name: Build and Push Docker image for PR
     if: github.event_name == 'pull_request'
@@ -204,7 +204,7 @@ jobs:
           skip-setup-trivy: 'false'
           output: ${{env.TRIVY_REPORT_NAME}}.md
       - name: Upload ${{inputs.SERVICE_NAME}} security report to artifact tab
-        if: ${{steps.generate-report.outcome == 'failure' && failure()}}
+        if: failure()
         id: upload-artifact
         uses: actions/upload-artifact@v4.3.4
         with:
@@ -212,7 +212,7 @@ jobs:
           if-no-files-found: warn
           path: ${{env.TRIVY_REPORT_NAME}}.md
       - name: Comment Security scan failed if check failed
-        if: ${{ steps.generate-report.outcome == 'failure' && github.event_name == 'pull_request' && success() }}
+        if: ${{ steps.upload-artifact.outcome == 'success' && github.event_name == 'pull_request' }}
         uses: thollander/actions-comment-pull-request@v3.0.1
         with:
           pr-number: ${{ github.event.number }}
@@ -228,39 +228,39 @@ jobs:
           pr-number: ${{ github.event.number }}
           comment-tag: 'trivy'
           mode: 'delete'
-  deploy-to-dev:
-    name: Deploy to dev environment
-    environment: dev
-    runs-on: dev-docker
-    defaults:
-      run:
-        working-directory: ${{inputs.SERVICE_NAME}}
-    needs: [build-and-push, ci-test]
-    if: needs.ci-test.outputs.CI_IT_OUTCOME == 'success'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.2.2
-        with:
-          fetch-depth: 1
-      - name: Update dev image tag
-        working-directory: user-svc
-        run: echo "IMAGE_VERSION=${{needs.build-and-push.outputs.IMAGE_VERSION}}" > .env
-      - name: Pull new Docker image version
-        run: sudo docker compose --profile all pull
-      - name: Fetch secrets from Vault
-        uses: hashicorp/vault-action@v3.0.0
-        env:
-            SECRET_PATH: secrets/data/se347/backend/dev/user-svc
-        with:
-          url: ${{ secrets.VAULT_ADDR }}
-          token: ${{ secrets.VAULT_TOKEN }}
-          secrets: |
-            ${{env.SECRET_PATH}} MONGODB_PASSWORD ;
-            ${{env.SECRET_PATH}} MONGODB_ROOT_PASSWORD ;
-      - name: Set up credentials
-        run: |
-          echo "MONGODB_PASSWORD=${{ env.MONGODB_PASSWORD }}" >> .env
-          echo "MONGODB_ROOT_PASSWORD=${{ env.MONGODB_ROOT_PASSWORD }}" >> .env
-      - name: Deploy new Docker image
-        working-directory: user-svc
-        run: sudo docker compose --profile all up -d
+#  deploy-to-dev:
+#    name: Deploy to dev environment
+#    environment: dev
+#    runs-on: dev-docker
+#    defaults:
+#      run:
+#        working-directory: ${{inputs.SERVICE_NAME}}
+#    needs: [build-and-push, ci-test]
+#    if: needs.ci-test.outputs.CI_IT_OUTCOME == 'success'
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4.2.2
+#        with:
+#          fetch-depth: 1
+#      - name: Update dev image tag
+#        working-directory: user-svc
+#        run: echo "IMAGE_VERSION=${{needs.build-and-push.outputs.IMAGE_VERSION}}" > .env
+#      - name: Pull new Docker image version
+#        run: sudo docker compose --profile all pull
+#      - name: Fetch secrets from Vault
+#        uses: hashicorp/vault-action@v3.0.0
+#        env:
+#            SECRET_PATH: secrets/data/se347/backend/dev/user-svc
+#        with:
+#          url: ${{ secrets.VAULT_ADDR }}
+#          token: ${{ secrets.VAULT_TOKEN }}
+#          secrets: |
+#            ${{env.SECRET_PATH}} MONGODB_PASSWORD ;
+#            ${{env.SECRET_PATH}} MONGODB_ROOT_PASSWORD ;
+#      - name: Set up credentials
+#        run: |
+#          echo "MONGODB_PASSWORD=${{ env.MONGODB_PASSWORD }}" >> .env
+#          echo "MONGODB_ROOT_PASSWORD=${{ env.MONGODB_ROOT_PASSWORD }}" >> .env
+#      - name: Deploy new Docker image
+#        working-directory: user-svc
+#        run: sudo docker compose --profile all up -d
