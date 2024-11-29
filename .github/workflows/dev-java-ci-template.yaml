@@ -87,7 +87,7 @@ jobs:
         uses: actions/upload-artifact@v4.3.4
         with:
           name: ${{inputs.SERVICE_NAME}}-${{inputs.BRANCH_NAME}}-${{github.sha}}-snyk-report
-          path: snyk.sarif
+          path: ${{inputs.SERVICE_NAME}}/snyk.sarif
       - name: Comment if Snyk check failed
         if: ${{ steps.snyk-check.outcome == 'failure' && github.event_name == 'pull_request' && success() }}
         uses: thollander/actions-comment-pull-request@v3.0.1
@@ -99,7 +99,7 @@ jobs:
             # Snyk scan failed
             ** Please check the security report [here](${{steps.upload-artifact.outputs.artifact-url}}) **
       - name: Delete comment if Snyk check passed
-        if: ${{ steps.snyk-check.outcome == 'success' && github.event_name == 'pull_request' }}
+        if: ${{ steps.snyk-check.outcome == 'success' && github.event_name == 'pull_request'}}
         uses: thollander/actions-comment-pull-request@v3.0.1
         with:
           pr-number: ${{ github.event.number }}
@@ -212,7 +212,7 @@ jobs:
           if-no-files-found: warn
           path: ${{env.TRIVY_REPORT_NAME}}.md
       - name: Comment Security scan failed if check failed
-        if: ${{ steps.generate-report.outcome == 'failure' && github.event_name == 'pull_request' }}
+        if: ${{ steps.generate-report.outcome == 'failure' && github.event_name == 'pull_request' && success() }}
         uses: thollander/actions-comment-pull-request@v3.0.1
         with:
           pr-number: ${{ github.event.number }}
