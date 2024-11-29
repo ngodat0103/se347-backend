@@ -1,5 +1,6 @@
 package com.github.ngodat0103.usersvc.service;
 
+import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;
 import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -11,10 +12,26 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 @Slf4j
 public class ServiceProducer {
-  private KafkaTemplate<String, TopicRegisteredUser> producer;
+  private KafkaTemplate<KeyTopic, TopicRegisteredUser> producer;
+  private static final String TOPIC_BUSINESS_LOGIC = "user-business-logic";
+  private static final String TOPIC_CDC = "user-cdc";
 
-  public void sendRegisteredUser(@Valid TopicRegisteredUser topicRegisteredUser) {
-    log.debug("Sending new registered user: {}", topicRegisteredUser);
-    producer.send("new-registered-user", topicRegisteredUser);
+  public void sendBusinessLogicTopic(@Valid TopicRegisteredUser topicRegisteredUser) {
+    producer.send(TOPIC_BUSINESS_LOGIC, topicRegisteredUser);
+  }
+
+  public void sendBusinessLogicTopic(
+      KeyTopic keyTopic, @Valid TopicRegisteredUser topicRegisteredUser) {
+    log.info("Sending Business Logic message to topic: {}", TOPIC_BUSINESS_LOGIC);
+    producer.send(TOPIC_BUSINESS_LOGIC, keyTopic, topicRegisteredUser);
+  }
+
+  public void sendCDC(@Valid TopicRegisteredUser topicRegisteredUser) {
+    producer.send(TOPIC_CDC, topicRegisteredUser);
+  }
+
+  public void sendCDC(KeyTopic key, @Valid TopicRegisteredUser topicRegisteredUser) {
+    log.info("Sending CDC message to topic: {}", TOPIC_CDC);
+    producer.send(TOPIC_CDC, key, topicRegisteredUser);
   }
 }

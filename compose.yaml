@@ -1,7 +1,6 @@
-name: se347-backend
+name: se347-deps
 services:
   elastic-search:
-    profiles: [ 'dev','all' ]
     image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2
     environment:
       - node.name=node1
@@ -22,7 +21,6 @@ services:
     networks:
       - dev
   kibana:
-    profiles: [ 'dev','all' ]
     image: docker.elastic.co/kibana/kibana:8.6.2
     environment:
       - elasticsearch.hosts=http://elastic-search:9200
@@ -39,7 +37,6 @@ services:
     depends_on:
       - elastic-search
   kafka-console:
-    profiles: [ 'dev','all' ]
     depends_on:
       - kafka
     networks: [ dev ]
@@ -49,7 +46,6 @@ services:
       - KAFKA_BROKERS=kafka-svc:9092
     image: docker.redpanda.com/redpandadata/console:latest
   zookeeper:
-    profiles: [ 'dev','all' ]
     container_name: zookeeper
     volumes:
       - var-lib-zookeeper-data:/var/lib/zookeeper/data
@@ -61,11 +57,8 @@ services:
       - "2181"
     networks: [ dev ]
   kafka:
-    profiles: [ 'dev','all' ]
     restart: unless-stopped
-    networks:
-      dev:
-        ipv4_address: 172.21.0.11
+    networks: [ dev ]
     container_name: kafka
     hostname: kafka-svc
     image: confluentinc/cp-kafka:7.4.6
@@ -80,11 +73,18 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  redis:
+    image: redis:alpine3.20
+    ports:
+      - "6379:6379"
+    networks: [ dev ]
 volumes:
   elastic-node1-data:
       name: elastic-node1-data
+      external: false
   var-lib-zookeeper-data:
     name: var-lib-zookeeper-data
+    external: false
 networks:
   dev:
     name: dev

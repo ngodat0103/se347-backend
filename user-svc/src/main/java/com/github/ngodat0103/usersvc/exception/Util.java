@@ -24,7 +24,7 @@ public final class Util {
       Logger log, String entity, String attributeName, Object attributeValues) {
     String message = String.format(TEMPLATE_CONFLICT, entity, attributeName, attributeValues);
     logging(log, message, null);
-    return new ConflictException(message);
+    return new ConflictException(message, ConflictException.Type.ALREADY_EXISTS);
   }
 
   public static NotFoundException createNotFoundException(

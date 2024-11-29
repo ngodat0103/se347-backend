@@ -23,23 +23,22 @@ public class GlobalExceptionHandler {
   static class Error {
     private final String detail;
     private final String pointer;
-    @JsonIgnore private final String jsonPathSchema = "#/";
+    @JsonIgnore private static final String JSON_PATH_SCHEMA = "#/";
 
     public Error(String detail, String pointer) {
       this.detail = detail;
-      this.pointer = jsonPathSchema + pointer;
+      this.pointer = JSON_PATH_SCHEMA + pointer;
     }
   }
 
   @ExceptionHandler({ConflictException.class})
   @ResponseStatus(HttpStatus.CONFLICT)
-  public ProblemDetail handleApiException(RuntimeException e, ServerHttpRequest request) {
+  public ProblemDetail handleApiException(ConflictException e, ServerHttpRequest request) {
     ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.CONFLICT);
     problemDetails.setDetail(e.getMessage());
-    problemDetails.setType(URI.create("https://problems-registry.smartbear.com/already-exists"));
-    problemDetails.setTitle("Already exists");
-    problemDetails.setDetail(e.getMessage());
     problemDetails.setInstance(URI.create(request.getPath().toString()));
+    problemDetails.setTitle(e.getType().toString());
+    problemDetails.setType(URI.create("https://problems-registry.smartbear.com/already-exists"));
     return problemDetails;
   }
 
@@ -74,6 +73,19 @@ public class GlobalExceptionHandler {
     ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
     problemDetails.setType(URI.create("https://problems-registry.smartbear.com/unauthorized"));
     problemDetails.setTitle("Unauthorized");
+    problemDetails.setDetail(e.getMessage());
+    problemDetails.setInstance(URI.create(request.getPath().toString()));
+    return problemDetails;
+  }
+
+  @ExceptionHandler(InvalidEmailCodeException.class)
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+  public ProblemDetail handleInvalidEmailCodeException(
+      InvalidEmailCodeException e, ServerHttpRequest request) {
+    ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+    problemDetails.setType(
+        URI.create("https://problems-registry.smartbear.com/invalid-request-parameter-value"));
+    problemDetails.setTitle("Invalid Email Code");
     problemDetails.setDetail(e.getMessage());
     problemDetails.setInstance(URI.create(request.getPath().toString()));
     return problemDetails;
