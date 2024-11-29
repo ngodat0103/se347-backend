@@ -57,7 +57,7 @@ jobs:
     needs: [CI-UnitTest-IntegrationTest-SourceCodeAnalysis ]
     #    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     outputs:
-      TAG: ${{ steps.meta.outputs.tags }}
+      TAG: ${{ steps.meta.outputs.version }}
     runs-on: ubuntu-22.04
     steps:
       - name: set up buildx
