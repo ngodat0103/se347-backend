@@ -210,7 +210,7 @@ jobs:
   deploy-to-dev:
     name: Deploy to dev environment
 #    environment: dev
-    runs-on: ubuntu-22.04
+    runs-on: akira-home
     defaults:
       run:
         working-directory: ${{inputs.SERVICE_NAME}}
