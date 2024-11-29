@@ -22,7 +22,7 @@ public class KafkaConfiguration {
     Map<String, Object> props =
         Map.of(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
     Serializer<TopicRegisteredUser> valueSerializer = new JsonSerializer<>(objectMapper);
-    Serializer<KeyTopic> keySerializer = new CustomSerializer();
+    Serializer<KeyTopic> keySerializer = new KeyTopicSerialize();
     ProducerFactory<KeyTopic, TopicRegisteredUser> producerFactory =
         new DefaultKafkaProducerFactory<>(props, keySerializer, valueSerializer);
     return new KafkaTemplate<>(producerFactory);
