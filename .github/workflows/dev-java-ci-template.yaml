@@ -209,8 +209,8 @@ jobs:
           mode: 'delete'
   deploy-to-dev:
     name: Deploy to dev environment
-#    environment: dev
-    runs-on: akira-home
+    environment: dev
+    runs-on: dev-docker
     defaults:
       run:
         working-directory: ${{inputs.SERVICE_NAME}}
