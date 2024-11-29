@@ -10,7 +10,7 @@ COPY ./src/main ./src/main
 ARG VERSION
 ARG SERVICE_NAME
 ENV JAR_PATH=/build/target/${SERVICE_NAME}-${VERSION}.jar
-RUN ./mvnw clean package -DskipTests -Drevision=${VERSION} && \
+RUN ./mvnw clean package -DskipTests -Drevision=${VERSION} -Dservice_name=${SERVICE_NAME} && \
     java -Djarmode=tools -jar "$JAR_PATH" extract --layers --launcher --destination /build/target/layers
 
 FROM eclipse-temurin:21-jdk-alpine AS jre-builder

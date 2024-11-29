@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.github.ngodat0103</groupId>
-	<artifactId>usersvc</artifactId>
+	<artifactId>user-svc</artifactId>
 	<version>${revision}</version>
-	<name>usersvc</name>
+	<name>user-svc</name>
 	<description>user-svc</description>
 	<url/>
 	<licenses>
