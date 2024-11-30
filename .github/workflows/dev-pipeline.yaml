@@ -42,11 +42,11 @@ jobs:
         run: |
           # List of Docker images from compose.yaml
           IMAGES=(
-            "ghcr.io/elasticsearch/elasticsearch:8.6.2"
-            "ghcr.io/kibana/kibana:8.6.2"
-            "ghcr.io/redpandadata/console:latest"
-            "ghcr.io/confluentinc/cp-zookeeper:7.4.6"
-            "ghcr.io/confluentinc/cp-kafka:7.4.6"
+            "docker.elastic.co/elasticsearch/elasticsearch:8.6.2"
+            "docker.elastic.co/kibana/kibana:8.6.2"
+            "docker.redpanda.com/redpandadata/console:latest"
+            "confluentinc/cp-zookeeper:7.4.6"
+            "confluentinc/cp-kafka:7.4.6"
           )
           
           # Install Trivy
