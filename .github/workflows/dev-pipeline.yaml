@@ -25,27 +25,38 @@ jobs:
           echo "Hello world"
 
   trivy_scan:
-    name: Trivy Security Scan for Container Image
+    name: Trivy Security Scan for Container Images
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.2
 
-      - name: Log in to Docker Hub
+      - name: Log in to GitHub Container Registry (GHCR)
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login ghcr.io -u "$DOCKER_USERNAME" --password-stdin
 
-      - name: Pull Docker image
+      - name: Pull and scan Docker images
         run: |
-          docker pull <your-image-name>
-
-      - name: Install Trivy
-        run: |
+          # List of Docker images from compose.yaml
+          IMAGES=(
+            "ghcr.io/elasticsearch/elasticsearch:8.6.2"
+            "ghcr.io/kibana/kibana:8.6.2"
+            "ghcr.io/redpandadata/console:latest"
+            "ghcr.io/confluentinc/cp-zookeeper:7.4.6"
+            "ghcr.io/confluentinc/cp-kafka:7.4.6"
+          )
+          
+          # Install Trivy
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-
-      - name: Run Trivy Image Scan
-        run: |
-          ./trivy image <your-image-name>
+          
+          # Iterate over each image and scan
+          for IMAGE in "${IMAGES[@]}"; do
+            echo "Pulling image: $IMAGE"
+            docker pull "$IMAGE"
+            
+            echo "Scanning image: $IMAGE"
+            ./trivy image "$IMAGE"
+          done
