@@ -50,7 +50,7 @@ jobs:
           )
           
           # Install Trivy
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
           
           # Iterate over each image and scan
           for IMAGE in "${IMAGES[@]}"; do
@@ -58,5 +58,5 @@ jobs:
             docker pull "$IMAGE"
             
             echo "Scanning image: $IMAGE"
-            ./trivy image "$IMAGE"
+            trivy image "$IMAGE"
           done
