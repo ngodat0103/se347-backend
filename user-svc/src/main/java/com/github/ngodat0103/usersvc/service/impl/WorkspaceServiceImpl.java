@@ -73,8 +73,14 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                     .uploadFile(objectPublicUrl, inputStream, inputStream.available(), contentType)
                     .subscribeOn(Schedulers.boundedElastic())
                     .subscribe();
-                return objectPublicUrl;
 
+                workspace.setWorkspacePictureUrl(objectPublicUrl);
+                workspaceRepository.save(workspace)
+                        .doOnSuccess(data -> log.info("Workspace Document {} picture updated successfully", workspaceId))
+                        .doOnError(throwable -> log.error("Error updating workspace picture for workspace with id: {}", workspaceId))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .subscribe();
+                return objectPublicUrl;
               } catch (IOException e) {
                 throw new RuntimeException(e);
               }

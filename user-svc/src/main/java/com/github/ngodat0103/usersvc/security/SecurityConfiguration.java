@@ -1,5 +1,7 @@
 package com.github.ngodat0103.usersvc.security;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -13,6 +15,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -74,11 +77,7 @@ public class SecurityConfiguration {
         exceptionHandlingSpec ->
             exceptionHandlingSpec
                 .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
-                .accessDeniedHandler(
-                    (exchange, denied) -> {
-                      exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-                      return exchange.getResponse().setComplete();
-                    }));
+    );
   }
 
   @Bean
