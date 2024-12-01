@@ -15,15 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TopicRegisteredUser {
-  public enum Action {
-    NEW_USER,
-    RESET_PASSWORD,
-    RESEND_EMAIL_VERIFICATION,
-    DATA_UPDATE
-  }
 
   @NotNull private Instant createdDate;
-  private Action action;
+  @NotNull private Action action;
   private Map<String, Object> additionalProperties;
-  private static final int VERSION = 1; // for schema evolution
 }

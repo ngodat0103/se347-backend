@@ -23,11 +23,11 @@ public class GlobalExceptionHandler {
   static class Error {
     private final String detail;
     private final String pointer;
-    @JsonIgnore private final String jsonPathSchema = "#/";
+    @JsonIgnore private static final String JSON_PATH_SCHEMA = "#/";
 
     public Error(String detail, String pointer) {
       this.detail = detail;
-      this.pointer = jsonPathSchema + pointer;
+      this.pointer = JSON_PATH_SCHEMA + pointer;
     }
   }
 
