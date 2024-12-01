@@ -7,9 +7,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -32,9 +34,15 @@ public class WorkspaceController {
     return workspaceService.create(workspaceDto, accountId);
   }
 
-  @PostMapping(value = "/{workspaceId}/picture")
+  @PostMapping(
+      value = "/{workspaceId}/picture",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+      produces = MediaType.TEXT_PLAIN_VALUE)
   public Mono<String> updatePicture(
-      @PathVariable String workspaceId, @RequestPart("image") FilePart filePart) {
+      @PathVariable String workspaceId,
+      @RequestPart("image") FilePart filePart,
+      Authentication authentication) {
+
     return filePart
         .content()
         .collectList()
@@ -45,9 +53,9 @@ public class WorkspaceController {
               try {
                 return workspaceService.updatePicture(
                     workspaceId,
+                    authentication.getName(),
                     inputstream,
-                    inputstream.available(),
-                    filePart.headers().getContentType().toString());
+                    Objects.requireNonNull(filePart.headers().getContentType()).toString());
               } catch (IOException e) {
                 throw new RuntimeException(e);
               }

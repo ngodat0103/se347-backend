@@ -2,6 +2,7 @@ package com.github.ngodat0103.usersvc.service.impl;
 
 import static com.github.ngodat0103.usersvc.exception.Util.createConflictException;
 
+import com.github.ngodat0103.usersvc.config.minio.MinioProperties;
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
 import com.github.ngodat0103.usersvc.dto.mapper.WorkspaceMapper;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -32,6 +34,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private UserRepository userRepository;
   private static final String WORKSPACE_IDX = "workspace_idx";
   private static final String WORKSPACE_STORAGE_PREFIX = "workspace/";
+  private final MinioProperties minioProperties;
 
   @Override
   public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId) {
@@ -55,20 +58,27 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
   @Override
   public Mono<String> updatePicture(
-      String id, InputStream inputStream, long size, String contentType) throws IOException {
-    return minioService
-        .uploadFile(WORKSPACE_STORAGE_PREFIX + id, inputStream, size, contentType)
-        .flatMap(
-            publicUrl ->
-                workspaceRepository
-                    .findById(id)
-                    .map(
-                        workspace -> {
-                          workspace.setWorkspacePictureUrl(publicUrl);
-                          return workspace;
-                        })
-                    .flatMap(workspaceRepository::save)
-                    .thenReturn(publicUrl));
+      String workspaceId, String accountId, InputStream inputStream, String contentType) {
+    return workspaceRepository
+        .findById(workspaceId)
+        .filter(workspace -> workspace.getMembers().contains(accountId))
+        .switchIfEmpty(
+            Mono.error(new AccessDeniedException("You are not a member of this workspace")))
+        .map(
+            workspace -> {
+              try {
+                String objectPublicUrl =
+                    minioProperties.getEndpoint() + "/" + WORKSPACE_STORAGE_PREFIX + workspaceId;
+                minioService
+                    .uploadFile(objectPublicUrl, inputStream, inputStream.available(), contentType)
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .subscribe();
+                return objectPublicUrl;
+
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
   }
 
   private void handleDuplicateKey(

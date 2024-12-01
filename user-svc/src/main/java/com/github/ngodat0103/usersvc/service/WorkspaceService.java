@@ -10,7 +10,8 @@ public interface WorkspaceService {
 
   Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId);
 
-  Mono<String> updatePicture(String id, InputStream inputStream, long size, String contentType)
+  Mono<String> updatePicture(
+      String workspaceId, String accountId, InputStream inputStream, String contentType)
       throws IOException;
 
   Mono<WorkspaceDto> update(WorkspaceDto workspaceDto);
