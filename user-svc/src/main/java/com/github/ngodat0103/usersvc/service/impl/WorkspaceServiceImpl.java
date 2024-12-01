@@ -12,9 +12,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import static com.github.ngodat0103.usersvc.exception.Util.createConflictException;
 
 @AllArgsConstructor
 @Service
@@ -23,6 +26,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private WorkspaceRepository workspaceRepository;
   private WorkspaceMapper workspaceMapper;
   private UserRepository userRepository;
+  private static final String WORKSPACE_IDX = "workspace_idx";
 
   @Override
   public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId) {
@@ -38,12 +42,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 updateAccountWorkspace(accountId, workspace)
                     .subscribeOn(Schedulers.boundedElastic())
                     .subscribe())
-        .doOnError(
-            throwable ->
-                log.error(
-                    "Error creating a new workspace with id: {}", newWorkspace.getWorkspaceId()))
+        .doOnError(DuplicateKeyException.class, e -> handleDuplicateKey(e, workspaceDto.getWorkspaceName()))
         .map(workspaceMapper::toDto);
   }
+  private void handleDuplicateKey(DuplicateKeyException duplicateKeyException,String workspaceName){
+    if(duplicateKeyException.getMessage().contains(WORKSPACE_IDX)){
+      throw createConflictException(log,"workspace", "workspaceName", workspaceName);
+    }
+  }
+
+
+
 
   private Mono<Account> updateAccountWorkspace(String accountId, Workspace workspace) {
     return userRepository
