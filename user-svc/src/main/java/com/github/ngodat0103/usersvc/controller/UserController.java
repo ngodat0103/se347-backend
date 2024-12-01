@@ -25,6 +25,7 @@ public class UserController {
       throws ConflictException {
     return userService.create(accountDto, request);
   }
+
   @PreAuthorize("isAuthenticated()")
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping(path = "/me")

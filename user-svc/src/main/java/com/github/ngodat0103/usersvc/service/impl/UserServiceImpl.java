@@ -240,7 +240,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Mono<AccountDto> get(String id ) {
+  public Mono<AccountDto> get(String id) {
     return Mono.empty();
   }
 }

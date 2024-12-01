@@ -6,12 +6,15 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import reactor.core.publisher.Mono;
 
-public interface UserService  {
+public interface UserService {
 
   Mono<AccountDto> create(AccountDto accountDto, ServerHttpRequest request);
+
   Mono<AccountDto> update(AccountDto accountDto);
-    Mono<Void> delete(String id);
-    Mono<AccountDto> get(String id);
+
+  Mono<Void> delete(String id);
+
+  Mono<AccountDto> get(String id);
 
   Mono<AccountDto> getMe();
 

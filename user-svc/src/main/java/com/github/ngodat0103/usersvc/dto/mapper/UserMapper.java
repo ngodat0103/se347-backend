@@ -8,6 +8,6 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
   AccountDto toDto(Account account);
-  Account toDocument(AccountDto dto);
 
+  Account toDocument(AccountDto dto);
 }

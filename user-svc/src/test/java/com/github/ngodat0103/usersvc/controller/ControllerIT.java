@@ -207,8 +207,7 @@ class ControllerIT {
   }
 
   @Test
-  void givenValidCredential_whenLogin_thenReturnToken()
-      throws JsonProcessingException {
+  void givenValidCredential_whenLogin_thenReturnToken() throws JsonProcessingException {
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     fakeAccount.setPassword(passwordEncoder.encode(fakeAccountDto.getPassword()));
     userRepository.save(fakeAccount).block();

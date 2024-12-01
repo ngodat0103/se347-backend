@@ -2,43 +2,92 @@ package com.github.ngodat0103.usersvc.service.impl;
 
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
 import com.github.ngodat0103.usersvc.dto.mapper.WorkspaceMapper;
+import com.github.ngodat0103.usersvc.persistence.document.Account;
+import com.github.ngodat0103.usersvc.persistence.document.Workspace;
+import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.usersvc.service.WorkspaceService;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.util.Set;
+import reactor.core.scheduler.Schedulers;
 
 @AllArgsConstructor
 @Service
+@Slf4j
 public class WorkspaceServiceImpl implements WorkspaceService {
-    private WorkspaceRepository workspaceRepository;
-    private WorkspaceMapper workspaceMapper;
+  private WorkspaceRepository workspaceRepository;
+  private WorkspaceMapper workspaceMapper;
+  private UserRepository userRepository;
 
-    @Override
-    public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId) {
-        return null;
-    }
+  @Override
+  public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId) {
+    var newWorkspace = workspaceMapper.toDocument(workspaceDto);
+    Set<String> members = new HashSet<>();
+    members.add(accountId);
+    newWorkspace.setMembers(members);
+    return workspaceRepository
+        .save(newWorkspace)
+        .doOnSubscribe(
+            data -> log.info("Creating a new workspace"))
+        .doOnSuccess(
+            workspace ->
+                updateAccountWorkspace(accountId, workspace)
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .subscribe())
+        .doOnError(
+            throwable ->
+                log.error(
+                    "Error creating a new workspace with id: {}", newWorkspace.getWorkspaceId()))
+        .map(workspaceMapper::toDto);
+  }
 
-    @Override
-    public Mono<WorkspaceDto> update(WorkspaceDto workspaceDto) {
-        return null;
-    }
+  private Mono<Account> updateAccountWorkspace(String accountId, Workspace workspace) {
+    return userRepository
+        .findById(accountId)
+        .doOnSubscribe(data -> log.info("Updating the account.workspaces with id: {}", accountId))
+        .map(
+            account -> {
+              Set<String> workspaces = account.getWorkspaces();
+              if (workspaces == null) {
+                workspaces = new HashSet<>();
+              }
+              workspaces.add(workspace.getWorkspaceId());
+              account.setWorkspaces(workspaces);
+              return account;
+            })
+        .flatMap(userRepository::save)
+        .doOnError(
+            throwable -> log.error("Error updating account.workspaces with id: {}", accountId))
+        .doOnSuccess(
+            data -> log.info("Account.workspaces updated successfully with id: {}", accountId));
+  }
 
-    @Override
-    public Mono<Void> delete(String id) {
-        return null;
-    }
+  @Override
+  public Mono<WorkspaceDto> updatePicture(String id, String pictureUrl) {
+    return null;
+  }
 
-    @Override
-    public Mono<WorkspaceDto> get(String id) {
-        return null;
-    }
+  @Override
+  public Mono<WorkspaceDto> update(WorkspaceDto workspaceDto) {
+    return null;
+  }
 
-    @Override
-    public Mono<Set<WorkspaceDto>> getWorkspaces(String accountId) {
-        return null;
-    }
+  @Override
+  public Mono<Void> delete(String id) {
+    return null;
+  }
+
+  @Override
+  public Mono<WorkspaceDto> get(String id) {
+    return null;
+  }
+
+  @Override
+  public Mono<Set<WorkspaceDto>> getWorkspaces(String accountId) {
+    return null;
+  }
 }

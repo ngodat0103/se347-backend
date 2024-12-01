@@ -4,10 +4,12 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.proc.SecurityContext;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import java.text.ParseException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,7 @@ import org.springframework.security.web.server.authentication.HttpStatusServerEn
 @Configuration
 @EnableReactiveMethodSecurity
 @EnableWebFluxSecurity
+@ConfigurationProperties("jwk")
 public class SecurityConfiguration {
 
   @Bean
@@ -79,17 +82,10 @@ public class SecurityConfiguration {
   }
 
   @Bean
-  @ConditionalOnMissingBean
-  RSAKey rsaKeyAutoGenerate() throws JOSEException {
-    RSAKeyGenerator rsaKeyGenerator = new RSAKeyGenerator(4096);
-    return rsaKeyGenerator.generate();
+  @ConditionalOnProperty(name = "jwk.rsa.key-value")
+  RSAKey rsaKey(@Value("${jwk.rsa.key-value}") String keyValue) throws ParseException {
+    return RSAKey.parse(keyValue);
   }
-
-  //  @Bean
-  //  @ConditionalOnProperty(name = "jwk.rsa.key-value")
-  //  RSAKey rsaKey(String keyValue) throws JOSEException {
-  //     RSAKey rsaKey = RSAKey.parse()
-  //  }
 
   @Bean
   JwtEncoder jwtEncoder(JWK jwk) {
