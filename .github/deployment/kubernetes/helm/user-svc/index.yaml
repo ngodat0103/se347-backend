@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  gateway-svc:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2024-10-03T15:01:50.0350903+07:00"
+    description: A Helm chart for gateway-svc
+    digest: 4183778866bd83d334b555ce03c996f1c3348839d5a9547233573f9bfc68e02d
+    name: gateway-svc
+    type: application
+    urls:
+    - charts/gateway-svc-0.0.1.tgz
+    version: 0.0.1
+generated: "2024-10-03T15:01:50.034051+07:00"

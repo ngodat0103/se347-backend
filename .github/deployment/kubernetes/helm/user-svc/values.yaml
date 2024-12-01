@@ -1,0 +1,126 @@
+# Default values for auth-svc.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+image:
+  repository: ghcr.io/ngodat0103/se347-backend/user-svc
+  # This sets the pull policy for images.
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "dev-latest"
+# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ 
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  ports:
+   - name: http
+     protocol: TCP
+     port: 5000
+     targetPort: 5000
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+   limits:
+     cpu: 500m
+     memory: 512Mi
+   requests:
+     cpu: 200m
+     memory: 256Mi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 5000
+  initialDelaySeconds: 10
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 5
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 5000
+  initialDelaySeconds: 10
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+#This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes:
+ - name: user-svc-mongo-volume
+   persistentVolumeClaim:
+     claimName: user-svc-mongo-pvc
+
+# Additional volumeMounts on the output Deployment definition.
+configMap:
+  db:
+    MONGODB_DATABASE: user-svc
+    MONGODB_USERNAME: user-svc
+    MONGODB_REPLICA_SET_MODE: primary
+    MONGODB_REPLICA_SET_NAME: rs0
+  app:
+    SPRING_PROFILES_ACTIVE: staging
+    SPRING_DATA_MONGODB_HOST: user-svc-mongodb
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-svc:9092
+    SPRING_DATA_MONGODB_DATABASE: user-svc
+    SPRING_DATA_MONGODB_USERNAME: user-svc
+    SPRING_DATA_REDIS_HOST: redis-svc-master
+secretRef:
+  name: "user-svc-secret"
+nodeSelector: {}
+
+tolerations: []
+
+secretStores:
+  vault:
+    server: {}
+    path: "secrets"
+    # Version is the Vault KV secret engine version.
+    # This can be either "v1" or "v2", defaults to "v2"
+    version: "v2"
+    auth:
+      # points to a secret that contains a vault token
+      # https://www.vaultproject.io/docs/auth/token
+      tokenSecretRef:
+        name: "user-svc-vault"
+        key: "token"
