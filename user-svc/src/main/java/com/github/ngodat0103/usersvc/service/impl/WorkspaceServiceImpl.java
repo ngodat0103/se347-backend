@@ -68,9 +68,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             workspace -> {
               try {
                 String objectPublicUrl =
-                    minioProperties.getEndpoint() + "/" + WORKSPACE_STORAGE_PREFIX + workspaceId;
+                    minioProperties.getEndpoint() +"/" + minioProperties.getBucket() + "/" + WORKSPACE_STORAGE_PREFIX + workspaceId;
                 minioService
-                    .uploadFile(objectPublicUrl, inputStream, inputStream.available(), contentType)
+                    .uploadFile(WORKSPACE_STORAGE_PREFIX+workspaceId, inputStream, inputStream.available(), contentType)
                     .subscribeOn(Schedulers.boundedElastic())
                     .subscribe();
 
