@@ -33,7 +33,7 @@ services:
   user-svc:
     profiles: ['all']
     mem_limit: 512m
-    cpus: 1
+    #cpus: 1
     image: ${DOCKER_REGISTRY:-ghcr.io}/${IMAGE:-ngodat0103/se347-backend/user-svc}:${IMAGE_VERSION:-dev-latest}
     environment:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
@@ -41,13 +41,17 @@ services:
       - SPRING_DATA_MONGODB_USERNAME=${MONGODB_USERNAME:-dev}
       - SPRING_DATA_MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
       - SPRING_DATA_MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
-      - APP_VERSION=${TAG:-dev-latest}
+      - APP_VERSION=${IMAGE_VERSION:-dev-latest}
       - SPRING_PROFILES_ACTIVE=staging
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_ELASTICSEARCH_URIS=http://elastic-search:9200
     build:
       context: .
       dockerfile: Dockerfile
+      cache_to:
+        - "type=local,compression=gzip,compression-level=0,force-compression=true,mode=max,dest=/build-cache"
+      cache_from:
+        - "type=local,src=/build-cache"
       args:
         SERVER_PORT: 5000
         SERVICE_NAME: user-svc
