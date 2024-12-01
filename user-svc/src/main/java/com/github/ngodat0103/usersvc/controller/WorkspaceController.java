@@ -27,7 +27,7 @@ public class WorkspaceController {
     return workspaceService.create(workspaceDto, accountId);
   }
 
-  @PostMapping("/{workspaceId}/picture")
+  @PostMapping(value = "/{workspaceId}/picture", consumes = "multipart/form-data")
   public Mono<WorkspaceDto> updatePicture(
       @RequestParam String workspaceId, @RequestPart("image") FilePart filePart) {
     return null;

@@ -2,7 +2,6 @@ package com.github.ngodat0103.usersvc.controller;
 
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.service.UserService;
-import com.nimbusds.jose.jwk.JWK;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -18,13 +17,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping(path = "/api/v1/auth")
 public class AuthController {
 
-  private final JWK jwk;
   private final UserService userService;
-
-  @GetMapping(path = "/jwk", produces = "application/json")
-  public String getJwk() {
-    return jwk.toString();
-  }
 
   @PostMapping(path = "/login")
   public Mono<OAuth2AccessTokenResponse> login(@RequestBody @Valid CredentialDto credentialDto) {

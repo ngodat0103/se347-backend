@@ -1,5 +1,7 @@
 package com.github.ngodat0103.usersvc.service.impl;
 
+import static com.github.ngodat0103.usersvc.exception.Util.createConflictException;
+
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
 import com.github.ngodat0103.usersvc.dto.mapper.WorkspaceMapper;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
@@ -16,8 +18,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import static com.github.ngodat0103.usersvc.exception.Util.createConflictException;
 
 @AllArgsConstructor
 @Service
@@ -42,17 +42,18 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 updateAccountWorkspace(accountId, workspace)
                     .subscribeOn(Schedulers.boundedElastic())
                     .subscribe())
-        .doOnError(DuplicateKeyException.class, e -> handleDuplicateKey(e, workspaceDto.getWorkspaceName()))
+        .doOnError(
+            DuplicateKeyException.class,
+            e -> handleDuplicateKey(e, workspaceDto.getWorkspaceName()))
         .map(workspaceMapper::toDto);
   }
-  private void handleDuplicateKey(DuplicateKeyException duplicateKeyException,String workspaceName){
-    if(duplicateKeyException.getMessage().contains(WORKSPACE_IDX)){
-      throw createConflictException(log,"workspace", "workspaceName", workspaceName);
+
+  private void handleDuplicateKey(
+      DuplicateKeyException duplicateKeyException, String workspaceName) {
+    if (duplicateKeyException.getMessage().contains(WORKSPACE_IDX)) {
+      throw createConflictException(log, "workspace", "workspaceName", workspaceName);
     }
   }
-
-
-
 
   private Mono<Account> updateAccountWorkspace(String accountId, Workspace workspace) {
     return userRepository
