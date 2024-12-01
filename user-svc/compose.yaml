@@ -48,6 +48,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      cache_to:
+        - "type=local,compression=gzip,compression-level=0,force-compression=true,mode=max,dest=/build-cache"
+      cache_from:
+        - "type=local,src=/build-cache"
       args:
         SERVER_PORT: 5000
         SERVICE_NAME: user-svc
