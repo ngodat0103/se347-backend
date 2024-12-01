@@ -1,0 +1,27 @@
+Thank you for installing user-svc!
+
+Your release is named: {{ .Release.Name }}
+
+To learn more about the release, you can run:
+
+  helm status {{ .Release.Name }}
+  helm get all {{ .Release.Name }}
+
+To get the logs of the user-svc pods, you can run:
+
+  kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}
+
+To port forward the user-svc service to your local machine, you can run:
+
+  kubectl port-forward svc/{{ include "user-svc.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }} -n {{ .Values.namespace }}
+
+This will forward the service port {{ .Values.service.port }} to your local machine, allowing you to access the service at http://localhost:{{ .Values.service.port }}.
+
+To check the health of the user-svc, you can access the following endpoints:
+
+  Liveness Probe: http://localhost:{{ .Values.service.port }}/api/v1/actuator/health/liveness
+  Readiness Probe: http://localhost:{{ .Values.service.port }}/api/v1/actuator/health/readiness
+
+For more information on the application, please refer to the documentation or contact the support team.
+
+Thank you for using user-svc!

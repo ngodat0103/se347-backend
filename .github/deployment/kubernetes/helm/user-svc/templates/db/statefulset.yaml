@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{ .Release.Namespace}}
+  name: user-svc-mongodb
+  labels:
+    app.kubernetes.io/name: user-svc-mongodb
+    app.kubernetes.part-of: user-svc
+    app.kubernetes.io/instance: user-svc
+    app.kubernetes.io/managed-by: Helm
+spec:
+  serviceName: user-svc-mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: user-svc-mongodb
+      app.kubernetes.part-of: user-svc
+      app.kubernetes.io/instance: user-svc
+  template:
+    metadata:
+      namespace: {{ .Release.Namespace }}
+      labels:
+        app.kubernetes.io/name: user-svc-mongodb
+        app.kubernetes.part-of: user-svc
+        app.kubernetes.io/instance: user-svc
+    spec:
+      securityContext:
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: user-svc-mongodb
+          image: bitnami/mongodb:8.0.3-debian-12-r1
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 250m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+          envFrom:
+            - configMapRef:
+                name: {{ include "user-svc.fullname" . }}-mongo-cm
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: MONGODB_REPLICA_SET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretRef.name }}
+                  key: mongodb-replica-set-key
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretRef.name }}
+                  key: mongodb-passwords
+            - name: MONGODB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretRef.name }}
+                  key: mongodb-root-password
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: user-svc-mongodb-volume
+              mountPath: /bitnami/mongodb
+  volumeClaimTemplates:
+    - metadata:
+        namespace: {{ .Release.Namespace }}
+        labels:
+          app.kubernetes.io/name: user-svc-mongodb
+          app.kubernetes.part-of: user-svc
+          app.kubernetes.io/instance: user-svc
+        name: user-svc-mongodb-volume
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi

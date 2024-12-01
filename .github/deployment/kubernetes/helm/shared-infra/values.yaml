@@ -1,0 +1,9 @@
+kafka:
+  fullnameOverride: kafka-svc
+  listeners:
+    client:
+      protocol: PLAINTEXT
+redis:
+  fullnameOverride: redis-svc
+  auth:
+    enabled: false
