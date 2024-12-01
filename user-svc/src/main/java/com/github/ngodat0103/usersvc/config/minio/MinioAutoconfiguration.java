@@ -1,13 +1,15 @@
-package com.github.ngodat0103.usersvc.config;
+package com.github.ngodat0103.usersvc.config.minio;
 
 import io.minio.MinioClient;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(MinioProperties.class)
-public class MinioConfiguration {
+public class MinioAutoconfiguration  {
 
   @Bean
   public MinioClient minioClient(MinioProperties minioProperties) {
