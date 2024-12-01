@@ -242,7 +242,6 @@ jobs:
         with:
           fetch-depth: 1
       - name: Update dev image tag
-        working-directory: user-svc
         run: echo "IMAGE_VERSION=${{needs.build-and-push.outputs.IMAGE_VERSION}}" > .env
       - name: Pull new Docker image version
         run: sudo docker compose --profile all pull
@@ -261,5 +260,4 @@ jobs:
           echo "MONGODB_PASSWORD=${{ env.MONGODB_PASSWORD }}" >> .env
           echo "MONGODB_ROOT_PASSWORD=${{ env.MONGODB_ROOT_PASSWORD }}" >> .env
       - name: Deploy new Docker image
-        working-directory: user-svc
         run: sudo docker compose --profile all up -d
