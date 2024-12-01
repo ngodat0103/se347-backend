@@ -8,7 +8,10 @@ import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.document.Workspace;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.persistence.repository.WorkspaceRepository;
+import com.github.ngodat0103.usersvc.service.MinioService;
 import com.github.ngodat0103.usersvc.service.WorkspaceService;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,10 +26,12 @@ import reactor.core.scheduler.Schedulers;
 @Service
 @Slf4j
 public class WorkspaceServiceImpl implements WorkspaceService {
+  private final MinioService minioService;
   private WorkspaceRepository workspaceRepository;
   private WorkspaceMapper workspaceMapper;
   private UserRepository userRepository;
   private static final String WORKSPACE_IDX = "workspace_idx";
+  private static final String WORKSPACE_STORAGE_PREFIX = "workspace/";
 
   @Override
   public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId) {
@@ -46,6 +51,24 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             DuplicateKeyException.class,
             e -> handleDuplicateKey(e, workspaceDto.getWorkspaceName()))
         .map(workspaceMapper::toDto);
+  }
+
+  @Override
+  public Mono<String> updatePicture(
+      String id, InputStream inputStream, long size, String contentType) throws IOException {
+    return minioService
+        .uploadFile(WORKSPACE_STORAGE_PREFIX + id, inputStream, size, contentType)
+        .flatMap(
+            publicUrl ->
+                workspaceRepository
+                    .findById(id)
+                    .map(
+                        workspace -> {
+                          workspace.setWorkspacePictureUrl(publicUrl);
+                          return workspace;
+                        })
+                    .flatMap(workspaceRepository::save)
+                    .thenReturn(publicUrl));
   }
 
   private void handleDuplicateKey(
@@ -74,11 +97,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             throwable -> log.error("Error updating account.workspaces with id: {}", accountId))
         .doOnSuccess(
             data -> log.info("Account.workspaces updated successfully with id: {}", accountId));
-  }
-
-  @Override
-  public Mono<WorkspaceDto> updatePicture(String id, String pictureUrl) {
-    return null;
   }
 
   @Override

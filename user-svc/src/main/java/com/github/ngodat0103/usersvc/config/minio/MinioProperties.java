@@ -11,11 +11,11 @@ public class MinioProperties {
   private String endpoint;
   private String accessKey;
   private String secretKey;
-  private String bucket;
+  public String bucket;
   private String region;
   private String url;
 
-  private final static String DEFAULT_POLICY="";
+  private static final String DEFAULT_POLICY = "";
 
   public String getEndpoint() {
     return endpoint == null ? DEFAULT_URL : endpoint;

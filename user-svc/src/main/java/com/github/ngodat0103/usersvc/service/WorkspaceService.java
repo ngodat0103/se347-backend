@@ -1,6 +1,8 @@
 package com.github.ngodat0103.usersvc.service;
 
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Set;
 import reactor.core.publisher.Mono;
 
@@ -8,7 +10,8 @@ public interface WorkspaceService {
 
   Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId);
 
-  Mono<WorkspaceDto> updatePicture(String id, String pictureUrl);
+  Mono<String> updatePicture(String id, InputStream inputStream, long size, String contentType)
+      throws IOException;
 
   Mono<WorkspaceDto> update(WorkspaceDto workspaceDto);
 
