@@ -26,6 +26,8 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -52,6 +54,8 @@ public class UserServiceImpl implements UserService {
   private static final String EMAIL = "email";
   private static final String USER = "User";
   private static final String IDX_EMAIL = "idx_email";
+
+  private static Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(99);
 
   private final UserRepository userRepository;
   private final UserMapper userMapper;
@@ -80,7 +84,7 @@ public class UserServiceImpl implements UserService {
 
   private OAuth2AccessTokenResponse createAccessTokenResponse(Account account) {
     Instant now = Instant.now();
-    Instant expireAt = now.plusSeconds(Duration.ofMinutes(5).getSeconds());
+    Instant expireAt = now.plusSeconds(ACCESS_TOKEN_DURATION.getSeconds());
     JwtClaimsSet jwtClaimsSet =
         JwtClaimsSet.builder()
             .subject(account.getAccountId())

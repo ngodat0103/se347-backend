@@ -4,6 +4,7 @@ import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
 import com.github.ngodat0103.usersvc.service.WorkspaceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,5 +39,10 @@ public class WorkspaceController {
 
   public Mono<WorkspaceDto> get(WorkspaceDto workspaceDto) {
     return null;
+  }
+
+  @GetMapping(path = "/me")
+  public Mono<Set<WorkspaceDto>> getWorkspaces(Authentication authentication) {
+    return workspaceService.getWorkspaces(authentication.getName());
   }
 }

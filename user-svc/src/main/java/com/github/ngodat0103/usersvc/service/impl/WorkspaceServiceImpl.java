@@ -9,6 +9,7 @@ import com.github.ngodat0103.usersvc.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.usersvc.service.WorkspaceService;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,8 +32,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     newWorkspace.setMembers(members);
     return workspaceRepository
         .save(newWorkspace)
-        .doOnSubscribe(
-            data -> log.info("Creating a new workspace"))
+        .doOnSubscribe(data -> log.info("Creating a new workspace"))
         .doOnSuccess(
             workspace ->
                 updateAccountWorkspace(accountId, workspace)
@@ -88,6 +88,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
   @Override
   public Mono<Set<WorkspaceDto>> getWorkspaces(String accountId) {
-    return null;
+    return userRepository
+        .findById(accountId)
+        .doOnSubscribe(data -> log.info("Getting workspaces for account with id: {}", accountId))
+        .map(Account::getWorkspaces)
+        .flatMapMany(workspaceRepository::findAllById)
+        .map(workspaceMapper::toDto)
+        .collect(Collectors.toSet())
+        .doOnError(
+            throwable -> log.error("Error getting workspaces for account with id: {}", accountId))
+        .doOnSuccess(
+            data ->
+                log.info("Workspaces retrieved successfully for account with id: {}", accountId));
   }
 }
