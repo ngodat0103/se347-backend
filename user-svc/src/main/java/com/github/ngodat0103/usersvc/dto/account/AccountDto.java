@@ -1,4 +1,4 @@
-package com.github.ngodat0103.usersvc.dto;
+package com.github.ngodat0103.usersvc.dto.account;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;

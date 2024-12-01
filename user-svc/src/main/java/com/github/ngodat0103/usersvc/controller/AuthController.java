@@ -1,6 +1,6 @@
 package com.github.ngodat0103.usersvc.controller;
 
-import com.github.ngodat0103.usersvc.dto.CredentialDto;
+import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.service.UserService;
 import com.nimbusds.jose.jwk.JWK;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

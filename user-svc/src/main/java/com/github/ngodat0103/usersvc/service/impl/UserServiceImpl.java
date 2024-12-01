@@ -2,9 +2,9 @@ package com.github.ngodat0103.usersvc.service.impl;
 
 import static com.github.ngodat0103.usersvc.exception.Util.*;
 
-import com.github.ngodat0103.usersvc.dto.AccountDto;
-import com.github.ngodat0103.usersvc.dto.CredentialDto;
-import com.github.ngodat0103.usersvc.dto.EmailDto;
+import com.github.ngodat0103.usersvc.dto.account.AccountDto;
+import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
+import com.github.ngodat0103.usersvc.dto.account.EmailDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.dto.topic.Action;
 import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;
@@ -235,12 +235,12 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Mono<AccountDto> delete(AccountDto accountDto) {
+  public Mono<Void> delete(String id) {
     return Mono.empty();
   }
 
   @Override
-  public Mono<AccountDto> get(AccountDto accountDto) {
+  public Mono<AccountDto> get(String id ) {
     return Mono.empty();
   }
 }

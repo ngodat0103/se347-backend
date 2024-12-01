@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.Set;
+
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -12,9 +14,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Data
-@Document
+@Document(collection = "accounts")
 @Builder
-public class Account {
+public class Account extends BaseDocument{
 
   public enum AccountStatus {
     ACTIVE,
@@ -39,6 +41,7 @@ public class Account {
   private String zoneInfo;
   private String pictureUrl;
   private Locale locale;
-  private Instant createdDate;
-  private Instant lastUpdatedDate;
+
+
+  private Set<String> workspaces;
 }

@@ -19,6 +19,9 @@ logging:
     org.springframework.data.redis: DEBUG
     web: debug
 spring:
+  webflux:
+    problemdetails:
+      enabled: true
   elasticsearch:
     uris: http://localhost:9200
   kafka:
