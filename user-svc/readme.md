@@ -15,53 +15,111 @@ The User Service is a part of the se347-backend project, built using Spring Boot
 
 ## Project Structure
 ```
-user-svc
-├── .mvn
-│   └── wrapper - Maven wrapper scripts for managing dependencies and building the project.
-├── compose.yaml - Docker Compose configuration for the user service.
-├── mvnw.cmd - Windows script for running Maven commands.
-├── pom.xml - Maven configuration file for managing project dependencies.
-├── readme.md - This file, providing an overview of the user service.
-└── src
+D:\code\projects\se347-backend\user-svc
+    src
     ├── main
-    │   ├── resources - Configuration files and other resources.
-    │   │   ├── application.yaml - Main application configuration.
-    │   │   ├── dev.yaml - Development-specific configuration.
-    │   │   └── META-INF - Metadata files for the application.
-    │   └── java - Source code for the application.
+    │   ├── resources
+    │   │   ├── application.yaml
+    │   │   ├── dev.yaml
+    │   │   ├── IT.yaml
+    │   │   ├── minio-default-policy.json
+    │   │   ├── staging.yaml
+    │   │   └── META-INF
+    │   │       └── additional-spring-configuration-metadata.json
+    │   └── java
     │       └── com
     │           └── github
     │               └── ngodat0103
     │                   └── usersvc
-    │                       ├── UserServiceApplication.java - Main application class.
-    │                       ├── controller - Controllers for handling requests.
-    │                       ├── dto - Data Transfer Objects (DTOs).
-    │                       ├── exception - Custom exception classes.
-    │                       ├── security - Security configuration classes.
-    │                       ├── service - Business logic services.
-    │                       ├── swagger - Swagger configuration.
-    │                       └── persistence - Data persistence classes.
-    └── test - Unit and integration tests for the application.
+    │                       ├── UserServiceApplication.java
+    │                       ├── controller
+    │                       │   ├── AppController.java
+    │                       │   ├── AuthController.java
+    │                       │   ├── UserController.java
+    │                       │   └── WorkspaceController.java
+    │                       ├── dto
+    │                       │   ├── WorkspaceDto.java
+    │                       │   ├── account
+    │                       │   │   ├── AccountDto.java
+    │                       │   │   ├── CredentialDto.java
+    │                       │   │   └── EmailDto.java
+    │                       │   ├── mapper
+    │                       │   │   ├── UserMapper.java
+    │                       │   │   └── WorkspaceMapper.java
+    │                       │   └── topic
+    │                       │       ├── Action.java
+    │                       │       ├── KeyTopic.java
+    │                       │       └── TopicRegisteredUser.java
+    │                       ├── exception
+    │                       │   ├── ConflictException.java
+    │                       │   ├── GlobalExceptionHandler.java
+    │                       │   ├── InvalidEmailCodeException.java
+    │                       │   ├── NotFoundException.java
+    │                       │   └── Util.java
+    │                       ├── filter
+    │                       │   └── BodyRequestSizeLimitFilter.java
+    │                       ├── security
+    │                       │   └── SecurityConfiguration.java
+    │                       ├── service
+    │                       │   ├── CdcService.java
+    │                       │   ├── MinioService.java
+    │                       │   ├── ServiceProducer.java
+    │                       │   ├── UserService.java
+    │                       │   ├── WorkspaceService.java
+    │                       │   └── impl
+    │                       │       ├── UserServiceImpl.java
+    │                       │       └── WorkspaceServiceImpl.java
+    │                       ├── swagger
+    │                       │   └── SwaggerConfiguration.java
+    │                       ├── config
+    │                       │   ├── kafka
+    │                       │   │   ├── KafkaConfiguration.java
+    │                       │   │   └── KeyTopicSerialize.java
+    │                       │   └── minio
+    │                       │       ├── MinioAutoconfiguration.java
+    │                       │       └── MinioProperties.java
+    │                       └── persistence
+    │                           ├── document
+    │                           │   ├── Account.java
+    │                           │   ├── BaseDocument.java
+    │                           │   └── workspace
+    │                           │       ├── Workspace.java
+    │                           │       ├── WorkSpacePermission.java
+    │                           │       └── WorkspaceProperty.java
+    │                           └── repository
+    │                               ├── UserRepository.java
+    │                               └── WorkspaceRepository.java
+    └── test
+        └── java
+            └── com
+                └── github
+                    └── ngodat0103
+                        └── usersvc
+                            └── controller
+                                ├── ContainerConfig.java
+                                ├── ControllerIT.java
+                                └── MyTestConfiguration.java
 ```
 
 ## API Endpoints
 The User Service supports the following API endpoints:
 
-| Endpoint                     | HTTP Method | Description                                           |
-|------------------------------|-------------|-------------------------------------------------------|
-| `/version`                   | GET         | Retrieves the current version of the application.     |
-| `/api/v1/auth/jwk`           | GET         | Retrieves the JSON Web Key (JWK) used for signing JWTs. |
-| `/api/v1/auth/login`         | POST        | Authenticates a user and returns an access token.    |
-| `/api/v1/auth/verify-email`  | GET         | Verifies the user's email using a verification code.  |
-| `/api/v1/auth/resend-email`  | GET         | Resends the email verification link to the user (requires authentication). |
-| `/api/v1/users`              | POST        | Creates a new user account.                           |
-| `/api/v1/users/me`           | GET         | Retrieves the current user's account information (requires authentication). |
-| `/api/v1/users/api-docs`     | GET         | Retrieves Swagger API documentation in JSON format.   |
-| `/api/v1/users/ui-docs`      | GET         | Retrieves Swagger UI for interactive API documentation.|
-| `/actuator/health`           | GET         | Checks the health of the application.                 |
+| Endpoint                                   | HTTP Method | Description                                                                 |
+|--------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| `/version`                                 | GET         | Retrieves the current version of the application.                          |
+| `/api/v1/auth/jwk`                        | GET         | Retrieves the JSON Web Key (JWK) used for signing JWTs.                   |
+| `/api/v1/auth/login`                      | POST        | Authenticates a user and returns an access token.                          |
+| `/api/v1/auth/verify-email`               | GET         | Verifies the user's email using a verification code.                        |
+| `/api/v1/auth/resend-email`               | GET         | Resends the email verification link to the user (requires authentication).  |
+| `/api/v1/users`                           | POST        | Creates a new user account.                                               |
+| `/api/v1/users/me`                        | GET         | Retrieves the current user's account information (requires authentication). |
+| `/api/v1/workspaces`                      | POST        | Creates a new workspace.                                                  |
+| `/api/v1/workspaces/me`                   | GET         | Retrieves a list of workspaces associated with the current user.          |
+| `/api/v1/workspaces/{workspaceId}/picture`| PUT         | Updates the picture of a workspace.                                       |
+| `/actuator/health`                        | GET         | Checks the health of the application.                                     |
 
 ## Supported APIs
-This service currently supports a total of **10 API endpoints** for user management and authentication.
+This service currently supports a total of **11 API endpoints** for user management and authentication.
 
 ## How to Run the Project
 
