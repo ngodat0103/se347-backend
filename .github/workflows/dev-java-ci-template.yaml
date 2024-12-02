@@ -242,7 +242,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Update dev image tag
-        run: echo "IMAGE_VERSION=${{needs.build-and-push.outputs.IMAGE_VERSION}}-${{github.sha}}" > .env
+        run: echo "IMAGE_VERSION=${{needs.build-and-push.outputs.IMAGE_VERSION}}" > .env
       - name: Pull new Docker image version
         run: sudo docker compose --profile all pull
       - name: Fetch secrets from Vault
