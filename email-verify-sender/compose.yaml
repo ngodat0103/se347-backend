@@ -1,0 +1,14 @@
+name: se347-email-verify-sender
+services:
+  email-verify-sender:
+    environment:
+      - SENDER_EMAIL_ADDRESS=${SENDER_EMAIL_ADDRESS}
+      - SENDER_PASSWORD=${SENDER_PASSWORD}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks: [ dev ]
+networks:
+  dev:
+    name: dev
+    external: true
