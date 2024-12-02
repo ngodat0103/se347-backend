@@ -102,16 +102,4 @@ public class GlobalExceptionHandler {
     problemDetails.setInstance(URI.create(request.getPath().toString()));
     return problemDetails;
   }
-
-  @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ProblemDetail handleMaxUploadSizeExceededException(
-        MaxUploadSizeExceededException e, ServerHttpRequest request) {
-      ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.PAYLOAD_TOO_LARGE);
-      problemDetails.setType(URI.create("https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/413"));
-      problemDetails.setTitle("Payload Too Large");
-      problemDetails.setDetail(e.getMessage());
-      problemDetails.setInstance(URI.create(request.getPath().toString()));
-      return problemDetails;
-    }
 }

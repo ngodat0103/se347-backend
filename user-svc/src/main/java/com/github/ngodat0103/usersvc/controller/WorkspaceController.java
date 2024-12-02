@@ -1,25 +1,25 @@
 package com.github.ngodat0103.usersvc.controller;
 
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
-import com.github.ngodat0103.usersvc.service.MinioService;
 import com.github.ngodat0103.usersvc.service.WorkspaceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.util.List;
+import java.io.InputStream;
 import java.util.Objects;
 import java.util.Set;
-
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/v1/workspaces")
@@ -27,7 +27,6 @@ import reactor.core.publisher.Mono;
 @PreAuthorize("isAuthenticated()")
 public class WorkspaceController {
   private final WorkspaceService workspaceService;
-  private final MinioService minioService;
 
   @PostMapping
   public Mono<WorkspaceDto> create(
@@ -38,42 +37,25 @@ public class WorkspaceController {
 
   @PostMapping(
       value = "/{workspaceId}/picture",
-      consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+      consumes = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE},
       produces = MediaType.TEXT_PLAIN_VALUE)
   public Mono<String> updatePicture(
-      @PathVariable String workspaceId,
-      @RequestPart("image") FilePart filePart,
-      Authentication authentication) {
+      @PathVariable String workspaceId, ServerHttpRequest request, Authentication authentication) {
+    String contentType = Objects.requireNonNull(request.getHeaders().getContentType()).toString();
 
-    return filePart
-        .content()
-        .collectList()
-        .filter(listDataBuffer -> listDataBuffer.size() <= 1) // Limit to 1024 bytes
-        .map(List::getFirst)
-        .switchIfEmpty(Mono.defer(() -> Mono.error(new MaxUploadSizeExceededException(1024))))
-        .map(DataBuffer::asInputStream)
-        .flatMap(
-            inputstream -> {
-              try {
-                return workspaceService.updatePicture(
-                    workspaceId,
-                    authentication.getName(),
-                    inputstream,
-                    Objects.requireNonNull(filePart.headers().getContentType()).toString());
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
+    Mono<InputStream> inputStreamMono =
+        DataBufferUtils.join(request.getBody()).map(DataBuffer::asInputStream);
 
-    //   throw new UnsupportedOperationException();
-  }
-
-  public Mono<Void> delete(String id) {
-    return null;
-  }
-
-  public Mono<WorkspaceDto> get(WorkspaceDto workspaceDto) {
-    return null;
+    return inputStreamMono.flatMap(
+        inputStream -> {
+          try {
+            return workspaceService.updatePicture(
+                workspaceId, authentication.getName(), inputStream, contentType);
+          } catch (IOException e) {
+            log.error("Failed to update picture", e);
+            return Mono.error(e);
+          }
+        });
   }
 
   @GetMapping(path = "/me")
