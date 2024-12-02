@@ -6,7 +6,9 @@ import com.github.ngodat0103.usersvc.config.minio.MinioProperties;
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
 import com.github.ngodat0103.usersvc.dto.mapper.WorkspaceMapper;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
-import com.github.ngodat0103.usersvc.persistence.document.Workspace;
+import com.github.ngodat0103.usersvc.persistence.document.workspace.WorkSpacePermission;
+import com.github.ngodat0103.usersvc.persistence.document.workspace.Workspace;
+import com.github.ngodat0103.usersvc.persistence.document.workspace.WorkspaceProperty;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.usersvc.service.MinioService;
@@ -39,9 +41,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   @Override
   public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId) {
     var newWorkspace = workspaceMapper.toDocument(workspaceDto);
-    Set<String> members = new HashSet<>();
-    members.add(accountId);
-    newWorkspace.setMembers(members);
+    WorkspaceProperty workspaceProperty = new WorkspaceProperty();
+    workspaceProperty.setOwnerId(accountId);
+    newWorkspace.setWorkspaceProperty(workspaceProperty);
     return workspaceRepository
         .save(newWorkspace)
         .doOnSubscribe(data -> log.info("Creating a new workspace"))
@@ -59,32 +61,71 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   @Override
   public Mono<String> updatePicture(
       String workspaceId, String accountId, InputStream inputStream, String contentType) {
+    String objectPublicUrl =
+        minioProperties.getEndpoint()
+            + "/"
+            + minioProperties.getBucket()
+            + "/"
+            + WORKSPACE_STORAGE_PREFIX
+            + workspaceId;
     return workspaceRepository
         .findById(workspaceId)
-        .filter(workspace -> workspace.getMembers().contains(accountId))
+        .filter(workspace -> checkPermission(workspace, accountId))
         .switchIfEmpty(
-            Mono.error(new AccessDeniedException("You are not a member of this workspace")))
+            Mono.error(
+                new AccessDeniedException("You do not have permission to edit this workspace")))
+        .doOnNext(
+            workspace -> this.uploadWorkspacePictureAsync(workspaceId, inputStream, contentType))
         .map(
             workspace -> {
-              try {
-                String objectPublicUrl =
-                    minioProperties.getEndpoint() +"/" + minioProperties.getBucket() + "/" + WORKSPACE_STORAGE_PREFIX + workspaceId;
-                minioService
-                    .uploadFile(WORKSPACE_STORAGE_PREFIX+workspaceId, inputStream, inputStream.available(), contentType)
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .subscribe();
+              workspace.setWorkspacePictureUrl(objectPublicUrl);
+              return workspace;
+            })
+        .doOnNext(this::updateWorkspaceDocumentAsync)
+        .thenReturn(objectPublicUrl);
+  }
 
-                workspace.setWorkspacePictureUrl(objectPublicUrl);
-                workspaceRepository.save(workspace)
-                        .doOnSuccess(data -> log.info("Workspace Document {} picture updated successfully", workspaceId))
-                        .doOnError(throwable -> log.error("Error updating workspace picture for workspace with id: {}", workspaceId))
-                        .subscribeOn(Schedulers.boundedElastic())
-                        .subscribe();
-                return objectPublicUrl;
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
+  private void uploadWorkspacePictureAsync(
+      String workspaceId, InputStream inputStream, String contentType) {
+    try {
+      log.info("Uploading workspace picture for workspace with id: {}", workspaceId);
+      minioService
+          .uploadFile(
+              WORKSPACE_STORAGE_PREFIX + workspaceId,
+              inputStream,
+              inputStream.available(),
+              contentType)
+          .subscribeOn(Schedulers.boundedElastic())
+          .subscribe();
+    } catch (IOException e) {
+      log.error("Error uploading workspace picture for workspace with id: {}", workspaceId);
+      log.error(e.getMessage());
+    }
+  }
+
+  private void updateWorkspaceDocumentAsync(Workspace workspace) {
+    workspaceRepository
+        .save(workspace)
+        .doOnSubscribe(
+            data -> log.info("Updating workspace with id: {}", workspace.getWorkspaceId()))
+        .doOnSuccess(
+            data ->
+                log.info("Workspace updated successfully with id: {}", workspace.getWorkspaceId()))
+        .doOnError(
+            throwable ->
+                log.error("Error updating workspace with id: {}", workspace.getWorkspaceId()))
+        .subscribeOn(Schedulers.boundedElastic())
+        .subscribe();
+  }
+
+  private boolean checkPermission(Workspace workspace, String accountId) {
+    var workspaceProperty = workspace.getWorkspaceProperty();
+    if (workspaceProperty.getOwnerId().equals(accountId)) {
+      return true;
+    }
+    WorkSpacePermission workSpacePermission =
+        workspaceProperty.getMembers().getOrDefault(accountId, null);
+    return workSpacePermission != null && workSpacePermission.isCanEdit();
   }
 
   private void handleDuplicateKey(

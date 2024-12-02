@@ -1,6 +1,6 @@
-package com.github.ngodat0103.usersvc.persistence.document;
+package com.github.ngodat0103.usersvc.persistence.document.workspace;
 
-import java.util.Set;
+import com.github.ngodat0103.usersvc.persistence.document.BaseDocument;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,8 +14,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 public class Workspace extends BaseDocument {
   @MongoId private String workspaceId;
   private String workspaceName;
-  private Set<String> members;
+  private WorkspaceProperty workspaceProperty;
   private String workspacePictureUrl;
-
   private boolean softDeleted;
 }
