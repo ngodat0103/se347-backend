@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -167,6 +168,7 @@ public class UserServiceImpl implements UserService {
     account.setPassword(passwordEncoder.encode(account.getPassword()));
     account.setCreatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
     account.setLastUpdatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    account.setWorkspaces(new HashSet<>());
     return userRepository
         .save(account)
         .map(a -> Pair.of(account, request.getHeaders()))
