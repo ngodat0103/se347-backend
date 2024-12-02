@@ -2,9 +2,9 @@ package com.github.ngodat0103.usersvc.service.impl;
 
 import static com.github.ngodat0103.usersvc.exception.Util.*;
 
-import com.github.ngodat0103.usersvc.dto.AccountDto;
-import com.github.ngodat0103.usersvc.dto.CredentialDto;
-import com.github.ngodat0103.usersvc.dto.EmailDto;
+import com.github.ngodat0103.usersvc.dto.account.AccountDto;
+import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
+import com.github.ngodat0103.usersvc.dto.account.EmailDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.dto.topic.Action;
 import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;
@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,8 @@ public class UserServiceImpl implements UserService {
   private static final String USER = "User";
   private static final String IDX_EMAIL = "idx_email";
 
+  private static Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(99);
+
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
@@ -80,7 +83,7 @@ public class UserServiceImpl implements UserService {
 
   private OAuth2AccessTokenResponse createAccessTokenResponse(Account account) {
     Instant now = Instant.now();
-    Instant expireAt = now.plusSeconds(Duration.ofMinutes(5).getSeconds());
+    Instant expireAt = now.plusSeconds(ACCESS_TOKEN_DURATION.getSeconds());
     JwtClaimsSet jwtClaimsSet =
         JwtClaimsSet.builder()
             .subject(account.getAccountId())
@@ -165,6 +168,7 @@ public class UserServiceImpl implements UserService {
     account.setPassword(passwordEncoder.encode(account.getPassword()));
     account.setCreatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
     account.setLastUpdatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    account.setWorkspaces(new HashSet<>());
     return userRepository
         .save(account)
         .map(a -> Pair.of(account, request.getHeaders()))
@@ -235,12 +239,12 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Mono<AccountDto> delete(AccountDto accountDto) {
+  public Mono<Void> delete(String id) {
     return Mono.empty();
   }
 
   @Override
-  public Mono<AccountDto> get(AccountDto accountDto) {
+  public Mono<AccountDto> get(String id) {
     return Mono.empty();
   }
 }

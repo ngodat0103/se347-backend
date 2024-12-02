@@ -1,4 +1,4 @@
-package com.github.ngodat0103.usersvc.config;
+package com.github.ngodat0103.usersvc.config.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;

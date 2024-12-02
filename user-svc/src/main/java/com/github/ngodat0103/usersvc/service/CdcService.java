@@ -42,8 +42,7 @@ public class CdcService implements ApplicationListener<ApplicationReadyEvent> {
         .map(this::mapToAccountAndActionPair)
         .map(this::mapToKafkaMessage)
         .doOnNext(pair -> serviceProducer.sendCDC(pair.getLeft(), pair.getRight()))
-        .doOnError(
-            throwable -> log.error("Error occurred while listening to changes: ", throwable))
+        .doOnError(throwable -> log.error("Error occurred while listening to changes: ", throwable))
         .doOnTerminate(() -> Thread.currentThread().interrupt())
         .blockLast();
   }

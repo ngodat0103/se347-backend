@@ -1,6 +1,6 @@
 package com.github.ngodat0103.usersvc.controller;
 
-import com.github.ngodat0103.usersvc.dto.AccountDto;
+import com.github.ngodat0103.usersvc.dto.account.AccountDto;
 import com.github.ngodat0103.usersvc.exception.ConflictException;
 import com.github.ngodat0103.usersvc.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,6 +25,7 @@ public class UserController {
       throws ConflictException {
     return userService.create(accountDto, request);
   }
+
   @PreAuthorize("isAuthenticated()")
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping(path = "/me")

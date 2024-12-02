@@ -1,4 +1,4 @@
-package com.github.ngodat0103.usersvc.config;
+package com.github.ngodat0103.usersvc.config.kafka;
 
 import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;
 import java.nio.charset.StandardCharsets;

@@ -255,9 +255,15 @@ jobs:
           secrets: |
             ${{env.SECRET_PATH}} MONGODB_PASSWORD ;
             ${{env.SECRET_PATH}} MONGODB_ROOT_PASSWORD ;
+            ${{env.SECRET_PATH}} MINIO_ENDPOINT ;
+            ${{env.SECRET_PATH}} MINIO_ACCESS_KEY ;
+            ${{env.SECRET_PATH}} MINIO_SECRET_KEY ;
       - name: Set up credentials
         run: |
           echo "MONGODB_PASSWORD=${{ env.MONGODB_PASSWORD }}" >> .env
           echo "MONGODB_ROOT_PASSWORD=${{ env.MONGODB_ROOT_PASSWORD }}" >> .env
+          echo "MINIO_ENDPOINT=${{ env.MINIO_ENDPOINT }}" >> .env 
+          echo "MINIO_ACCESS_KEY=${{ env.MINIO_ACCESS_KEY }}" >> .env
+          echo "MINIO_SECRET_KEY=${{ env.MINIO_SECRET_KEY }}" >> .env
       - name: Deploy new Docker image
         run: sudo docker compose --profile all up -d

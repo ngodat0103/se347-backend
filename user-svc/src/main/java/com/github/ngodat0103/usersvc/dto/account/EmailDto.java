@@ -1,4 +1,4 @@
-package com.github.ngodat0103.usersvc.dto;
+package com.github.ngodat0103.usersvc.dto.account;
 
 import jakarta.validation.constraints.Email;
 import lombok.*;

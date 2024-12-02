@@ -35,6 +35,9 @@ services:
     mem_limit: 512m
     #cpus: 1
     image: ${DOCKER_REGISTRY:-ghcr.io}/${IMAGE:-ngodat0103/se347-backend/user-svc}:${IMAGE_VERSION:-dev-latest}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     environment:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_DATA_MONGODB_HOST=mongo-primary
@@ -42,9 +45,11 @@ services:
       - SPRING_DATA_MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
       - SPRING_DATA_MONGODB_DATABASE=${MONGODB_DATABASE:-user-svc}
       - APP_VERSION=${IMAGE_VERSION:-dev-latest}
-      - SPRING_PROFILES_ACTIVE=staging
+      - SPRING_PROFILES_ACTIVE=dev
       - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_ELASTICSEARCH_URIS=http://elastic-search:9200
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minio}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minio123}
     build:
       context: .
       dockerfile: Dockerfile
