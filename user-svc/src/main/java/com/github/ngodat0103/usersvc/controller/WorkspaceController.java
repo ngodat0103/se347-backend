@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.MediaType;
@@ -16,6 +17,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -46,7 +48,9 @@ public class WorkspaceController {
     return filePart
         .content()
         .collectList()
+        .filter(listDataBuffer -> listDataBuffer.size() <= 1) // Limit to 1024 bytes
         .map(List::getFirst)
+        .switchIfEmpty(Mono.defer(() -> Mono.error(new MaxUploadSizeExceededException(1024))))
         .map(DataBuffer::asInputStream)
         .flatMap(
             inputstream -> {
