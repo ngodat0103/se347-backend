@@ -17,6 +17,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -40,11 +41,12 @@ public class WorkspaceController {
       consumes = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE},
       produces = MediaType.TEXT_PLAIN_VALUE)
   public Mono<String> updatePicture(
+          @RequestBody Flux<DataBuffer> dataBufferFlux,
       @PathVariable String workspaceId, ServerHttpRequest request, Authentication authentication) {
     String contentType = Objects.requireNonNull(request.getHeaders().getContentType()).toString();
 
     Mono<InputStream> inputStreamMono =
-        DataBufferUtils.join(request.getBody()).map(DataBuffer::asInputStream);
+        DataBufferUtils.join(dataBufferFlux).map(DataBuffer::asInputStream);
 
     return inputStreamMono.flatMap(
         inputStream -> {
