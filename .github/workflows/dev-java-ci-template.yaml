@@ -171,7 +171,7 @@ jobs:
         with:
           context: ${{inputs.SERVICE_NAME}}
           push: true
-          tags: ${{steps.meta.outputs.tags}}
+          tags: ${{steps.meta.outputs.tags}}-${{github.sha}}
           cache-from: type=gha
           cache-to: type=gha,mode=max,compression=gzip,compression-level=0
           build-args: |
@@ -242,7 +242,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Update dev image tag
-        run: echo "IMAGE_VERSION=${{needs.build-and-push.outputs.IMAGE_VERSION}}" > .env
+        run: echo "IMAGE_VERSION=${{needs.build-and-push.outputs.IMAGE_VERSION}}-${{github.sha}}" > .env
       - name: Pull new Docker image version
         run: sudo docker compose --profile all pull
       - name: Fetch secrets from Vault
