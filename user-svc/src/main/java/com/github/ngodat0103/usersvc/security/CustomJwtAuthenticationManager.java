@@ -32,42 +32,32 @@ public class CustomJwtAuthenticationManager implements ReactiveAuthenticationMan
 
   private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
-  //   public CustomJwtAuthenticationManager(ReactiveJwtDecoder
-  // jwtDecoder,ReactiveRedisTemplate<String,String> reactiveRedisTemplate) {
-  //        this.jwtDecoder = jwtDecoder;
-  //        this.reactiveRedisTemplate = reactiveRedisTemplate;
-  //    }
+  private Mono<Jwt> checkBlacklist(Jwt jwt) {
+    return reactiveRedisTemplate
+        .opsForValue()
+        .get("access_token_blacklist:" + jwt.getTokenValue())
+        .flatMap(
+            blacklistToken -> {
+              if (blacklistToken != null) {
+                log.info("Token is blacklisted: {}", jwt.getTokenValue());
+                return Mono.error(new InvalidBearerTokenException("Token is blacklisted"));
+              }
+              return Mono.empty();
+            })
+        .thenReturn(jwt);
+  }
 
   @Override
   public Mono<Authentication> authenticate(Authentication authentication) {
-    // @formatter:off
     return Mono.justOrEmpty(authentication)
         .filter(BearerTokenAuthenticationToken.class::isInstance)
         .cast(BearerTokenAuthenticationToken.class)
         .map(BearerTokenAuthenticationToken::getToken)
         .flatMap(this.jwtDecoder::decode)
-        .flatMap(
-            jwt ->
-                reactiveRedisTemplate
-                    .opsForValue()
-                    .get("access_token_blacklist:" + jwt.getTokenValue())
-                    .flatMap(
-                        token -> {
-                          if (token != null) {
-                              log.info("Token is in blacklist");
-                            return Mono.error(new BadJwtException("Token is black list"));
-                          }
-                          return Mono.just(jwt);
-                        })
-                    .thenReturn(jwt))
-        .flatMap(
-            jwt -> {
-              log.info("jwt: {}", jwt);
-              return jwtAuthenticationConverter.convert(jwt);
-            })
+        .flatMap(this::checkBlacklist) // Refactor blacklist check into a method
+        .flatMap(jwtAuthenticationConverter::convert) // Refactor conversion into a method
         .cast(Authentication.class)
-        .onErrorMap(JwtException.class, this::onError);
-    // @formatter:on
+        .onErrorMap(JwtException.class, this::onError); // Handle JWT-specific errors
   }
 
   private AuthenticationException onError(JwtException ex) {
