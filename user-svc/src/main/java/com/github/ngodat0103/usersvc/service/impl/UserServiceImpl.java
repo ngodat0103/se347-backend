@@ -28,6 +28,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -38,6 +39,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.ForwardedHeaderUtils;
@@ -65,6 +67,7 @@ public class UserServiceImpl implements UserService {
 
   private static final URI verifyEmailEndpoint =
       URI.create("http://localhost:5000/api/v1/auth/verify-email");
+  private final RedisTemplate<Object, Object> redisTemplate;
 
   @Override
   public Mono<AccountDto> getMe() {
@@ -79,6 +82,21 @@ public class UserServiceImpl implements UserService {
             account -> passwordEncoder.matches(credentialDto.getPassword(), account.getPassword()))
         .switchIfEmpty(Mono.error(new BadCredentialsException(INVALID_EMAIL_OR_PASSWORD)))
         .map(this::createAccessTokenResponse);
+  }
+
+  @Override
+  public Mono<Void> logout(JwtAuthenticationToken jwtAuthenticationToken) {
+    Jwt jwt = jwtAuthenticationToken.getToken();
+    String accessToken = jwt.getTokenValue();
+    Instant expireAt = jwt.getExpiresAt();
+    return reactiveRedisTemplate
+        .opsForValue()
+        .set(
+            "access_token_blacklist:" + accessToken,
+            "This user have logout",
+            Duration.between(Instant.now(), expireAt))
+        .doOnSuccess(aVoid -> log.info("User logged out,blacklist token: {}", accessToken))
+        .then();
   }
 
   private OAuth2AccessTokenResponse createAccessTokenResponse(Account account) {

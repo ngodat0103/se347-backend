@@ -5,11 +5,11 @@ import java.net.URI;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.web.reactive.filter.OrderedWebFilter;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
 @Component
 @Slf4j
 @AllArgsConstructor
-public class BodyRequestSizeLimitFilter implements WebFilter {
+public class BodyRequestSizeLimitWebFilter implements WebFilter, OrderedWebFilter {
   private static final int MAX_UPLOAD_SIZE = 2 * 1024 * 1024; // 2MB
 
   private ObjectMapper objectMapper;
@@ -35,6 +35,7 @@ public class BodyRequestSizeLimitFilter implements WebFilter {
       var headers = response.getHeaders();
       headers.setContentType(MediaType.APPLICATION_PROBLEM_JSON);
       exchange.getResponse().setStatusCode(HttpStatus.PAYLOAD_TOO_LARGE);
+      log.info("Request body size exceeded: {}", length);
       return exchange.getResponse().writeWith(writeProblemDetail(exchange));
     }
     return chain.filter(exchange);
@@ -60,5 +61,10 @@ public class BodyRequestSizeLimitFilter implements WebFilter {
     problemDetail.setType(
         URI.create("https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/413"));
     return problemDetail;
+  }
+
+  @Override
+  public int getOrder() {
+    return 0;
   }
 }

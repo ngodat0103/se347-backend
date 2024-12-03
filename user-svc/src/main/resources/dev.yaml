@@ -10,6 +10,7 @@ management:
         enabled: true
 logging:
   level:
+    org.springframework.web.server.handler: DEBUG
     com.github.ngodat0103.usersvc.service: INFO
 #    org.springframework.kafka: DEBUG
 #    org.springframework.data.mongodb.core.MongoTemplate: DEBUG

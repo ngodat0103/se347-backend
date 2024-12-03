@@ -41,8 +41,10 @@ public class WorkspaceController {
       consumes = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE},
       produces = MediaType.TEXT_PLAIN_VALUE)
   public Mono<String> updatePicture(
-          @RequestBody Flux<DataBuffer> dataBufferFlux,
-      @PathVariable String workspaceId, ServerHttpRequest request, Authentication authentication) {
+      @RequestBody Flux<DataBuffer> dataBufferFlux,
+      @PathVariable String workspaceId,
+      ServerHttpRequest request,
+      Authentication authentication) {
     String contentType = Objects.requireNonNull(request.getHeaders().getContentType()).toString();
 
     Mono<InputStream> inputStreamMono =

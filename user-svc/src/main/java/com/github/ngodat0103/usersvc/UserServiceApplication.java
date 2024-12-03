@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class UserServiceApplication {
   public static void main(String[] args) {
-    //fdsf
+    // fdsf
     SpringApplication.run(com.github.ngodat0103.usersvc.UserServiceApplication.class, args);
   }
 }
