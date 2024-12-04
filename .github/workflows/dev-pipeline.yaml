@@ -87,4 +87,11 @@ jobs:
           done
             
           echo "Trivy scan completed. Results saved in $OUTPUT_FILE"
+      
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-scan-results
+          path: trivy_scan_results.txt
+
 
