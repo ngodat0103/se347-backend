@@ -38,25 +38,52 @@ jobs:
         run: |
           echo "$DOCKER_PASSWORD" | docker login ghcr.io -u "$DOCKER_USERNAME" --password-stdin
 
-      - name: Pull and scan Docker images
-        run: |
-          # List of Docker images from compose.yaml
-          IMAGES=(
-            "docker.elastic.co/elasticsearch/elasticsearch:8.6.2"
-            "docker.elastic.co/kibana/kibana:8.6.2"
-            "docker.redpanda.com/redpandadata/console:latest"
-            "confluentinc/cp-zookeeper:7.4.6"
-            "confluentinc/cp-kafka:7.4.6"
-          )
+      # - name: Pull and scan Docker images
+      #   run: |
+      #     # List of Docker images from compose.yaml
+      #     IMAGES=(
+      #       "docker.elastic.co/elasticsearch/elasticsearch:8.6.2"
+      #       "docker.elastic.co/kibana/kibana:8.6.2"
+      #       "docker.redpanda.com/redpandadata/console:latest"
+      #       "confluentinc/cp-zookeeper:7.4.6"
+      #       "confluentinc/cp-kafka:7.4.6"
+      #     )
           
-          # Install Trivy
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+      #     # Install Trivy
+      #     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
           
-          # Iterate over each image and scan
-          for IMAGE in "${IMAGES[@]}"; do
-            echo "Pulling image: $IMAGE"
-            docker pull "$IMAGE"
+      #     # Iterate over each image and scan
+      #     for IMAGE in "${IMAGES[@]}"; do
+      #       echo "Pulling image: $IMAGE"
+      #       docker pull "$IMAGE"
             
-            echo "Scanning image: $IMAGE"
-            trivy image "$IMAGE"
-          done
+      #       echo "Scanning image: $IMAGE"
+      #       trivy image "$IMAGE"
+      #     done
+      - name: Pull and scan Docker images
+      run: |
+        # List of Docker images from compose.yaml
+        IMAGES=(
+          "docker.elastic.co/elasticsearch/elasticsearch:8.6.2"
+          "docker.elastic.co/kibana/kibana:8.6.2"
+          "docker.redpanda.com/redpandadata/console:latest"
+          "confluentinc/cp-zookeeper:7.4.6"
+          "confluentinc/cp-kafka:7.4.6"
+        )
+        
+        # Install Trivy
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+        
+        OUTPUT_FILE="trivy_scan_results.txt"
+        echo "Trivy Scan Results" > "$OUTPUT_FILE"
+        
+        for IMAGE in "${IMAGES[@]}"; do
+          echo "Pulling image: $IMAGE" >> "$OUTPUT_FILE"
+          docker pull "$IMAGE" >> "$OUTPUT_FILE" 2>&1
+          
+          echo "Scanning image: $IMAGE" >> "$OUTPUT_FILE"
+          trivy image "$IMAGE" >> "$OUTPUT_FILE" 2>&1
+        done
+        
+        echo "Trivy scan completed. Results saved in $OUTPUT_FILE"
+
