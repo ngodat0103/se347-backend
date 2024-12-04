@@ -27,6 +27,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
@@ -41,9 +42,9 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.ForwardedHeaderUtils;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 @AllArgsConstructor
@@ -177,55 +178,72 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  @Transactional
   public Mono<AccountDto> create(AccountDto accountDto, ServerHttpRequest request) {
 
     Account account = userMapper.toDocument(accountDto);
     account.setAccountStatus(Account.AccountStatus.ACTIVE);
     account.setEmailVerified(false);
     account.setPassword(passwordEncoder.encode(account.getPassword()));
-    account.setCreatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
-    account.setLastUpdatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    Instant instant = LocalDateTime.now().toInstant(ZoneOffset.UTC);
+    account.setCreatedDate(instant);
+    account.setLastUpdatedDate(instant);
     account.setWorkspaces(new HashSet<>());
     return userRepository
         .save(account)
+            .onErrorMap(DuplicateKeyException.class,e -> createConflictException(log, USER, "email", account.getEmail()))
+            .doOnError(ConflictException.class, e ->log.info("Email {} already exists",accountDto.getEmail()))
         .map(a -> Pair.of(account, request.getHeaders()))
-        .doOnError(e -> handleSaveError(e, account))
-        .flatMap(pair -> handlePostSave(pair.getLeft(), pair.getRight()));
+        .flatMap(this::handlePostSave);
   }
 
-  private void handleSaveError(Throwable e, Account account) {
-    if (e.getMessage().contains(IDX_EMAIL)) {
-      log.info("User with email {} already exists", account.getEmail());
-      throw createConflictException(log, USER, EMAIL, account.getEmail());
-    }
-    log.error("Unexpected exception", e);
-  }
 
-  private Mono<AccountDto> handlePostSave(Account account, HttpHeaders headers) {
+  private Mono<AccountDto> handlePostSave(Pair<Account, HttpHeaders> pair) {
+    Account account = pair.getLeft();
+    HttpHeaders headers = pair.getRight();
     String verifyEmailCode = generateVerifyEmailCode();
-    EmailDto emailDto = createEmailDto(account, verifyEmailCode, headers);
     AccountDto accountDto = userMapper.toDto(account);
-    Map<String, Object> additionalProperties =
-        Map.of("accountDto", accountDto, "emailDto", emailDto);
-
-    TopicRegisteredUser topicRegisteredUser =
-        TopicRegisteredUser.builder()
-            .createdDate(LocalDateTime.now().toInstant(ZoneOffset.UTC))
-            .action(Action.INSERT)
-            .additionalProperties(additionalProperties)
-            .build();
-
-    log.info("Sending new registered user to kafka: {}", topicRegisteredUser);
-    KeyTopic keyTopic = new KeyTopic("account", account.getAccountId());
-    serviceProducer.sendBusinessLogicTopic(keyTopic, topicRegisteredUser);
-    log.info("Store Email verification code in redis: {}", verifyEmailCode);
-    return reactiveRedisTemplate
-        .opsForValue()
-        .set(verifyEmailCode, account.getAccountId())
-        .thenReturn(account)
-        .map(userMapper::toDto);
+    sendToKafka(account, headers, accountDto, verifyEmailCode)
+            .doOnSubscribe(aVoid -> log.debug("Sending email verification to Kafka"))
+            .retry(3)
+            .doOnSuccess(aVoid -> log.debug("Email verification sent to Kafka"))
+            .doOnError(throwable -> log.error("Error sending email verification to Kafka", throwable))
+            .subscribeOn(Schedulers.boundedElastic())
+            .subscribe();
+    storeVerificationCodeInRedis(verifyEmailCode, account.getAccountId())
+            .doOnSubscribe(aVoid -> log.debug("Storing email verification code in Redis"))
+            .retry(3)
+            .doOnSuccess(aVoid -> log.debug("Email verification code stored in Redis"))
+            .doOnError(throwable -> log.error("Error storing email verification code in Redis", throwable))
+            .subscribeOn(Schedulers.boundedElastic())
+            .subscribe();
+    return Mono.just(accountDto);
   }
+
+  private Mono<Void> sendToKafka(Account account, HttpHeaders headers, AccountDto accountDto, String verifyEmailCode) {
+    TopicRegisteredUser topicRegisteredUser = createTopicRegisteredUser(account, accountDto, verifyEmailCode,headers);
+    KeyTopic keyTopic = new KeyTopic("account", account.getAccountId());
+    log.info("Sending new registered user to Kafka: {}", topicRegisteredUser);
+    serviceProducer.sendBusinessLogicTopic(keyTopic, topicRegisteredUser);
+    return Mono.empty();
+  }
+
+  private TopicRegisteredUser createTopicRegisteredUser(Account account, AccountDto accountDto, String verifyEmailCode,HttpHeaders headers) {
+    EmailDto emailDto = createEmailDto(account, verifyEmailCode, headers);
+    Map<String, Object> additionalProperties = Map.of("accountDto", accountDto, "emailDto", emailDto);
+    return TopicRegisteredUser.builder()
+        .createdDate(LocalDateTime.now().toInstant(ZoneOffset.UTC))
+        .action(Action.INSERT)
+        .additionalProperties(additionalProperties)
+        .build();
+  }
+
+  private Mono<Void> storeVerificationCodeInRedis(String verifyEmailCode, String accountId) {
+    log.info("Storing email verification code in Redis: {}", verifyEmailCode);
+    return reactiveRedisTemplate.opsForValue().set(verifyEmailCode, accountId).then();
+  }
+
+
+
 
   private EmailDto createEmailDto(
       Account account, String verifyEmailCode, HttpHeaders forwardedHeaders) {

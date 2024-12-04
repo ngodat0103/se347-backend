@@ -1,5 +1,6 @@
 package com.github.ngodat0103.usersvc.security;
 
+import java.time.Duration;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
@@ -44,6 +45,7 @@ public class CustomJwtAuthenticationManager implements ReactiveAuthenticationMan
               }
               return Mono.empty();
             })
+        .timeout(Duration.ofSeconds(1), Mono.empty())
         .thenReturn(jwt);
   }
 
@@ -54,10 +56,10 @@ public class CustomJwtAuthenticationManager implements ReactiveAuthenticationMan
         .cast(BearerTokenAuthenticationToken.class)
         .map(BearerTokenAuthenticationToken::getToken)
         .flatMap(this.jwtDecoder::decode)
-        .flatMap(this::checkBlacklist) // Refactor blacklist check into a method
-        .flatMap(jwtAuthenticationConverter::convert) // Refactor conversion into a method
+        .flatMap(this::checkBlacklist)
+        .flatMap(jwtAuthenticationConverter::convert)
         .cast(Authentication.class)
-        .onErrorMap(JwtException.class, this::onError); // Handle JWT-specific errors
+        .onErrorMap(JwtException.class, this::onError);
   }
 
   private AuthenticationException onError(JwtException ex) {

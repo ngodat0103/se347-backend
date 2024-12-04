@@ -121,8 +121,8 @@ class ControllerIT {
         .isCreated();
 
     var records = consumer.poll(Duration.ofSeconds(3));
-    assertEquals(
-        1, records.count()); // consume 2 messages from 2 topics: user-business-logic and user-cdc
+    assertEquals(1, records.count()); // consume 2 messages from 2 topics: user-business-logic and
+    // user-cdc
     var userSvcTopic = records.records(TOPICS.getFirst()).iterator().next();
     var topicRegisteredUser = userSvcTopic.value();
     Assertions.assertNotNull(topicRegisteredUser);
