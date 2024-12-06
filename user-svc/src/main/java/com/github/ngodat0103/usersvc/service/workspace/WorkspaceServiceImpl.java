@@ -1,4 +1,4 @@
-package com.github.ngodat0103.usersvc.service.impl;
+package com.github.ngodat0103.usersvc.service.workspace;
 
 import static com.github.ngodat0103.usersvc.exception.Util.createConflictException;
 
@@ -12,7 +12,6 @@ import com.github.ngodat0103.usersvc.persistence.document.workspace.WorkspacePro
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.usersvc.service.MinioService;
-import com.github.ngodat0103.usersvc.service.WorkspaceService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;

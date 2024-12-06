@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TopicRegisteredUser {
+public class ValueTopicRegisteredUser {
 
   @NotNull private Instant createdDate;
   @NotNull private Action action;

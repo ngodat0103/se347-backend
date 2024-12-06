@@ -2,7 +2,7 @@ package com.github.ngodat0103.usersvc.config.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;
-import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
+import com.github.ngodat0103.usersvc.dto.topic.ValueTopicRegisteredUser;
 import java.util.Map;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Serializer;
@@ -17,13 +17,13 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 @Configuration
 public class KafkaConfiguration {
   @Bean
-  public KafkaTemplate<KeyTopic, TopicRegisteredUser> kafkaTemplate(
+  public KafkaTemplate<KeyTopic, ValueTopicRegisteredUser> kafkaTemplate(
       ObjectMapper objectMapper, KafkaProperties kafkaProperties) {
     Map<String, Object> props =
         Map.of(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
-    Serializer<TopicRegisteredUser> valueSerializer = new JsonSerializer<>(objectMapper);
+    Serializer<ValueTopicRegisteredUser> valueSerializer = new JsonSerializer<>(objectMapper);
     Serializer<KeyTopic> keySerializer = new KeyTopicSerialize();
-    ProducerFactory<KeyTopic, TopicRegisteredUser> producerFactory =
+    ProducerFactory<KeyTopic, ValueTopicRegisteredUser> producerFactory =
         new DefaultKafkaProducerFactory<>(props, keySerializer, valueSerializer);
     return new KafkaTemplate<>(producerFactory);
   }

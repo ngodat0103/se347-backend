@@ -3,8 +3,9 @@ package com.github.ngodat0103.usersvc.service;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.dto.topic.Action;
 import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;
-import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
+import com.github.ngodat0103.usersvc.dto.topic.ValueTopicRegisteredUser;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
+import com.github.ngodat0103.usersvc.service.kafka.DefaultKafkaService;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
@@ -31,7 +32,8 @@ public class CdcService implements ApplicationListener<ApplicationReadyEvent> {
   private final ReactiveMongoTemplate reactiveMongoTemplate;
   private final TaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
   private final UserMapper userMapper;
-  private final ServiceProducer serviceProducer;
+  private final DefaultKafkaService defaultKafkaService;
+  private static final String TOPIC_NAME = "user-cdc";
 
   public void listenToChanges() {
     reactiveMongoTemplate
@@ -41,7 +43,8 @@ public class CdcService implements ApplicationListener<ApplicationReadyEvent> {
         .doOnSubscribe(s -> log.info("Subscribed to changes on 'account' collection..."))
         .map(this::mapToAccountAndActionPair)
         .map(this::mapToKafkaMessage)
-        .doOnNext(pair -> serviceProducer.sendCDC(pair.getLeft(), pair.getRight()))
+        .doOnNext(
+            pair -> defaultKafkaService.sendMessage(TOPIC_NAME, pair.getLeft(), pair.getRight()))
         .doOnError(throwable -> log.error("Error occurred while listening to changes: ", throwable))
         .doOnTerminate(() -> Thread.currentThread().interrupt())
         .blockLast();
@@ -65,11 +68,11 @@ public class CdcService implements ApplicationListener<ApplicationReadyEvent> {
     }
   }
 
-  private Pair<KeyTopic, TopicRegisteredUser> mapToKafkaMessage(Pair<Account, Action> pair) {
+  private Pair<KeyTopic, ValueTopicRegisteredUser> mapToKafkaMessage(Pair<Account, Action> pair) {
     log.debug("Mapping to Kafka message: {}", pair);
     var keyTopic = new KeyTopic("account", pair.getLeft().getAccountId());
     var topicRegisteredUser =
-        TopicRegisteredUser.builder()
+        ValueTopicRegisteredUser.builder()
             .createdDate(LocalDateTime.now().toInstant(ZoneOffset.UTC))
             .action(pair.getRight())
             .additionalProperties(Map.of("accountDto", userMapper.toDto(pair.getLeft())))

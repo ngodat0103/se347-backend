@@ -1,7 +1,7 @@
 package com.github.ngodat0103.usersvc.controller;
 
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
-import com.github.ngodat0103.usersvc.service.UserService;
+import com.github.ngodat0103.usersvc.service.user.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
