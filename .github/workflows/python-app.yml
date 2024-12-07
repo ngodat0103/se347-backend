@@ -21,7 +21,6 @@ jobs:
       uses: actions/setup-python@v4  # Cài đặt Python
       with:
         python-version: '3.12'  # Đảm bảo cài đặt đúng phiên bản Python
-      working-directory: ./email-verify-sender
 
     - name: Install dependencies
       run: |
