@@ -9,6 +9,7 @@ def kafka_consume():
     """
     Subcribe to kafka topic, extract information from messages and send it to email sender.
     """
+    """
     logger = logging.getLogger("kafka_process")
 
     topic = "registered-user"
@@ -38,3 +39,4 @@ def kafka_consume():
             send_email(email, code, url)
         except Exception as e:
             logger.error(f"Failed to parse message", exc_info=e)
+    """
