@@ -1,7 +1,7 @@
 package com.github.ngodat0103.usersvc.controller;
 
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
-import com.github.ngodat0103.usersvc.service.WorkspaceService;
+import com.github.ngodat0103.usersvc.service.workspace.WorkspaceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.io.IOException;

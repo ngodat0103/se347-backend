@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @AllArgsConstructor
 public class BodyRequestSizeLimitWebFilter implements WebFilter, OrderedWebFilter {
-  private static final int MAX_UPLOAD_SIZE = 2 * 1024 * 1024; // 2MB
+  private static final int MAX_UPLOAD_SIZE = 2 * 1_000_000; // 2MB
 
   private ObjectMapper objectMapper;
 

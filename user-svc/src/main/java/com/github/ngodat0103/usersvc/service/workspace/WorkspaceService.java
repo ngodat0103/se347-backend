@@ -1,4 +1,4 @@
-package com.github.ngodat0103.usersvc.service;
+package com.github.ngodat0103.usersvc.service.workspace;
 
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
 import java.io.IOException;

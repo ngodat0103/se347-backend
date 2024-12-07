@@ -2,34 +2,31 @@ package com.github.ngodat0103.usersvc.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.github.ngodat0103.usersvc.dto.account.AccountDto;
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
-import com.github.ngodat0103.usersvc.dto.account.EmailDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapperImpl;
 import com.github.ngodat0103.usersvc.dto.topic.Action;
-import com.github.ngodat0103.usersvc.dto.topic.KeyTopic;
-import com.github.ngodat0103.usersvc.dto.topic.TopicRegisteredUser;
 import com.github.ngodat0103.usersvc.exception.ConflictException;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
-import com.github.ngodat0103.usersvc.service.impl.UserServiceImpl;
+import com.github.ngodat0103.usersvc.service.email.UserEmailService;
+import com.jayway.jsonpath.JsonPath;
+import com.redis.testcontainers.RedisContainer;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -43,48 +40,74 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.Assert;
+import org.testcontainers.containers.MinIOContainer;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
+import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.MapperFeature;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
-@Import(MyTestConfiguration.class)
 @ActiveProfiles("IT")
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Slf4j
-@Disabled(value = "Temporarily disabled due to the lack of implementation")
 class ControllerIT {
   @Autowired private WebTestClient webTestClient;
   @Autowired private UserRepository userRepository;
-  private final ObjectMapper objectMapper =
-      new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+  private final ObjectMapper objectMapper = new ObjectMapper();
   private static final String API_PATH = "/api/v1";
   private static final String USER_PATH = API_PATH + "/users";
   private static final String LOGIN_PATH = API_PATH + "/auth/login";
   private static final String AUTH_PATH = API_PATH + "/auth";
+  private static final String MONGODB_DOCKER_IMAGE =
+      "mongodb/mongodb-community-server:7.0.6-ubuntu2204-20241117T082517Z";
+  private static final MongoDBContainer mongoDBContainer =
+      new MongoDBContainer(MONGODB_DOCKER_IMAGE);
 
+  private static final RedisContainer redisContainer =
+      new RedisContainer(DockerImageName.parse("redis:alpine3.20"));
+
+  private static final String KAFKA_DOCKER_IMAGE = "confluentinc/cp-kafka:7.4.6";
+
+  private static final ConfluentKafkaContainer kafkaContainer =
+      new ConfluentKafkaContainer(KAFKA_DOCKER_IMAGE);
+
+  private static final MinIOContainer minioContainer =
+      new MinIOContainer(DockerImageName.parse("minio/minio:RELEASE.2023-09-04T19-57-37Z"));
   private final UserMapper userMapper = new UserMapperImpl();
   private AccountDto fakeAccountDto;
   private Account fakeAccount;
-  @Autowired private KafkaConsumer<KeyTopic, TopicRegisteredUser> consumer;
+  private KafkaConsumer<String, String> consumer;
   @Autowired private JwtEncoder jwtEncoder;
   @Autowired private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
-  private static final List<String> TOPICS = List.of("user-business-logic");
+  private static final List<String> TOPICS = List.of("user-email");
 
   @BeforeAll
   static void setUpAll() {
-    ContainerConfig.startContainers();
+    mongoDBContainer.start();
+    kafkaContainer.start();
+    redisContainer.start();
+    minioContainer.start();
   }
 
   @AfterAll
   static void tearDownAll() {
-    ContainerConfig.stopContainers();
+    mongoDBContainer.stop();
+    kafkaContainer.stop();
+    redisContainer.stop();
+    minioContainer.stop();
   }
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.kafka.bootstrap-servers", ContainerConfig::getKafkaBootstrapServers);
-    registry.add("spring.data.mongodb.uri", ContainerConfig::getMongoDbUri);
-    registry.add("spring.data.redis.port", ContainerConfig::getRedisPort);
+    registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
+    registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+    registry.add("spring.data.redis.port", redisContainer::getRedisPort);
+    registry.add("minio.url", minioContainer::getS3URL);
+    registry.add("minio.access-key", minioContainer::getUserName);
+    registry.add("minio.secret-key", minioContainer::getPassword);
   }
 
   @BeforeEach
@@ -94,23 +117,22 @@ class ControllerIT {
     String emailFake = faker.internet().emailAddress();
     String nickNameFake = faker.name().username();
     String passwordFake = faker.internet().password();
-    fakeAccountDto = new AccountDto();
-    fakeAccountDto.setEmail(emailFake);
-    fakeAccountDto.setNickName(nickNameFake);
-    fakeAccountDto.setPassword(passwordFake);
+    this.fakeAccountDto =
+        AccountDto.builder().email(emailFake).nickName(nickNameFake).password(passwordFake).build();
     this.fakeAccount = userMapper.toDocument(fakeAccountDto);
     this.fakeAccount.setAccountStatus(Account.AccountStatus.ACTIVE);
+    this.consumer = new KafkaConsumer<>(getConsumerProps());
+    this.consumer.subscribe(TOPICS);
   }
 
   @AfterEach
   void tearDown() {
     userRepository.deleteAll().block();
+    consumer.close();
   }
 
   @Test
-  @Order(1)
   void createAccountWhenNotExists() {
-    this.consumer.subscribe(TOPICS);
     webTestClient
         .post()
         .uri(USER_PATH)
@@ -121,41 +143,41 @@ class ControllerIT {
         .isCreated();
 
     var records = consumer.poll(Duration.ofSeconds(3));
+    assertEquals(1, records.count());
+    var recordKafka = records.iterator().next();
+    var value = recordKafka.value();
+    assertNotNull(JsonPath.read(value, "$.createdDate"));
+    assertEquals(Action.INSERT.toString(), JsonPath.read(value, "$.action"));
+
+    //        // accountDto assertions
+    //        assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.accountId"));
+    //        assertEquals(
+    //                fakeAccount.getNickName(),
+    //                JsonPath.read(value, "$.additionalProperties.accountDto.nickName"));
+    //        assertEquals(
+    //                fakeAccount.getEmail(), JsonPath.read(value,
+    // "$.additionalProperties.accountDto.email"));
+    //        assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.zoneInfo"));
+    //        assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.pictureUrl"));
+    //        assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.locale"));
+    //        assertEquals(
+    //                Boolean.FALSE, JsonPath.read(value,
+    // "$.additionalProperties.accountDto.emailVerified"));
+    //        assertNotNull(JsonPath.read(value,
+    // "$.additionalProperties.accountDto.lastUpdatedDate"));
+    //        assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.createdDate"));
+
+    // emailDto assertions
+    assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.accountId"));
+    assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.emailVerificationCode"));
+    assertNotNull(
+        JsonPath.read(value, "$.additionalProperties.emailDto.emailVerificationEndpoint"));
     assertEquals(
-        1, records.count()); // consume 2 messages from 2 topics: user-business-logic and user-cdc
-    var userSvcTopic = records.records(TOPICS.getFirst()).iterator().next();
-    var topicRegisteredUser = userSvcTopic.value();
-    Assertions.assertNotNull(topicRegisteredUser);
-    Assertions.assertNotNull(topicRegisteredUser.getCreatedDate());
-    Assertions.assertEquals(Action.INSERT, topicRegisteredUser.getAction());
-    Map<String, Object> additionalProperties = topicRegisteredUser.getAdditionalProperties();
-    Assertions.assertNotNull(additionalProperties);
-    AccountDto accountDto = getAccountDtoFromTopic(topicRegisteredUser);
-    Assertions.assertEquals(fakeAccountDto.getEmail(), accountDto.getEmail());
-    Assertions.assertEquals(fakeAccountDto.getNickName(), accountDto.getNickName());
-    Assertions.assertNull(accountDto.getPassword());
-    Assertions.assertNotNull(accountDto.getCreatedDate());
-    Assertions.assertNotNull(accountDto.getAccountId());
-    Assertions.assertNotNull(accountDto.getLastUpdatedDate());
-    EmailDto emailDto = getEmailDtoFromTopic(topicRegisteredUser);
-    Assertions.assertEquals(fakeAccountDto.getEmail(), emailDto.getEmail());
-    Assertions.assertEquals(accountDto.getAccountId(), emailDto.getAccountId());
-    Assertions.assertNotNull(emailDto.getEmailVerificationCode());
-    Assertions.assertNotNull(emailDto.getEmailVerificationEndpoint());
-  }
-
-  private AccountDto getAccountDtoFromTopic(TopicRegisteredUser topicRegisteredUser) {
-    Map<String, Object> additionalProperties = topicRegisteredUser.getAdditionalProperties();
-    return objectMapper.convertValue(additionalProperties.get("accountDto"), AccountDto.class);
-  }
-
-  private EmailDto getEmailDtoFromTopic(TopicRegisteredUser topicRegisteredUser) {
-    Map<String, Object> additionalProperties = topicRegisteredUser.getAdditionalProperties();
-    return objectMapper.convertValue(additionalProperties.get("emailDto"), EmailDto.class);
+        fakeAccount.getEmail(), JsonPath.read(value, "$.additionalProperties.emailDto.email"));
   }
 
   @Test
-  void createAccountWhenAlreadyExists() throws com.fasterxml.jackson.core.JsonProcessingException {
+  void createAccountWhenAlreadyExists() throws JsonProcessingException {
     userRepository.save(fakeAccount).block();
 
     webTestClient
@@ -284,9 +306,7 @@ class ControllerIT {
   }
 
   @Test
-  @Order(2)
   void givenNotVerified_whenResendEmail_thenReturn202() {
-    this.consumer.commitSync();
     fakeAccount.setEmailVerified(false);
     fakeAccount = userRepository.save(fakeAccount).block();
     String accessToken = createTemporaryAccessToken(fakeAccount);
@@ -297,19 +317,16 @@ class ControllerIT {
         .exchange()
         .expectStatus()
         .isEqualTo(HttpStatus.ACCEPTED);
-    var records = consumer.poll(Duration.ofSeconds(3));
+    var records = consumer.poll(Duration.ofSeconds(5));
     assertEquals(1, records.count());
-    var recordKafka = records.records(TOPICS.getFirst());
-    var topicRegisteredUser = recordKafka.iterator().next().value();
-    Assertions.assertNotNull(topicRegisteredUser);
-    Assertions.assertEquals(Action.RESEND_EMAIL_VERIFICATION, topicRegisteredUser.getAction());
-    EmailDto emailDto = getEmailDtoFromTopic(topicRegisteredUser);
-    Assertions.assertNotNull(emailDto);
-    Assertions.assertEquals(fakeAccount.getAccountId(), emailDto.getAccountId());
-    Assertions.assertEquals(fakeAccount.getEmail(), emailDto.getEmail());
-    Assertions.assertNotNull(emailDto.getEmailVerificationCode());
-    Assertions.assertNotNull(emailDto.getEmailVerificationEndpoint());
-    consumer.commitSync();
+    var recordKafka = records.iterator().next();
+    var value = recordKafka.value();
+    log.debug(value);
+    String accountId = JsonPath.read(value, "$.additionalProperties.emailDto.accountId");
+    String email = JsonPath.read(value, "$.additionalProperties.emailDto.email");
+    assertEquals(fakeAccountDto.getEmail(), email);
+    Assertions.assertNotNull(accountId);
+    assertEquals(Action.RESEND_EMAIL_VERIFICATION.toString(), JsonPath.read(value, "$.action"));
   }
 
   @Test
@@ -317,7 +334,7 @@ class ControllerIT {
     fakeAccount.setEmailVerified(false);
     fakeAccount = userRepository.save(fakeAccount).block();
 
-    String randomCode = UserServiceImpl.generateVerifyEmailCode();
+    String randomCode = UserEmailService.generateVerifyEmailCode();
     reactiveRedisTemplate.opsForValue().set(randomCode, fakeAccount.getAccountId()).block();
     String accessToken = createTemporaryAccessToken(fakeAccount);
     webTestClient
@@ -348,5 +365,19 @@ class ControllerIT {
     JwtEncoderParameters jwtEncoderParameters = JwtEncoderParameters.from(jwtClaimsSet);
 
     return jwtEncoder.encode(jwtEncoderParameters).getTokenValue();
+  }
+
+  private Map<String, Object> getConsumerProps() {
+    return Map.of(
+        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+        "earliest",
+        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
+        kafkaContainer.getBootstrapServers(),
+        ConsumerConfig.GROUP_ID_CONFIG,
+        "test-group",
+        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+        StringDeserializer.class,
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+        StringDeserializer.class);
   }
 }

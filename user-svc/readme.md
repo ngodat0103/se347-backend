@@ -1,106 +1,84 @@
-# User Service (user-svc)
+# **User Service**
 
-## Overview
-The User Service is a part of the se347-backend project, built using Spring Boot. It provides RESTful APIs for user registration, authentication, and account management. This service is designed to be reactive and leverages Spring Data MongoDB for data persistence and Spring Security for authentication and authorization.
+## **Project Overview**
+The **User Service** is a scalable backend service designed to manage user accounts and authentication for a distributed application. It provides capabilities for user registration, email verification, login, and workspace management. The service leverages a reactive programming model using **Spring WebFlux**, ensuring high performance and scalability for I/O-intensive operations.
 
-## Technologies Used
-- **Java**: 17
-- **Spring Boot**: 3.3.5
-- **Spring Data MongoDB Reactive**: 3.3.5
-- **Spring Kafka**: 3.3.5
-- **Spring Security **: 1.3.3
-- **Lombok**: For reducing boilerplate code
-- **MapStruct**: For mapping between DTOs and domain objects
-- **Swagger**: For API documentation
+---
 
-## Project Structure
-```
-D:\code\projects\se347-backend\user-svc
-    src
-    ├── main
-    │   ├── resources
-    │   │   ├── application.yaml
-    │   │   ├── dev.yaml
-    │   │   ├── IT.yaml
-    │   │   ├── minio-default-policy.json
-    │   │   ├── staging.yaml
-    │   │   └── META-INF
-    │   │       └── additional-spring-configuration-metadata.json
-    │   └── java
-    │       └── com
-    │           └── github
-    │               └── ngodat0103
-    │                   └── usersvc
-    │                       ├── UserServiceApplication.java
-    │                       ├── controller
-    │                       │   ├── AppController.java
-    │                       │   ├── AuthController.java
-    │                       │   ├── UserController.java
-    │                       │   └── WorkspaceController.java
-    │                       ├── dto
-    │                       │   ├── WorkspaceDto.java
-    │                       │   ├── account
-    │                       │   │   ├── AccountDto.java
-    │                       │   │   ├── CredentialDto.java
-    │                       │   │   └── EmailDto.java
-    │                       │   ├── mapper
-    │                       │   │   ├── UserMapper.java
-    │                       │   │   └── WorkspaceMapper.java
-    │                       │   └── topic
-    │                       │       ├── Action.java
-    │                       │       ├── KeyTopic.java
-    │                       │       └── TopicRegisteredUser.java
-    │                       ├── exception
-    │                       │   ├── ConflictException.java
-    │                       │   ├── GlobalExceptionHandler.java
-    │                       │   ├── InvalidEmailCodeException.java
-    │                       │   ├── NotFoundException.java
-    │                       │   └── Util.java
-    │                       ├── filter
-    │                       │   └── BodyRequestSizeLimitFilter.java
-    │                       ├── security
-    │                       │   └── SecurityConfiguration.java
-    │                       ├── service
-    │                       │   ├── CdcService.java
-    │                       │   ├── MinioService.java
-    │                       │   ├── ServiceProducer.java
-    │                       │   ├── UserService.java
-    │                       │   ├── WorkspaceService.java
-    │                       │   └── impl
-    │                       │       ├── UserServiceImpl.java
-    │                       │       └── WorkspaceServiceImpl.java
-    │                       ├── swagger
-    │                       │   └── SwaggerConfiguration.java
-    │                       ├── config
-    │                       │   ├── kafka
-    │                       │   │   ├── KafkaConfiguration.java
-    │                       │   │   └── KeyTopicSerialize.java
-    │                       │   └── minio
-    │                       │       ├── MinioAutoconfiguration.java
-    │                       │       └── MinioProperties.java
-    │                       └── persistence
-    │                           ├── document
-    │                           │   ├── Account.java
-    │                           │   ├── BaseDocument.java
-    │                           │   └── workspace
-    │                           │       ├── Workspace.java
-    │                           │       ├── WorkSpacePermission.java
-    │                           │       └── WorkspaceProperty.java
-    │                           └── repository
-    │                               ├── UserRepository.java
-    │                               └── WorkspaceRepository.java
-    └── test
-        └── java
-            └── com
-                └── github
-                    └── ngodat0103
-                        └── usersvc
-                            └── controller
-                                ├── ContainerConfig.java
-                                ├── ControllerIT.java
-                                └── MyTestConfiguration.java
-```
+## **Project Details**
+### **Features**
+- **User Management**: Create, update, and delete user accounts.
+- **Authentication**: Supports login/logout using JWT-based OAuth2 authentication.
+- **Email Integration**:
+    - Sends email verification for new users.
+    - Resends verification emails on request.
+- **Workspace Management**: Allows users to manage associated workspaces.
+- **Event Streaming**:
+    - Integrates with **Kafka** to produce user-related events for downstream systems.
+    - Implements CDC (Change Data Capture) to publish changes to user accounts.
+- **Asynchronous Processing**: Uses Redis for task offloading, such as email verification.
 
+### **Architecture**
+The service follows a **modular architecture**:
+- Organized into separate layers (controllers, services, and repositories).
+- Adheres to interface-based design for better extensibility and testing.
+
+---
+
+## **Description**
+This service is part of a larger microservices-based system and is designed to handle user-related workflows. It leverages modern practices such as:
+- **Reactive Programming**: Ensures high concurrency and non-blocking I/O.
+- **Event-Driven Architecture**: Publishes user events to Kafka for external systems to consume.
+- **Cloud-Native Design**: Configured for deployment in containerized environments with minimal overhead.
+
+### **Modules**
+1. **Auth**:
+    - Handles login/logout functionality.
+    - Uses JWT for authentication.
+2. **Email**:
+    - Sends email verification using a Kafka-backed producer.
+    - Stores verification codes in Redis for validation.
+3. **Kafka Integration**:
+    - Produces events for topics like `user-email` and `user-cdc`.
+    - Custom Kafka service (`DefaultKafkaService`) ensures type safety and validation.
+4. **Workspace**:
+    - Provides API endpoints for workspace-related actions.
+
+---
+
+## **Technology Stack**
+### **Core Frameworks and Libraries**
+- **Java 17**: Core programming language.
+- **Spring WebFlux**: Reactive framework for building asynchronous and non-blocking REST APIs.
+- **Spring Data MongoDB**: Manages user and workspace data in MongoDB.
+- **Spring Security**: Implements authentication and authorization using OAuth2 and JWT.
+- **Reactor**: Core library for reactive programming.
+
+### **Infrastructure and Tools**
+- **Kafka**: Event streaming platform for publishing and consuming user events.
+- **Redis**: In-memory data store for email verification and token blacklisting.
+- **MinIO**: Cloud-native storage for workspace-related files (if applicable).
+- **Swagger/OpenAPI**: API documentation for easier client integration.
+
+### **Development Tools**
+- **Maven**: Build and dependency management.
+- **IntelliJ IDEA**: Recommended IDE for Java development.
+- **JUnit 5**: Unit testing framework.
+- **Mocking**: Uses Mockito for unit test isolation.
+
+---
+
+## **Getting Started**
+### **Prerequisites**
+- **Java 17** or higher.
+- **Docker** for containerized deployment.
+- Kafka and Redis running locally or in a cloud environment.
+
+### **Run the Application**
+1. Clone the repository:
+   ```bash
+   git clone <repo-url>
+   cd user-svc
 ## API Endpoints
 The User Service supports the following API endpoints:
 

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b9fffd90-f3aa-4ff1-9c71-ffc7ff0bb064" name="Changes" comment="feat: rename gateway webhook workflow to auth-svc webhook&#10;- Updated workflow file from gateway-webhook-dev.yaml to &#10;  auth-svc-webhook-dev.yaml&#10;- Adjusted paths to reflect changes in service structure&#10;- Modified webhook authentication token for auth service" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../../.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;ngodat0103&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/ngodat0103/NT548.P11.MMCL.git&quot;,
+    &quot;accountId&quot;: &quot;39437dab-aa7e-423b-9666-5ad401759f48&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="2ovMNw8GR1mUN6SJ3rotDkrVn08" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "dev",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/akira/code/se347/backend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fdfe4dae3a2d-intellij.indexing.shared.core-IU-243.21565.193" />
+        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-IU-243.21565.193" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b9fffd90-f3aa-4ff1-9c71-ffc7ff0bb064" name="Changes" comment="" />
+      <created>1731745559833</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1731745559833</updated>
+      <workItem from="1731745560898" duration="2214000" />
+      <workItem from="1731896330221" duration="1064000" />
+      <workItem from="1731899711655" duration="133000" />
+      <workItem from="1731915765340" duration="935000" />
+      <workItem from="1731916709711" duration="955000" />
+      <workItem from="1731920532087" duration="90000" />
+      <workItem from="1731922118588" duration="175000" />
+      <workItem from="1731990889954" duration="42000" />
+    </task>
+    <task id="LOCAL-00001" summary="feat: add initial Helm chart for auth-svc and share-infra&#10;- Introduced Chart.yaml and values.yaml for both auth-svc and share-infra&#10;- Added necessary templates including deployment, service, and configmap&#10;- Implemented autoscaling, liveness, and readiness probes for auth-svc&#10;- Added .helmignore files to exclude unnecessary files from packaging&#10;- Configured Kafka as a dependency for share-infra">
+      <option name="closed" value="true" />
+      <created>1731747571581</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1731747571581</updated>
+    </task>
+    <task id="LOCAL-00002" summary="feat: add initial Helm chart for user-svc (issue: dev)&#10;- Introduced Chart.yaml and values.yaml for user-svc&#10;- Added necessary templates including deployment, service, and configmap&#10;- Implemented autoscaling, liveness, and readiness probes for user-svc&#10;- Added .helmignore files to exclude unnecessary files from packaging&#10;- Configured PostgreSQL as a dependency for user-svc">
+      <option name="closed" value="true" />
+      <created>1731918597017</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1731918597017</updated>
+    </task>
+    <task id="LOCAL-00003" summary="feat: rename gateway webhook workflow to auth-svc webhook &#10;- Updated workflow file from gateway-webhook-dev.yaml to &#10;  auth-svc-webhook-dev.yaml&#10;- Adjusted paths to reflect changes in service structure&#10;- Modified webhook authentication token for auth service">
+      <option name="closed" value="true" />
+      <created>1731920612788</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1731920612788</updated>
+    </task>
+    <task id="LOCAL-00004" summary="feat: rename gateway webhook workflow to auth-svc webhook&#10;- Updated workflow file from gateway-webhook-dev.yaml to &#10;  auth-svc-webhook-dev.yaml&#10;- Adjusted paths to reflect changes in service structure&#10;- Modified webhook authentication token for auth service">
+      <option name="closed" value="true" />
+      <created>1731922159596</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1731922159596</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="feat: add initial Helm chart for auth-svc and share-infra&#10;- Introduced Chart.yaml and values.yaml for both auth-svc and share-infra&#10;- Added necessary templates including deployment, service, and configmap&#10;- Implemented autoscaling, liveness, and readiness probes for auth-svc&#10;- Added .helmignore files to exclude unnecessary files from packaging&#10;- Configured Kafka as a dependency for share-infra" />
+    <MESSAGE value="feat: add initial Helm chart for user-svc (issue: dev)&#10;- Introduced Chart.yaml and values.yaml for user-svc&#10;- Added necessary templates including deployment, service, and configmap&#10;- Implemented autoscaling, liveness, and readiness probes for user-svc&#10;- Added .helmignore files to exclude unnecessary files from packaging&#10;- Configured PostgreSQL as a dependency for user-svc" />
+    <MESSAGE value="feat: rename gateway webhook workflow to auth-svc webhook &#10;- Updated workflow file from gateway-webhook-dev.yaml to &#10;  auth-svc-webhook-dev.yaml&#10;- Adjusted paths to reflect changes in service structure&#10;- Modified webhook authentication token for auth service" />
+    <MESSAGE value="feat: rename gateway webhook workflow to auth-svc webhook&#10;- Updated workflow file from gateway-webhook-dev.yaml to &#10;  auth-svc-webhook-dev.yaml&#10;- Adjusted paths to reflect changes in service structure&#10;- Modified webhook authentication token for auth service" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: rename gateway webhook workflow to auth-svc webhook&#10;- Updated workflow file from gateway-webhook-dev.yaml to &#10;  auth-svc-webhook-dev.yaml&#10;- Adjusted paths to reflect changes in service structure&#10;- Modified webhook authentication token for auth service" />
+  </component>
+</project>
