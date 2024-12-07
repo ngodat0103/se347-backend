@@ -110,9 +110,15 @@ jobs:
         run: pip install checkov
 
       - name: Run Checkov for Dockerfile
-        run: checkov -d . --framework dockerfile
-        # |
-        #   find . -name 'Dockerfile' | while read file; do
-        #     echo "Scanning $file"
-        #     checkov -f "$file" --framework dockerfile || true
-        #   done
+        run: |
+          mkdir -p checkov-reports
+          find . -name 'Dockerfile' | while read file; do
+            echo "Scanning $file" >> checkov-reports/reportcheckov.txt
+            checkov -f "$file" --framework dockerfile >> checkov-reports/reportcheckov.txt || true
+          done
+
+      - name: Upload Checkov Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: checkov-report
+          path: checkov-reports/reportcheckov.txt
