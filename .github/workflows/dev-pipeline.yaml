@@ -94,4 +94,25 @@ jobs:
           name: trivy-scan-results
           path: trivy_scan_results.txt
 
+  checkov-scan:
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Checkov
+        run: pip install checkov
+
+      - name: Run Checkov for Dockerfile
+        run: checkov -d . --framework dockerfile
+        # |
+        #   find . -name 'Dockerfile' | while read file; do
+        #     echo "Scanning $file"
+        #     checkov -f "$file" --framework dockerfile || true
+        #   done
