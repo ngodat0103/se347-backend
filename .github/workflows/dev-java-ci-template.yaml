@@ -131,9 +131,9 @@ jobs:
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-m2-v1
-      - name: Run unit tests
-        run: echo "placeholder, will be replaced by actual unit tests"
-      - name: Run integration tests
+      - name: UT
+        run: ./mvnw -q test
+      - name: IT
         id: IT
         run: ./mvnw -q verify
       - name: Run Sonarqube analysis

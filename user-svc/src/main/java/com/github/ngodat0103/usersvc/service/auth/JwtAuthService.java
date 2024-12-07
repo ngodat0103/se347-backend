@@ -2,10 +2,9 @@ package com.github.ngodat0103.usersvc.service.auth;
 
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
+import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import java.time.Duration;
 import java.time.Instant;
-
-import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -34,11 +33,12 @@ public class JwtAuthService implements AuthService {
   @Override
   public Mono<OAuth2AccessTokenResponse> login(CredentialDto credentialDto) {
     return userRepository
-            .findByEmail(credentialDto.getEmail())
-            .filter(account -> passwordEncoder.matches(credentialDto.getPassword(), account.getPassword()))
-            .switchIfEmpty(Mono.error(new BadCredentialsException(INVALID_EMAIL_OR_PASSWORD)))
-            .doOnSuccess(account -> log.info("User {} logged in", account.getAccountId()))
-            .map(this::createAccessTokenResponse);
+        .findByEmail(credentialDto.getEmail())
+        .filter(
+            account -> passwordEncoder.matches(credentialDto.getPassword(), account.getPassword()))
+        .switchIfEmpty(Mono.error(new BadCredentialsException(INVALID_EMAIL_OR_PASSWORD)))
+        .doOnSuccess(account -> log.info("User {} logged in", account.getAccountId()))
+        .map(this::createAccessTokenResponse);
   }
 
   @Override

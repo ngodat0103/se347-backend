@@ -11,10 +11,7 @@ import com.github.ngodat0103.usersvc.exception.InvalidEmailCodeException;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.service.auth.AuthService;
-import com.github.ngodat0103.usersvc.service.auth.JwtAuthService;
 import com.github.ngodat0103.usersvc.service.email.EmailService;
-import com.github.ngodat0103.usersvc.service.email.UserEmailService;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -39,11 +36,11 @@ import reactor.core.scheduler.Schedulers;
 @Slf4j
 public class DefaultUserService implements UserService {
   private static final String EMAIL_ALREADY_VERIFIED = "Email already verified";
-    private static final String EMAIL = "email";
+  private static final String EMAIL = "email";
   private static final String USER = "User";
   private final UserMapper userMapper = new UserMapperImpl();
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
   private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
   private final EmailService emailService;
@@ -57,7 +54,6 @@ public class DefaultUserService implements UserService {
   @Override
   public Mono<OAuth2AccessTokenResponse> login(CredentialDto credentialDto) {
     return authService.login(credentialDto);
-
   }
 
   @Override
@@ -135,7 +131,6 @@ public class DefaultUserService implements UserService {
   }
 
   private void triggerEmailServiceAsync(AccountDto accountDto, HttpHeaders forwardedHeaders) {
-
 
     emailService
         .emailNewUser(accountDto, forwardedHeaders)

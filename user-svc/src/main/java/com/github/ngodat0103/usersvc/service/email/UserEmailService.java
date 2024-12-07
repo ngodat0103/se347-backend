@@ -40,7 +40,8 @@ public class UserEmailService implements EmailService {
   @Override
   public Mono<Void> resendEmailVerification(AccountDto account, HttpHeaders forwardedHeaders) {
     EmailDto emailDto = createEmailDto(account, forwardedHeaders);
-    ValueTopicRegisteredUser valueTopicRegisteredUser = createValueTopicRegisteredUser(emailDto,Action.RESEND_EMAIL_VERIFICATION);
+    ValueTopicRegisteredUser valueTopicRegisteredUser =
+        createValueTopicRegisteredUser(emailDto, Action.RESEND_EMAIL_VERIFICATION);
     log.info("Sending resend email verification to kafka: {}", valueTopicRegisteredUser);
     KeyTopic keyTopic = new KeyTopic("account", account.getAccountId());
     defaultKafkaService.sendMessage(TOPIC_NAME, keyTopic, valueTopicRegisteredUser);
@@ -53,7 +54,8 @@ public class UserEmailService implements EmailService {
   public Mono<Void> emailNewUser(AccountDto accountDto, HttpHeaders forwardedHeaders) {
     EmailDto emailDto = createEmailDto(accountDto, forwardedHeaders);
     KeyTopic keyTopic = new KeyTopic("account", accountDto.getAccountId());
-    ValueTopicRegisteredUser valueTopicRegisteredUser = createValueTopicRegisteredUser(emailDto,Action.INSERT);
+    ValueTopicRegisteredUser valueTopicRegisteredUser =
+        createValueTopicRegisteredUser(emailDto, Action.INSERT);
     defaultKafkaService.sendMessage(TOPIC_NAME, keyTopic, valueTopicRegisteredUser);
     return storeVerificationCodeInRedis(
         emailDto.getEmailVerificationCode(), emailDto.getAccountId());
@@ -75,7 +77,8 @@ public class UserEmailService implements EmailService {
     return emailDto;
   }
 
-  private static ValueTopicRegisteredUser createValueTopicRegisteredUser(EmailDto emailDto,Action action) {
+  private static ValueTopicRegisteredUser createValueTopicRegisteredUser(
+      EmailDto emailDto, Action action) {
     Map<String, Object> additionalProperties = Map.of("emailDto", emailDto);
     return ValueTopicRegisteredUser.builder()
         .createdDate(LocalDateTime.now().toInstant(ZoneOffset.UTC))

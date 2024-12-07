@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: audit-svc
+  config:
+    import:
+      - optional:dev.yaml

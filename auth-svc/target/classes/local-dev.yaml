@@ -1,0 +1,25 @@
+spring:
+  config:
+    activate:
+      on-profile: local-dev
+  kafka:
+    bootstrap-servers: [ localhost:9092 ]
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth-svc-db
+    username: dev
+    password: dev
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.hibernate.format_sql: true
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      url: redis://localhost:6379
+
+logging:
+  level:
+    com.github.ngodat0103.yamp.authsvc: DEBUG
+    org.springframework.security: DEBUG
