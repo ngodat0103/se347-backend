@@ -84,7 +84,7 @@ public class UserEmailService implements EmailService {
         .build();
   }
 
-  private static String generateVerifyEmailCode() {
+  public static String generateVerifyEmailCode() {
     byte[] randomBytes = new byte[16];
     SecureRandom random = new SecureRandom();
     random.nextBytes(randomBytes);

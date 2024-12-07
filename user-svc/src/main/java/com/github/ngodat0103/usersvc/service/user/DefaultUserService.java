@@ -5,14 +5,16 @@ import static com.github.ngodat0103.usersvc.exception.Util.*;
 import com.github.ngodat0103.usersvc.dto.account.AccountDto;
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
+import com.github.ngodat0103.usersvc.dto.mapper.UserMapperImpl;
 import com.github.ngodat0103.usersvc.exception.ConflictException;
 import com.github.ngodat0103.usersvc.exception.InvalidEmailCodeException;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.service.auth.AuthService;
 import com.github.ngodat0103.usersvc.service.auth.JwtAuthService;
+import com.github.ngodat0103.usersvc.service.email.EmailService;
 import com.github.ngodat0103.usersvc.service.email.UserEmailService;
-import java.net.URI;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -24,11 +26,10 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -38,19 +39,15 @@ import reactor.core.scheduler.Schedulers;
 @Slf4j
 public class DefaultUserService implements UserService {
   private static final String EMAIL_ALREADY_VERIFIED = "Email already verified";
-  private static final String INVALID_EMAIL_OR_PASSWORD = "Invalid email or password";
-  private static final String USER_SVC = "user-svc";
-  private static final String EMAIL = "email";
+    private static final String EMAIL = "email";
   private static final String USER = "User";
-  private static final String IDX_EMAIL = "idx_email";
+  private final UserMapper userMapper = new UserMapperImpl();
+  private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final UserRepository userRepository;
 
-  private final UserRepository userRepository;
-  private final UserMapper userMapper;
-  private final PasswordEncoder passwordEncoder;
   private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
-  private final UserEmailService userEmailService;
+  private final EmailService emailService;
   private final AuthService authService;
-  private final JwtAuthService jwtAuthService;
 
   @Override
   public Mono<AccountDto> getMe() {
@@ -65,7 +62,7 @@ public class DefaultUserService implements UserService {
 
   @Override
   public Mono<Void> logout(Authentication authentication) {
-    return jwtAuthService.logout(authentication);
+    return authService.logout(authentication);
   }
 
   @Override
@@ -94,7 +91,7 @@ public class DefaultUserService implements UserService {
         .flatMap(userRepository::findById)
         .flatMap(this::validateEmailVerificationStatus)
         .map(userMapper::toDto)
-        .flatMap(account -> userEmailService.resendEmailVerification(account, request.getHeaders()))
+        .flatMap(account -> emailService.resendEmailVerification(account, request.getHeaders()))
         .thenReturn("Email verification code resent");
   }
 
@@ -138,7 +135,9 @@ public class DefaultUserService implements UserService {
   }
 
   private void triggerEmailServiceAsync(AccountDto accountDto, HttpHeaders forwardedHeaders) {
-    userEmailService
+
+
+    emailService
         .emailNewUser(accountDto, forwardedHeaders)
         .subscribeOn(Schedulers.boundedElastic())
         .doOnSubscribe(s -> log.debug("Starting email task for user: {}", accountDto.getEmail()))
