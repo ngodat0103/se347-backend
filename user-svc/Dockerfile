@@ -1,14 +1,17 @@
-FROM maven:3.9.8-eclipse-temurin-21 AS app-builder
+FROM maven:3.9.8-eclipse-temurin-21 AS deps-builder
 WORKDIR /build
+COPY --chmod=500 .mvn .mvn
 COPY --chmod=500 mvnw .
-COPY .mvn .mvn
 COPY pom.xml .
-RUN --mount=type=cache,sharing=shared,target=~/.m2/repository/ \
+RUN --mount=type=cache,sharing=locked,target=~/.m2/repository/ \
     ./mvnw dependency:resolve-plugins dependency:resolve
+
+FROM deps-builder AS app-builder
 COPY ./src/main ./src/main
 ARG VERSION
 ARG SERVICE_NAME
 ENV JAR_PATH=/build/target/${SERVICE_NAME}-${VERSION}.jar
+WORKDIR /build
 RUN  ./mvnw clean package -q -DskipTests -Drevision=${VERSION} -Dservice_name=${SERVICE_NAME} && \
     java -Djarmode=tools -jar "$JAR_PATH" extract --layers --launcher --destination /build/target/layers
 

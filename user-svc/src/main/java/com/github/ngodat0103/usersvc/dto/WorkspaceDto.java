@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.validation.constraints.Null;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,7 +19,6 @@ public class WorkspaceDto {
   @NotNull(message = "Name is required")
   private String name;
 
-  private String description;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private Set<String> members;
@@ -33,5 +33,5 @@ public class WorkspaceDto {
   private Instant createDate;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private Instant lastModifiedDate;
+  private Instant lastUpdatedDate;
 }

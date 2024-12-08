@@ -11,6 +11,7 @@ import com.github.ngodat0103.usersvc.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.usersvc.service.MinioService;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -36,6 +37,9 @@ public class DefaultWorkspaceService implements WorkspaceService {
   public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String ownerId) {
     var newWorkspace = workspaceMapper.toDocument(workspaceDto);
     newWorkspace.setOwner(ownerId);
+    Instant instantNow = Instant.now();
+    newWorkspace.setCreatedDate(instantNow);
+    newWorkspace.setLastUpdatedDate(instantNow);
     return workspaceRepository
         .save(newWorkspace)
         .doOnSubscribe(data -> log.info("Creating a new workspace"))
@@ -109,7 +113,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   private void handleDuplicateKey(
       DuplicateKeyException duplicateKeyException, String workspaceName) {
     if (duplicateKeyException.getMessage().contains(WORKSPACE_IDX)) {
-      throw createConflictException(log, "workspace", "workspaceName", workspaceName);
+      throw createConflictException(log, "workspace", "name", workspaceName);
     }
   }
 
@@ -122,7 +126,6 @@ public class DefaultWorkspaceService implements WorkspaceService {
         .map(
             w -> {
               w.setName(workspaceDto.getName());
-              w.setDescription(workspaceDto.getDescription());
               return w;
             })
         .flatMap(workspaceRepository::save)

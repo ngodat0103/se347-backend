@@ -18,7 +18,6 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 public class Workspace extends BaseDocument {
   @MongoId private String id;
   private String name;
-  private String description;
   private String owner;
   private Map<String, WorkspaceRole> members;
   private Set<String> projects;

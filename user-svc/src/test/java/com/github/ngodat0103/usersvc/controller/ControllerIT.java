@@ -3,6 +3,7 @@ package com.github.ngodat0103.usersvc.controller;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.github.javafaker.Faker;
+import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
 import com.github.ngodat0103.usersvc.dto.account.AccountDto;
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
@@ -10,7 +11,9 @@ import com.github.ngodat0103.usersvc.dto.mapper.UserMapperImpl;
 import com.github.ngodat0103.usersvc.dto.topic.Action;
 import com.github.ngodat0103.usersvc.exception.ConflictException;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
+import com.github.ngodat0103.usersvc.persistence.document.workspace.Workspace;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
+import com.github.ngodat0103.usersvc.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.usersvc.service.email.UserEmailService;
 import com.jayway.jsonpath.JsonPath;
 import com.redis.testcontainers.RedisContainer;
@@ -55,6 +58,7 @@ import org.testcontainers.utility.DockerImageName;
 class ControllerIT {
   @Autowired private WebTestClient webTestClient;
   @Autowired private UserRepository userRepository;
+  @Autowired private WorkspaceRepository workspaceRepository;
   private final ObjectMapper objectMapper = new ObjectMapper();
   private static final String API_PATH = "/api/v1";
   private static final String USER_PATH = API_PATH + "/users";
@@ -83,6 +87,7 @@ class ControllerIT {
   @Autowired private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
   private static final List<String> TOPICS = List.of("user-email");
+  private final static Faker faker = new Faker();
 
   @BeforeAll
   static void setUpAll() {
@@ -352,6 +357,96 @@ class ControllerIT {
               assertEquals("Email verified", message);
             });
   }
+  @Test
+  void createWorkspace_thenReturnSuccessful(){
+     // Given
+    Account account = userRepository.save(fakeAccount).block();
+    String accessToken = createTemporaryAccessToken(account);
+    WorkspaceDto workspaceDto = WorkspaceDto.builder().name(faker.funnyName().name()).build();
+    // When
+    webTestClient
+        .post()
+        .uri(API_PATH + "/workspaces")
+        .header("Authorization", "Bearer " + accessToken)
+        .bodyValue(workspaceDto)
+        .exchange()
+        .expectStatus()
+            .isCreated()
+            .expectBody()
+            .jsonPath("$.id").isNotEmpty()
+            .jsonPath("$.name").isEqualTo(workspaceDto.getName())
+            .jsonPath("$.projects").isEmpty()
+            .jsonPath("$.imageUrl").isEmpty()
+            .jsonPath("$.createDate").isNotEmpty()
+            .jsonPath("$.lastUpdatedDate").isNotEmpty();
+  }
+  @Test
+  void givenAlreadyExistsWorkspace_whenCreateWorkspace_thenReturn409(){
+    // Given
+    Account account = userRepository.save(fakeAccount).block();
+    String accessToken = createTemporaryAccessToken(account);
+    WorkspaceDto workspaceDto = WorkspaceDto.builder().name(faker.funnyName().name()).build();
+    webTestClient
+        .post()
+        .uri(API_PATH + "/workspaces")
+        .header("Authorization", "Bearer " + accessToken)
+        .bodyValue(workspaceDto)
+        .exchange()
+        .expectStatus()
+        .isCreated();
+    // When
+    webTestClient
+        .post()
+        .uri(API_PATH + "/workspaces")
+        .header("Authorization", "Bearer " + accessToken)
+        .bodyValue(workspaceDto)
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT)
+        .expectBody(ProblemDetail.class)
+        .value(
+            problemDetail -> {
+              assertEquals(
+                  ConflictException.Type.ALREADY_EXISTS.toString(), problemDetail.getTitle());
+              assertEquals(
+                  "https://problems-registry.smartbear.com/already-exists",
+                  problemDetail.getType().toString());
+              String expectedDetail = "workspace with name: " + workspaceDto.getName() + " already exists";
+              assertEquals(expectedDetail, problemDetail.getDetail());
+            });
+  }
+
+  @Test
+  void givenHaveWorkspace_whenGetWorkspaces_thenReturnWorkspaces(){
+    // Given
+    Account account = userRepository.save(fakeAccount).block();
+    String accessToken = createTemporaryAccessToken(account);
+    Workspace workspace = new Workspace();
+    workspace.setName(faker.funnyName().name());
+    workspace.setLastUpdatedDate(Instant.now());
+    workspace.setCreatedDate(Instant.now());
+      assert account != null;
+      workspace.setOwner(account.getAccountId());
+    var workspaceResponse =workspaceRepository.save(workspace).block();
+    assert workspaceResponse != null;
+    // When
+    webTestClient
+        .get()
+        .uri(API_PATH + "/workspaces/me")
+        .header("Authorization", "Bearer " + accessToken)
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$[0].id").isEqualTo(workspaceResponse.getId())
+        .jsonPath("$[0].name").isEqualTo(workspaceResponse.getName())
+        .jsonPath("$[0].projects").isEmpty()
+        .jsonPath("$[0].imageUrl").isEmpty()
+        .jsonPath("$[0].createDate").isNotEmpty()
+        .jsonPath("$[0].lastUpdatedDate").isNotEmpty();
+  }
+
+
 
   private String createTemporaryAccessToken(Account account) {
     Assert.notNull(account, "Account must not be null");
