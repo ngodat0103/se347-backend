@@ -1,5 +1,6 @@
 from kafka import KafkaConsumer
 from email_sender import send_email
+from os import getenv
 
 import json
 import logging
@@ -11,7 +12,8 @@ def kafka_consume():
     """
     logger = logging.getLogger("kafka_process")
 
-    topic = "registered-user"
+    topic = getenv("KAFKA_TOPIC")
+    logger.info("Connecting to broker...")
     consumer = KafkaConsumer(
         topic,
         group_id="email-sender",
