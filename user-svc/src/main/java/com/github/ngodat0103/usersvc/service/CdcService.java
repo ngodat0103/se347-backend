@@ -38,7 +38,7 @@ public class CdcService implements ApplicationListener<ApplicationReadyEvent> {
   public void listenToChanges() {
     reactiveMongoTemplate
         .changeStream(Account.class)
-        .watchCollection("account")
+        .watchCollection("accounts")
         .listen()
         .doOnSubscribe(s -> log.info("Subscribed to changes on 'account' collection..."))
         .map(this::mapToAccountAndActionPair)

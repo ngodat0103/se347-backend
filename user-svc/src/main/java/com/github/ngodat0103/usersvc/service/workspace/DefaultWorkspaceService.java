@@ -5,16 +5,12 @@ import static com.github.ngodat0103.usersvc.exception.Util.createConflictExcepti
 import com.github.ngodat0103.usersvc.config.minio.MinioProperties;
 import com.github.ngodat0103.usersvc.dto.WorkspaceDto;
 import com.github.ngodat0103.usersvc.dto.mapper.WorkspaceMapper;
-import com.github.ngodat0103.usersvc.persistence.document.Account;
-import com.github.ngodat0103.usersvc.persistence.document.workspace.WorkSpacePermission;
+import com.github.ngodat0103.usersvc.dto.mapper.WorkspaceMapperImpl;
 import com.github.ngodat0103.usersvc.persistence.document.workspace.Workspace;
-import com.github.ngodat0103.usersvc.persistence.document.workspace.WorkspaceProperty;
-import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.usersvc.service.MinioService;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -28,32 +24,24 @@ import reactor.core.scheduler.Schedulers;
 @AllArgsConstructor
 @Service
 @Slf4j
-public class WorkspaceServiceImpl implements WorkspaceService {
-  private final MinioService minioService;
-  private WorkspaceRepository workspaceRepository;
-  private WorkspaceMapper workspaceMapper;
-  private UserRepository userRepository;
+public class DefaultWorkspaceService implements WorkspaceService {
   private static final String WORKSPACE_IDX = "workspace_idx";
   private static final String WORKSPACE_STORAGE_PREFIX = "workspace/";
+  private final MinioService minioService;
+  private final WorkspaceRepository workspaceRepository;
+  private final WorkspaceMapper workspaceMapper = new WorkspaceMapperImpl();
   private final MinioProperties minioProperties;
 
   @Override
-  public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId) {
+  public Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String ownerId) {
     var newWorkspace = workspaceMapper.toDocument(workspaceDto);
-    WorkspaceProperty workspaceProperty = new WorkspaceProperty();
-    workspaceProperty.setOwnerId(accountId);
-    newWorkspace.setWorkspaceProperty(workspaceProperty);
+    newWorkspace.setOwner(ownerId);
     return workspaceRepository
         .save(newWorkspace)
         .doOnSubscribe(data -> log.info("Creating a new workspace"))
+        .doOnError(DuplicateKeyException.class, e -> handleDuplicateKey(e, workspaceDto.getName()))
         .doOnSuccess(
-            workspace ->
-                updateAccountWorkspace(accountId, workspace)
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .subscribe())
-        .doOnError(
-            DuplicateKeyException.class,
-            e -> handleDuplicateKey(e, workspaceDto.getWorkspaceName()))
+            workspace -> log.info("New workspace {} created successfully", workspace.getId()))
         .map(workspaceMapper::toDto);
   }
 
@@ -69,22 +57,18 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             + workspaceId;
     return workspaceRepository
         .findById(workspaceId)
-        .filter(workspace -> checkPermission(workspace, accountId))
-        .switchIfEmpty(
-            Mono.error(
-                new AccessDeniedException("You do not have permission to edit this workspace")))
-        .doOnNext(
-            workspace -> this.uploadWorkspacePictureAsync(workspaceId, inputStream, contentType))
+        .flatMap(workspace -> checkPermission(workspace, accountId))
+        .doOnNext(workspace -> uploadWorkspaceImageAsync(workspaceId, inputStream, contentType))
         .map(
             workspace -> {
-              workspace.setWorkspacePictureUrl(objectPublicUrl);
+              workspace.setImageUrl(objectPublicUrl);
               return workspace;
             })
         .doOnNext(this::updateWorkspaceDocumentAsync)
         .thenReturn(objectPublicUrl);
   }
 
-  private void uploadWorkspacePictureAsync(
+  private void uploadWorkspaceImageAsync(
       String workspaceId, InputStream inputStream, String contentType) {
     try {
       log.info("Uploading workspace picture for workspace with id: {}", workspaceId);
@@ -105,26 +89,21 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private void updateWorkspaceDocumentAsync(Workspace workspace) {
     workspaceRepository
         .save(workspace)
-        .doOnSubscribe(
-            data -> log.info("Updating workspace with id: {}", workspace.getWorkspaceId()))
+        .doOnSubscribe(data -> log.info("Updating workspace with id: {}", workspace.getId()))
         .doOnSuccess(
-            data ->
-                log.info("Workspace updated successfully with id: {}", workspace.getWorkspaceId()))
+            data -> log.info("Workspace updated successfully with id: {}", workspace.getId()))
         .doOnError(
-            throwable ->
-                log.error("Error updating workspace with id: {}", workspace.getWorkspaceId()))
+            throwable -> log.error("Error updating workspace with id: {}", workspace.getId()))
         .subscribeOn(Schedulers.boundedElastic())
         .subscribe();
   }
 
-  private boolean checkPermission(Workspace workspace, String accountId) {
-    var workspaceProperty = workspace.getWorkspaceProperty();
-    if (workspaceProperty.getOwnerId().equals(accountId)) {
-      return true;
+  private Mono<Workspace> checkPermission(Workspace workspace, String accountId) {
+    if (workspace.getOwner().equals(accountId)) {
+      return Mono.just(workspace);
     }
-    WorkSpacePermission workSpacePermission =
-        workspaceProperty.getMembers().getOrDefault(accountId, null);
-    return workSpacePermission != null && workSpacePermission.isCanEdit();
+    return Mono.error(
+        new AccessDeniedException("You do not have permission to edit this workspace"));
   }
 
   private void handleDuplicateKey(
@@ -134,35 +113,29 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     }
   }
 
-  private Mono<Account> updateAccountWorkspace(String accountId, Workspace workspace) {
-    return userRepository
-        .findById(accountId)
-        .doOnSubscribe(data -> log.info("Updating the account.workspaces with id: {}", accountId))
-        .map(
-            account -> {
-              Set<String> workspaces = account.getWorkspaces();
-              if (workspaces == null) {
-                workspaces = new HashSet<>();
-              }
-              workspaces.add(workspace.getWorkspaceId());
-              account.setWorkspaces(workspaces);
-              return account;
-            })
-        .flatMap(userRepository::save)
-        .doOnError(
-            throwable -> log.error("Error updating account.workspaces with id: {}", accountId))
-        .doOnSuccess(
-            data -> log.info("Account.workspaces updated successfully with id: {}", accountId));
-  }
-
   @Override
-  public Mono<WorkspaceDto> update(WorkspaceDto workspaceDto) {
-    return null;
+  public Mono<WorkspaceDto> update(
+      String workspaceId, WorkspaceDto workspaceDto, String accountId) {
+    return workspaceRepository
+        .findById(workspaceId)
+        .flatMap(w -> checkPermission(w, accountId))
+        .map(
+            w -> {
+              w.setName(workspaceDto.getName());
+              w.setDescription(workspaceDto.getDescription());
+              return w;
+            })
+        .flatMap(workspaceRepository::save)
+        .map(workspaceMapper::toDto);
   }
 
   @Override
   public Mono<Void> delete(String id) {
-    return null;
+    return workspaceRepository
+        .deleteById(id)
+        .doOnSubscribe(data -> log.info("Deleting workspace with id: {}", id))
+        .doOnSuccess(data -> log.info("Workspace deleted successfully with id: {}", id))
+        .doOnError(throwable -> log.error("Error deleting workspace with id: {}", id));
   }
 
   @Override
@@ -172,11 +145,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
   @Override
   public Mono<Set<WorkspaceDto>> getWorkspaces(String accountId) {
-    return userRepository
-        .findById(accountId)
+    return workspaceRepository
+        .findByOwner(accountId)
         .doOnSubscribe(data -> log.info("Getting workspaces for account with id: {}", accountId))
-        .map(Account::getWorkspaces)
-        .flatMapMany(workspaceRepository::findAllById)
         .map(workspaceMapper::toDto)
         .collect(Collectors.toSet())
         .doOnError(

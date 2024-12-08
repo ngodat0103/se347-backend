@@ -37,7 +37,7 @@ public class WorkspaceController {
   }
 
   @PostMapping(
-      value = "/{workspaceId}/picture",
+      value = "/{workspaceId}/image",
       consumes = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE},
       produces = MediaType.TEXT_PLAIN_VALUE)
   public Mono<String> updatePicture(
@@ -56,7 +56,7 @@ public class WorkspaceController {
             return workspaceService.updatePicture(
                 workspaceId, authentication.getName(), inputStream, contentType);
           } catch (IOException e) {
-            log.error("Failed to update picture", e);
+            log.error("Failed to update image workspace", e);
             return Mono.error(e);
           }
         });
@@ -66,4 +66,9 @@ public class WorkspaceController {
   public Mono<Set<WorkspaceDto>> getWorkspaces(Authentication authentication) {
     return workspaceService.getWorkspaces(authentication.getName());
   }
+
+  @DeleteMapping("/{id}")
+    public Mono<Void> delete(@PathVariable String id) {
+        return workspaceService.delete(id);
+    }
 }

@@ -1,12 +1,14 @@
 spring:
+  config:
+    activate:
+      on-profile: dev
   kafka:
     consumer:
       bootstrap-servers: [kafka-svc:9092]
       group-id: audit-svc
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      auto-offset-reset: latest
+      auto-offset-reset: earliest
+      enable-auto-commit: true
   main:
     web-application-type: none
   elasticsearch:
-    uris: 127.0.0.1:9200
+    uris: ["http://elasticsearch-svc:9200"]
