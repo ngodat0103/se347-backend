@@ -30,6 +30,16 @@ services:
     ports:
       - "27017:27017"
     networks: [dev]
+
+  deps-cache:
+    profiles:
+      - deps-cache
+    image : ${DOCKER_REGISTRY:-ghcr.io}/${IMAGE:-ngodat0103/se347-backend/deps-cache}:${IMAGE_VERSION:-dev-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app-builder
+
   user-svc:
     profiles: ['all']
     mem_limit: 512m

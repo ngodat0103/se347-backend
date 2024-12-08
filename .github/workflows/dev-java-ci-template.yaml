@@ -195,7 +195,7 @@ jobs:
         id: trivy-scan
         uses: aquasecurity/trivy-action@0.29.0
         with:
-          image-ref: ${{needs.build-and-push.outputs.IMAGE_TAG}}
+          image-ref: ${{needs.build-and-push.outputs.IMAGE_TAG}}-${{github.sha}}
           severity: HIGH,CRITICAL
           vuln-type: os,library
           exit-code: 1

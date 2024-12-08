@@ -22,15 +22,19 @@ public interface WorkspaceMapper {
 
     workspaceDto.id( workspace.getId() );
     workspaceDto.name( workspace.getName() );
-    workspaceDto.description( workspace.getDescription() );
     Set<String> list = workspace.getProjects();
     if ( list != null ) {
       workspaceDto.projects( new HashSet<>( list ) );
     }
     workspaceDto.imageUrl( workspace.getImageUrl() );
     Set<String> members = new HashSet<>();
-    workspace.getMembers().forEach((userId,role) -> members.add(userId));
+    var workspaceMembers = workspace.getMembers();
+    if ( workspaceMembers != null ) {
+      workspaceMembers.forEach((userId, role) -> members.add(userId));
+    }
     workspaceDto.members(members);
+    workspaceDto.createDate( workspace.getCreatedDate() );
+    workspaceDto.lastUpdatedDate( workspace.getLastUpdatedDate() );
     return workspaceDto.build();
   }
 }
