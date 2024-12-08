@@ -1,13 +1,12 @@
 package com.github.ngodat0103.usersvc.service.user;
-
 import static com.github.ngodat0103.usersvc.exception.Util.*;
-
 import com.github.ngodat0103.usersvc.dto.account.AccountDto;
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapperImpl;
 import com.github.ngodat0103.usersvc.exception.ConflictException;
 import com.github.ngodat0103.usersvc.exception.InvalidEmailCodeException;
+import com.github.ngodat0103.usersvc.exception.NotFoundException;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.service.auth.AuthService;
@@ -16,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -108,7 +108,6 @@ public class DefaultUserService implements UserService {
     Instant instant = LocalDateTime.now().toInstant(ZoneOffset.UTC);
     account.setCreatedDate(instant);
     account.setLastUpdatedDate(instant);
-    account.setWorkspaces(new HashSet<>());
     return userRepository
         .save(account)
         .onErrorMap(
@@ -123,28 +122,44 @@ public class DefaultUserService implements UserService {
         .doOnSuccess(a -> log.info("Create new user with email {} successfully", a.getEmail()));
   }
 
+  @Override
+  public Mono<AccountDto> getById(String id) {
+    return userRepository
+        .findById(id)
+        .map(userMapper::toDto)
+        .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException("User not found"))));
+  }
+
+  @Override
+  public Mono<AccountDto> getByEmail(String email) {
+    return userRepository
+        .findByEmail(email)
+        .map(userMapper::toDto)
+        .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException("User not found"))));
+  }
+
+  @Override
+  public Mono<Set<AccountDto>> getByNickName(String nickName) {
+    return userRepository
+        .findByNickNameContainingIgnoreCase(nickName)
+        .map(userMapper::toDto)
+        .collect(HashSet::new, Set::add);
+  }
   private Mono<AccountDto> handlePostSave(Pair<AccountDto, HttpHeaders> pair) {
     AccountDto accountDto = pair.getLeft();
     HttpHeaders forwardedHeaders = pair.getRight();
     triggerEmailServiceAsync(accountDto, forwardedHeaders);
     return Mono.just(accountDto);
   }
-
   private void triggerEmailServiceAsync(AccountDto accountDto, HttpHeaders forwardedHeaders) {
-
     emailService
-        .emailNewUser(accountDto, forwardedHeaders)
-        .subscribeOn(Schedulers.boundedElastic())
-        .doOnSubscribe(s -> log.debug("Starting email task for user: {}", accountDto.getEmail()))
-        .doOnSuccess(
-            unused -> log.info("Email successfully sent for user: {}", accountDto.getEmail()))
-        .doOnError(
-            error -> log.error("Failed to send email for user: {}", accountDto.getEmail(), error))
-        .subscribe();
-  }
-
-  @Override
-  public Mono<AccountDto> get(String id) {
-    return Mono.empty();
+            .emailNewUser(accountDto, forwardedHeaders)
+            .subscribeOn(Schedulers.boundedElastic())
+            .doOnSubscribe(s -> log.debug("Starting email task for user: {}", accountDto.getEmail()))
+//            .doOnSuccess(
+//                    unused -> log.info("Email successfully sent for user: {}", accountDto.getEmail()))
+            .doOnError(
+                    error -> log.error("Failed to send email for user: {}", accountDto.getEmail(), error))
+            .subscribe();
   }
 }

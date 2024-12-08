@@ -4,8 +4,8 @@ import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.when;
 
 import com.github.javafaker.Faker;
-import com.github.javafaker.Internet;
 import com.github.ngodat0103.usersvc.dto.account.AccountDto;
+import com.github.ngodat0103.usersvc.exception.ConflictException;
 import com.github.ngodat0103.usersvc.persistence.document.Account;
 import com.github.ngodat0103.usersvc.persistence.repository.UserRepository;
 import com.github.ngodat0103.usersvc.service.email.EmailService;
@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -36,15 +37,16 @@ class DefaultUserServiceTest {
   @Mock private ServerHttpRequest serverHttpRequest;
 
   @Mock private HttpHeaders httpHeaders;
+
   @Mock private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
-  private AccountDto fakeaccountDto;
+  private AccountDto fakeAccountDto;
   private Account mockResponseAccount;
 
   @BeforeEach
   void setUp() {
     Faker faker = new Faker();
-    fakeaccountDto =
+    fakeAccountDto =
         AccountDto.builder()
             .email(faker.internet().emailAddress())
             .password(faker.internet().password())
@@ -52,9 +54,9 @@ class DefaultUserServiceTest {
             .build();
     mockResponseAccount =
         Account.builder()
-            .email(fakeaccountDto.getEmail())
-            .password(fakeaccountDto.getPassword())
-            .nickName(fakeaccountDto.getNickName())
+            .email(fakeAccountDto.getEmail())
+            .password(fakeAccountDto.getPassword())
+            .nickName(fakeAccountDto.getNickName())
             .emailVerified(false)
             .accountId("123219783129873")
             .build();
@@ -63,16 +65,52 @@ class DefaultUserServiceTest {
         HttpHeaders.readOnlyHttpHeaders(
             new HttpHeaders() {
               {
-                Internet internet = faker.internet();
-                add("X-Forwarded-Proto", internet.domainName());
-                add("X-Forwarded-Host", internet.domainName());
-                add("X-Forwarded-For", internet.ipV4Address());
+                add("X-Forwarded-Proto", faker.internet().domainName());
+                add("X-Forwarded-Host", faker.internet().domainName());
+                add("X-Forwarded-For", faker.internet().ipV4Address());
               }
             });
   }
 
   @Test
-  void givenNotExistsWhenCreateAccountThenReturnSuccessful() {
+  void givenNotExists_whenCreateAccount_thenReturnSuccessful() {
+    given(emailService.emailNewUser(any(AccountDto.class), any(HttpHeaders.class)))
+        .willReturn(Mono.empty());
+
+    Instant now = Instant.now();
+    mockResponseAccount.setCreatedDate(now);
+    mockResponseAccount.setLastUpdatedDate(now);
+    given(userRepository.save(any(Account.class))).willReturn(Mono.just(mockResponseAccount));
+    given(serverHttpRequest.getHeaders()).willReturn(this.httpHeaders);
+
+    StepVerifier.create(defaultUserService.create(fakeAccountDto, serverHttpRequest))
+        .expectNextMatches(
+            responseAccountDto -> {
+              Assertions.assertNotNull(responseAccountDto.getAccountId());
+              Assertions.assertNotNull(responseAccountDto.getCreatedDate());
+              Assertions.assertNotNull(responseAccountDto.getLastUpdatedDate());
+              Assertions.assertEquals(fakeAccountDto.getEmail(), responseAccountDto.getEmail());
+              Assertions.assertEquals(
+                  fakeAccountDto.getNickName(), responseAccountDto.getNickName());
+              Assertions.assertNull(responseAccountDto.getPassword());
+              return true;
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  void givenDuplicateKey_whenCreateAccount_thenThrowConflictException() {
+    DuplicateKeyException duplicateKeyException = new DuplicateKeyException("IDX_EMAIL");
+    given(serverHttpRequest.getHeaders()).willReturn(this.httpHeaders);
+    given(userRepository.save(any(Account.class))).willReturn(Mono.error(duplicateKeyException));
+
+    StepVerifier.create(defaultUserService.create(fakeAccountDto, serverHttpRequest))
+        .expectError(ConflictException.class)
+        .verify();
+  }
+
+  @Test
+  void givenValidAccount_whenCreateAccount_thenTriggerEmailService() {
     when(emailService.emailNewUser(any(AccountDto.class), any(HttpHeaders.class)))
         .thenReturn(Mono.empty());
 
@@ -81,21 +119,17 @@ class DefaultUserServiceTest {
     mockResponseAccount.setLastUpdatedDate(now);
     given(userRepository.save(any(Account.class))).willReturn(Mono.just(mockResponseAccount));
     given(serverHttpRequest.getHeaders()).willReturn(this.httpHeaders);
-    StepVerifier.create(defaultUserService.create(fakeaccountDto, serverHttpRequest))
+
+    StepVerifier.create(defaultUserService.create(fakeAccountDto, serverHttpRequest))
         .expectNextMatches(
             responseAccountDto -> {
               Assertions.assertNotNull(responseAccountDto.getAccountId());
               Assertions.assertNotNull(responseAccountDto.getCreatedDate());
               Assertions.assertNotNull(responseAccountDto.getLastUpdatedDate());
-              Assertions.assertEquals(fakeaccountDto.getEmail(), responseAccountDto.getEmail());
-              Assertions.assertEquals(
-                  fakeaccountDto.getNickName(), responseAccountDto.getNickName());
-              Assertions.assertNull(responseAccountDto.getPassword());
               return true;
             })
         .verifyComplete();
-  }
 
-  @Test
-  void testCreateAccountErrorHandling() {}
+    verify(emailService, times(1)).emailNewUser(any(AccountDto.class), any(HttpHeaders.class));
+  }
 }

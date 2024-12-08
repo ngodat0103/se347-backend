@@ -8,13 +8,13 @@ import reactor.core.publisher.Mono;
 
 public interface WorkspaceService {
 
-  Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String accountId);
+  Mono<WorkspaceDto> create(WorkspaceDto workspaceDto, String ownerId);
 
   Mono<String> updatePicture(
       String workspaceId, String accountId, InputStream inputStream, String contentType)
       throws IOException;
 
-  Mono<WorkspaceDto> update(WorkspaceDto workspaceDto);
+  Mono<WorkspaceDto> update(String workspaceId, WorkspaceDto workspaceDto, String accountId);
 
   Mono<Void> delete(String id);
 
