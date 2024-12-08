@@ -30,7 +30,7 @@ public class WorkspaceDto {
   private String imageUrl;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private Instant createDate;
+  private Instant createdDate;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private Instant lastUpdatedDate;
