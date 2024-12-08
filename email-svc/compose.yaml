@@ -1,0 +1,16 @@
+name: se347-email-verify-sender
+services:
+  email-verify-sender:
+    image : ${DOCKER_REGISTRY:-ghcr.io}/${IMAGE:-ngodat0103/se347-backend/email-svc}:${IMAGE_VERSION:-dev-latest}
+    environment:
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-user-email}
+      - SENDER_EMAIL_ADDRESS=${SENDER_EMAIL_ADDRESS}
+      - SENDER_PASSWORD=${SENDER_PASSWORD}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks: [ dev ]
+networks:
+  dev:
+    name: dev
+    external: true

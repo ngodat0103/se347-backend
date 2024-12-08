@@ -1,0 +1,5 @@
+.env.example
+.gitignore
+Dockerfile
+README.md
+compose.yaml
