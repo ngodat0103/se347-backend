@@ -17,7 +17,9 @@ def send_email(recipient: str, code: str, url: str):
     msg["To"] = recipient
     msg.set_content(body, subtype="html")
     try:
-        logger.info("Sending email")
+        logger.info(f"Sending email to {recipient}")
+        logger.debug(f"Verification url: {url}")
+        logger.debug(f"Verification code: {code}")
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp_server:
             smtp_server.login(sender, password)
             smtp_server.sendmail(sender, recipient, msg.as_string())
