@@ -1,5 +1,7 @@
 package com.github.ngodat0103.usersvc.service.user;
+
 import static com.github.ngodat0103.usersvc.exception.Util.*;
+
 import com.github.ngodat0103.usersvc.dto.account.AccountDto;
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.dto.mapper.UserMapper;
@@ -145,21 +147,24 @@ public class DefaultUserService implements UserService {
         .map(userMapper::toDto)
         .collect(HashSet::new, Set::add);
   }
+
   private Mono<AccountDto> handlePostSave(Pair<AccountDto, HttpHeaders> pair) {
     AccountDto accountDto = pair.getLeft();
     HttpHeaders forwardedHeaders = pair.getRight();
     triggerEmailServiceAsync(accountDto, forwardedHeaders);
     return Mono.just(accountDto);
   }
+
   private void triggerEmailServiceAsync(AccountDto accountDto, HttpHeaders forwardedHeaders) {
     emailService
-            .emailNewUser(accountDto, forwardedHeaders)
-            .subscribeOn(Schedulers.boundedElastic())
-            .doOnSubscribe(s -> log.debug("Starting email task for user: {}", accountDto.getEmail()))
-//            .doOnSuccess(
-//                    unused -> log.info("Email successfully sent for user: {}", accountDto.getEmail()))
-            .doOnError(
-                    error -> log.error("Failed to send email for user: {}", accountDto.getEmail(), error))
-            .subscribe();
+        .emailNewUser(accountDto, forwardedHeaders)
+        .subscribeOn(Schedulers.boundedElastic())
+        .doOnSubscribe(s -> log.debug("Starting email task for user: {}", accountDto.getEmail()))
+        //            .doOnSuccess(
+        //                    unused -> log.info("Email successfully sent for user: {}",
+        // accountDto.getEmail()))
+        .doOnError(
+            error -> log.error("Failed to send email for user: {}", accountDto.getEmail(), error))
+        .subscribe();
   }
 }

@@ -1,10 +1,8 @@
 package com.github.ngodat0103.usersvc.persistence.document.workspace;
 
 import com.github.ngodat0103.usersvc.persistence.document.BaseDocument;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import lombok.*;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;

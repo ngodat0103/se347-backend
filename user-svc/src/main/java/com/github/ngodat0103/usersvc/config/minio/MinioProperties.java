@@ -6,19 +6,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "minio")
 @Data
 public class MinioProperties {
-  private static final String DEFAULT_URL = "http://localhost:9000";
+  private static final String DEFAULT_ENDPOINT = "http://localhost:9000";
   private static final String DEFAULT_BUCKET = "default";
   private String endpoint;
   private String accessKey;
   private String secretKey;
-  public String bucket;
+  private String bucket;
   private String region;
-  private String url;
 
   private static final String DEFAULT_POLICY = "";
 
   public String getEndpoint() {
-    return endpoint == null ? DEFAULT_URL : endpoint;
+    return endpoint == null ? DEFAULT_ENDPOINT : endpoint;
   }
 
   public String getBucket() {

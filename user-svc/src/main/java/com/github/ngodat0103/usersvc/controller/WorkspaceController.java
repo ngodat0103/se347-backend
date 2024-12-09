@@ -70,7 +70,7 @@ public class WorkspaceController {
   }
 
   @DeleteMapping("/{id}")
-    public Mono<Void> delete(@PathVariable String id) {
-        return workspaceService.delete(id);
-    }
+  public Mono<Void> delete(@PathVariable String id) {
+    return workspaceService.delete(id);
+  }
 }

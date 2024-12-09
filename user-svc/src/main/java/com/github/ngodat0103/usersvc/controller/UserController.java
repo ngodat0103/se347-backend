@@ -32,5 +32,4 @@ public class UserController {
   public Mono<AccountDto> getMe() {
     return userService.getMe();
   }
-
 }
