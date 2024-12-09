@@ -4,6 +4,7 @@ import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.service.user.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -19,6 +20,15 @@ import reactor.core.publisher.Mono;
 public class AuthController {
 
   private final UserService userService;
+
+  @GetMapping(path = "/isValidJwt")
+  @SecurityRequirement(name = "bearerAuth")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  @PreAuthorize("isAuthenticated()")
+  public Mono<Map<String, Object>> isValidJwt(JwtAuthenticationToken jwtAuthenticationToken) {
+    Map<String, Object> claims = jwtAuthenticationToken.getTokenAttributes();
+    return Mono.just(claims);
+  }
 
   @PostMapping(path = "/login")
   public Mono<OAuth2AccessTokenResponse> login(@RequestBody @Valid CredentialDto credentialDto) {

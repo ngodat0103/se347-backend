@@ -87,7 +87,7 @@ class ControllerIT {
   @Autowired private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
 
   private static final List<String> TOPICS = List.of("user-email");
-  private final static Faker faker = new Faker();
+  private static final Faker faker = new Faker();
 
   @BeforeAll
   static void setUpAll() {
@@ -118,7 +118,6 @@ class ControllerIT {
   @BeforeEach
   void setUp() {
     this.objectMapper.configure(MapperFeature.USE_ANNOTATIONS, false);
-    Faker faker = new Faker();
     String emailFake = faker.internet().emailAddress();
     String nickNameFake = faker.name().username();
     String passwordFake = faker.internet().password();
@@ -153,26 +152,6 @@ class ControllerIT {
     var value = recordKafka.value();
     assertNotNull(JsonPath.read(value, "$.createdDate"));
     assertEquals(Action.INSERT.toString(), JsonPath.read(value, "$.action"));
-
-    //        // accountDto assertions
-    //        assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.accountId"));
-    //        assertEquals(
-    //                fakeAccount.getNickName(),
-    //                JsonPath.read(value, "$.additionalProperties.accountDto.nickName"));
-    //        assertEquals(
-    //                fakeAccount.getEmail(), JsonPath.read(value,
-    // "$.additionalProperties.accountDto.email"));
-    //        assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.zoneInfo"));
-    //        assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.pictureUrl"));
-    //        assertNull(JsonPath.read(value, "$.additionalProperties.accountDto.locale"));
-    //        assertEquals(
-    //                Boolean.FALSE, JsonPath.read(value,
-    // "$.additionalProperties.accountDto.emailVerified"));
-    //        assertNotNull(JsonPath.read(value,
-    // "$.additionalProperties.accountDto.lastUpdatedDate"));
-    //        assertNotNull(JsonPath.read(value, "$.additionalProperties.accountDto.createdDate"));
-
-    // emailDto assertions
     assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.accountId"));
     assertNotNull(JsonPath.read(value, "$.additionalProperties.emailDto.emailVerificationCode"));
     assertNotNull(
@@ -357,9 +336,10 @@ class ControllerIT {
               assertEquals("Email verified", message);
             });
   }
+
   @Test
-  void createWorkspace_thenReturnSuccessful(){
-     // Given
+  void createWorkspace_thenReturnSuccessful() {
+    // Given
     Account account = userRepository.save(fakeAccount).block();
     String accessToken = createTemporaryAccessToken(account);
     WorkspaceDto workspaceDto = WorkspaceDto.builder().name(faker.funnyName().name()).build();
@@ -371,17 +351,24 @@ class ControllerIT {
         .bodyValue(workspaceDto)
         .exchange()
         .expectStatus()
-            .isCreated()
-            .expectBody()
-            .jsonPath("$.id").isNotEmpty()
-            .jsonPath("$.name").isEqualTo(workspaceDto.getName())
-            .jsonPath("$.projects").isEmpty()
-            .jsonPath("$.imageUrl").isEmpty()
-            .jsonPath("$.createDate").isNotEmpty()
-            .jsonPath("$.lastUpdatedDate").isNotEmpty();
+        .isCreated()
+        .expectBody()
+        .jsonPath("$.id")
+        .isNotEmpty()
+        .jsonPath("$.name")
+        .isEqualTo(workspaceDto.getName())
+        .jsonPath("$.projects")
+        .isEmpty()
+        .jsonPath("$.imageUrl")
+        .isEmpty()
+        .jsonPath("$.createdDate")
+        .isNotEmpty()
+        .jsonPath("$.lastUpdatedDate")
+        .isNotEmpty();
   }
+
   @Test
-  void givenAlreadyExistsWorkspace_whenCreateWorkspace_thenReturn409(){
+  void givenAlreadyExistsWorkspace_whenCreateWorkspace_thenReturn409() {
     // Given
     Account account = userRepository.save(fakeAccount).block();
     String accessToken = createTemporaryAccessToken(account);
@@ -411,13 +398,14 @@ class ControllerIT {
               assertEquals(
                   "https://problems-registry.smartbear.com/already-exists",
                   problemDetail.getType().toString());
-              String expectedDetail = "workspace with name: " + workspaceDto.getName() + " already exists";
+              String expectedDetail =
+                  "workspace with name: " + workspaceDto.getName() + " already exists";
               assertEquals(expectedDetail, problemDetail.getDetail());
             });
   }
 
   @Test
-  void givenHaveWorkspace_whenGetWorkspaces_thenReturnWorkspaces(){
+  void givenHaveWorkspace_whenGetWorkspaces_thenReturnWorkspaces() {
     // Given
     Account account = userRepository.save(fakeAccount).block();
     String accessToken = createTemporaryAccessToken(account);
@@ -425,9 +413,9 @@ class ControllerIT {
     workspace.setName(faker.funnyName().name());
     workspace.setLastUpdatedDate(Instant.now());
     workspace.setCreatedDate(Instant.now());
-      assert account != null;
-      workspace.setOwner(account.getAccountId());
-    var workspaceResponse =workspaceRepository.save(workspace).block();
+    assert account != null;
+    workspace.setOwner(account.getAccountId());
+    var workspaceResponse = workspaceRepository.save(workspace).block();
     assert workspaceResponse != null;
     // When
     webTestClient
@@ -438,15 +426,19 @@ class ControllerIT {
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("$[0].id").isEqualTo(workspaceResponse.getId())
-        .jsonPath("$[0].name").isEqualTo(workspaceResponse.getName())
-        .jsonPath("$[0].projects").isEmpty()
-        .jsonPath("$[0].imageUrl").isEmpty()
-        .jsonPath("$[0].createDate").isNotEmpty()
-        .jsonPath("$[0].lastUpdatedDate").isNotEmpty();
+        .jsonPath("$[0].id")
+        .isEqualTo(workspaceResponse.getId())
+        .jsonPath("$[0].name")
+        .isEqualTo(workspaceResponse.getName())
+        .jsonPath("$[0].projects")
+        .isEmpty()
+        .jsonPath("$[0].imageUrl")
+        .isEmpty()
+        .jsonPath("$[0].createdDate")
+        .isNotEmpty()
+        .jsonPath("$[0].lastUpdatedDate")
+        .isNotEmpty();
   }
-
-
 
   private String createTemporaryAccessToken(Account account) {
     Assert.notNull(account, "Account must not be null");

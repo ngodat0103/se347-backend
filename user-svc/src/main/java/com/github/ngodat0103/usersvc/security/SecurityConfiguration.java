@@ -1,13 +1,17 @@
 package com.github.ngodat0103.usersvc.security;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.proc.SecurityContext;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.text.ParseException;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -27,6 +32,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
 import reactor.core.publisher.Flux;
 
+@Slf4j
 @Configuration
 @EnableReactiveMethodSecurity
 @EnableWebFluxSecurity
@@ -40,11 +46,13 @@ public class SecurityConfiguration {
 
   @Bean
   SecurityWebFilterChain httpSecurity(
-      ServerHttpSecurity http, CustomJwtAuthenticationManager customJwtAuthenticationManager) {
+      ServerHttpSecurity http,
+      CustomJwtAuthenticationManager customJwtAuthenticationManager,
+      ObjectMapper objectMapper) {
     configureCors(http);
     configureCsrf(http);
     configureAuthorizeExchange(http);
-    configureOauth2ResourceServer(http, customJwtAuthenticationManager);
+    configureOauth2ResourceServer(http, objectMapper, customJwtAuthenticationManager);
     configureExceptionHandling(http);
     return http.build();
   }
@@ -73,6 +81,7 @@ public class SecurityConfiguration {
 
   private void configureOauth2ResourceServer(
       ServerHttpSecurity httpSecurity,
+      ObjectMapper objectMapper,
       CustomJwtAuthenticationManager customJwtAuthenticationManager) {
 
     httpSecurity.oauth2ResourceServer(
@@ -83,11 +92,18 @@ public class SecurityConfiguration {
               (exchange, denied) -> {
                 ServerHttpResponse response = exchange.getResponse();
                 response.setStatusCode(HttpStatus.FORBIDDEN);
-                response.getHeaders().setContentType(MediaType.TEXT_PLAIN);
-                DataBuffer dataBuffer =
-                    response
-                        .bufferFactory()
-                        .wrap(denied.getMessage().getBytes(StandardCharsets.UTF_8));
+                response.getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
+                ProblemDetail problemDetail =
+                    ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, denied.getMessage());
+                problemDetail.setType(
+                    URI.create("https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"));
+                DataBuffer dataBuffer;
+                try {
+                  dataBuffer =
+                      response.bufferFactory().wrap(objectMapper.writeValueAsBytes(problemDetail));
+                } catch (JsonProcessingException e) {
+                  throw new RuntimeException(e);
+                }
                 return response.writeWith(Flux.just(dataBuffer));
               });
 
@@ -95,11 +111,20 @@ public class SecurityConfiguration {
               (exchange, ex) -> {
                 ServerHttpResponse serverHttpResponse = exchange.getResponse();
                 serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
-                serverHttpResponse.getHeaders().setContentType(MediaType.TEXT_PLAIN);
-                DataBuffer dataBuffer =
-                    serverHttpResponse
-                        .bufferFactory()
-                        .wrap(ex.getMessage().getBytes(StandardCharsets.UTF_8));
+                serverHttpResponse.getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
+                ProblemDetail problemDetail =
+                    ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+                problemDetail.setType(
+                    URI.create("https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401"));
+                DataBuffer dataBuffer;
+                try {
+                  dataBuffer =
+                      serverHttpResponse
+                          .bufferFactory()
+                          .wrap(objectMapper.writeValueAsBytes(problemDetail));
+                } catch (JsonProcessingException e) {
+                  throw new RuntimeException(e);
+                }
                 return serverHttpResponse.writeWith(Flux.just(dataBuffer));
               });
         });

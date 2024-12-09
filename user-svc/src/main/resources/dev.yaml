@@ -10,14 +10,14 @@ management:
         enabled: true
 logging:
   level:
-    org.springframework.web.server.handler: DEBUG
+#    org.springframework.web.server.handler: DEBUG
     com.github.ngodat0103.usersvc.service: INFO
-    org.springframework.kafka: DEBUG
-    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.web.reactive: DEBUG
-    org.springframework.data.mongodb: DEBUG
-    org.springframework.data.redis: DEBUG
+#    org.springframework.kafka: DEBUG
+#    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+#    org.springframework.security: DEBUG
+#    org.springframework.web.reactive: DEBUG
+#    org.springframework.data.mongodb: DEBUG
+#    org.springframework.data.redis: DEBUG
     web: debug
 spring:
   webflux:

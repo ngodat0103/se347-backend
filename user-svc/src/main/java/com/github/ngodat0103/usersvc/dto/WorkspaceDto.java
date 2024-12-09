@@ -3,10 +3,7 @@ package com.github.ngodat0103.usersvc.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
-import java.util.List;
 import java.util.Set;
-
-import jakarta.validation.constraints.Null;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,7 +15,6 @@ public class WorkspaceDto {
 
   @NotNull(message = "Name is required")
   private String name;
-
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private Set<String> members;
