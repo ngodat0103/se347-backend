@@ -361,7 +361,7 @@ class ControllerIT {
         .isEmpty()
         .jsonPath("$.imageUrl")
         .isEmpty()
-        .jsonPath("$.createDate")
+        .jsonPath("$.createdDate")
         .isNotEmpty()
         .jsonPath("$.lastUpdatedDate")
         .isNotEmpty();
@@ -434,7 +434,7 @@ class ControllerIT {
         .isEmpty()
         .jsonPath("$[0].imageUrl")
         .isEmpty()
-        .jsonPath("$[0].createDate")
+        .jsonPath("$[0].createdDate")
         .isNotEmpty()
         .jsonPath("$[0].lastUpdatedDate")
         .isNotEmpty();
