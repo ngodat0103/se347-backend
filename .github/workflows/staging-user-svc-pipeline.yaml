@@ -1,0 +1,20 @@
+name: Deploy user-svc to staging in Kubernetes
+run-name: "Deploying to Staging in Kubernetes"
+
+on:
+  push:
+    paths:
+      - '.github/workflows/staging-usersvc-pipeline.yaml'
+      - 'user-svc/src/main/**'
+      - 'user-svc/compose.yaml'
+      - '.github/deployment/kubernetes/helm/user-svc/staging.yaml'
+    branches:
+      - dev
+jobs:
+  user-svc-cd:
+    name: Deploy user-svc to staging in Kubernetes environment
+    uses: ./.github/workflows/staging-java-cd-template.yaml
+    secrets: inherit
+    with:
+      SERVICE_NAME: user-svc
+      SERVICE_PORT: 5000

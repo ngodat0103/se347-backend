@@ -1,4 +1,4 @@
-name: dev-java-pipeline
+name: dev-user-svc-pipeline
 on:
   workflow_dispatch:
   pull_request:
