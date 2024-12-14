@@ -161,7 +161,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5.5.1
         with:
-          images: ghcr.io/ngodat0103/se347-backend/user-svc
+          images: ghcr.io/ngodat0103/se347-backend
       - name: Clone the repository
         uses: actions/checkout@v4.2.2
         with:
