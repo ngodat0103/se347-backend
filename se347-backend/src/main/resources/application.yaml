@@ -18,8 +18,8 @@ springdoc:
         url: https://github.com/NGODAT0103
         email: 21521935@gm.uit.edu.vn
   api-docs:
-    path: /api/v1/users/api-docs
+    path: /api/v1/api-docs
   swagger-ui:
-    path: /api/v1/users/ui-docs
+    path: /api/v1/ui-docs
     use-root-path: true
   show-actuator: true

@@ -5,6 +5,24 @@ x-minio-credential: &minio-credential
   MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio-demo}
   MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio-demo}
 services:
+  minio:
+    image: bitnami/minio:2024.10.13-debian-12-r0
+    profiles:
+      - dev
+    container_name: minio
+    restart: always
+    hostname: minio-svc
+    healthcheck:
+      test: [ "CMD","curl","-f","http://127.0.0.1:9000/minio/health/live" ]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      <<: *minio-credential
+    volumes:
+      - minio-data:/bitnami/minio/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
   kafka-console:
     restart: unless-stopped
     depends_on:
@@ -46,6 +64,9 @@ services:
       - "6379:6379"
   mongo-primary:
     image: bitnami/mongodb:8.0.3-debian-12-r1
+    profiles:
+      - dev
+      - all
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "27017"]
       timeout: 1s
@@ -108,6 +129,8 @@ services:
     ports:
       - "5000:5000"
 volumes:
+  minio-data:
+      name: minio-data
   var-lib-zookeeper-data:
     name: var-lib-zookeeper-data
   bitnami-mongodb:
