@@ -26,9 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @PreAuthorize("isAuthenticated()")
 public class WorkspaceController {
-  private final WorkspaceRepository workspaceRepository;
   private WorkspaceService workspaceService;
-
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public WorkspaceDto create(@RequestBody @Valid WorkspaceDto workspaceDto) {
