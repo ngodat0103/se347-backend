@@ -39,7 +39,7 @@ public class DefaultWorkspaceMapper implements WorkspaceMapper {
             });
 
     return WorkspaceDto.builder()
-        .workspaceId(workspace.getWorkspaceId())
+        .id(workspace.getId())
         .name(workspace.getName())
         .ownerId(workspace.getOwnerId())
         .imageUrl(workspace.getImageUrl())
