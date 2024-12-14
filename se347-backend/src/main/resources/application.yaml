@@ -6,6 +6,7 @@ spring:
     name: se347-backend
 server:
   port: 5000
+  forward-headers-strategy: native
 springdoc:
   open-api:
     info:
