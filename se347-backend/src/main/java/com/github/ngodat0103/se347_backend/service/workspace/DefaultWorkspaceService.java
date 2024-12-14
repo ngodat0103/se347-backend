@@ -73,6 +73,9 @@ public class DefaultWorkspaceService implements WorkspaceService {
         userRepository
             .findByEmailAndUserStatus(email, UserStatus.ACTIVE)
             .orElseThrow(() -> new NotFoundException("User with this email is not exists"));
+    if(invitedUser.getAccountId().equals(callerUserId)){
+      throw new ConflictException("You can not invite yourself", ConflictException.Type.ALREADY_EXISTS);
+    }
     Workspace callerWorkspace =
         workspaceRepository
             .findById(workspaceId)
