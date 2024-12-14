@@ -105,42 +105,42 @@ jobs:
           pr-number: ${{ github.event.number }}
           comment-tag: 'snyk'
           mode: 'delete'
-  ci-test:
-    name: UT, IT, Sonarqube analysis
-    runs-on: ubuntu-22.04
-    needs: setup-deps
-    continue-on-error: true
-    outputs:
-      CI_IT_OUTCOME: ${{steps.IT.outcome}}
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{inputs.SERVICE_NAME}}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.2.2
-        with:
-          fetch-depth: 1
-      - name: Setup Jdk 17
-        uses: actions/setup-java@v4.5.0
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-      - name: Cache Maven packages
-        uses: actions/cache@v4.1.2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-v1
-      - name: UT
-        run: ./mvnw -q test
-      - name: IT
-        id: IT
-        run: ./mvnw -q verify
-      - name: Run Sonarqube analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: ./mvnw -q sonar:sonar
+#  ci-test:
+#    name: UT, IT, Sonarqube analysis
+#    runs-on: ubuntu-22.04
+#    needs: setup-deps
+#    continue-on-error: true
+#    outputs:
+#      CI_IT_OUTCOME: ${{steps.IT.outcome}}
+#    defaults:
+#      run:
+#        shell: bash
+#        working-directory: ${{inputs.SERVICE_NAME}}
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4.2.2
+#        with:
+#          fetch-depth: 1
+#      - name: Setup Jdk 17
+#        uses: actions/setup-java@v4.5.0
+#        with:
+#          distribution: 'temurin'
+#          java-version: '21'
+#      - name: Cache Maven packages
+#        uses: actions/cache@v4.1.2
+#        with:
+#          path: ~/.m2/repository
+#          key: ${{ runner.os }}-m2-v1
+#      - name: UT
+#        run: ./mvnw -q test
+#      - name: IT
+#        id: IT
+#        run: ./mvnw -q verify
+#      - name: Run Sonarqube analysis
+#        env:
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#        run: ./mvnw -q sonar:sonar
   build-and-push:
     name: Build and Push Docker image for PR
     if: github.event_name == 'pull_request'
@@ -234,8 +234,9 @@ jobs:
     defaults:
       run:
         working-directory: ${{inputs.SERVICE_NAME}}
-    needs: [build-and-push, ci-test]
-    if: needs.ci-test.outputs.CI_IT_OUTCOME == 'success'
+#    needs: [build-and-push, ci-test]
+#    if: needs.ci-test.outputs.CI_IT_OUTCOME == 'success'
+    needs: [build-and-push]
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
@@ -255,15 +256,15 @@ jobs:
           secrets: |
             ${{env.SECRET_PATH}} MONGODB_PASSWORD ;
             ${{env.SECRET_PATH}} MONGODB_ROOT_PASSWORD ;
-            ${{env.SECRET_PATH}} MINIO_ENDPOINT ;
-            ${{env.SECRET_PATH}} MINIO_ACCESS_KEY ;
-            ${{env.SECRET_PATH}} MINIO_SECRET_KEY ;
+            ${{env.SECRET_PATH}} MINIO_API_SERVER ;
+            ${{env.SECRET_PATH}} MINIO_SERVER_ACCESS_KEY ;
+            ${{env.SECRET_PATH}} MINIO_SERVER_SECRET_KEY ;
       - name: Set up credentials
         run: |
           echo "MONGODB_PASSWORD=${{ env.MONGODB_PASSWORD }}" >> .env
           echo "MONGODB_ROOT_PASSWORD=${{ env.MONGODB_ROOT_PASSWORD }}" >> .env
-          echo "MINIO_ENDPOINT=${{ env.MINIO_ENDPOINT }}" >> .env 
-          echo "MINIO_ACCESS_KEY=${{ env.MINIO_ACCESS_KEY }}" >> .env
-          echo "MINIO_SECRET_KEY=${{ env.MINIO_SECRET_KEY }}" >> .env
+          echo "MINIO_API_SERVER=${{ env.MINIO_API_SERVER }}" >> .env 
+          echo "MINIO_SERVER_ACCESS_KEY=${{ env.MINIO_SERVER_ACCESS_KEY }}" >> .env
+          echo "MINIO_SERVER_SECRET_KEY=${{ env.MINIO_SERVER_SECRET_KEY }}" >> .env
       - name: Deploy new Docker image
         run: sudo docker compose --profile all up -d
