@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.github.ngodat0103</groupId>
     <artifactId>se347-backend</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${revision}</version>
     <name>se347-backend</name>
     <description>se347-backend</description>
     <url/>
