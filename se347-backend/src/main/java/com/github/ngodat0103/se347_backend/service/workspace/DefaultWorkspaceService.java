@@ -115,7 +115,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
       return;
     }
     WorkSpaceMember workSpaceMember = workspace.getMembers().get(accountId);
-    if (workSpaceMember == null) {
+    if (workSpaceMember == null|| workSpaceMember.getRole() != WorkspaceRole.EDITOR) {
       throw new AccessDeniedException("You do not have permission to edit this resource");
     }
   }
