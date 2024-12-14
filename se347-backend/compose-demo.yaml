@@ -1,10 +1,26 @@
 x-minio-credential: &minio-credential
-  MINIO_API_SERVER: ${MINIO_API_SERVER:-http://minio-svc:9000}
-  MINIO_SERVER_ACCESS_KEY: ${MINIO_SERVER_ACCESS_KEY:-minio-demo}
-  MINIO_SERVER_SECRET_KEY: ${MINIO_SERVER_SECRET_KEY:-minio-demo}
-  MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio-demo}
-  MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio-demo}
+   MINIO_API_SERVER: ${MINIO_API_SERVER:-http://minio-svc:9000}
+   MINIO_SERVER_ACCESS_KEY: ${MINIO_SERVER_ACCESS_KEY:-minio-demo}
+   MINIO_SERVER_SECRET_KEY: ${MINIO_SERVER_SECRET_KEY:-minio-demo}
+   MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio-demo}
+   MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio-demo}
 services:
+  minio:
+    image: bitnami/minio:2024.10.13-debian-12-r0
+    container_name: minio
+    restart: always
+    hostname: minio-svc
+    healthcheck:
+      test: ["CMD","curl","-f","http://127.0.0.1:9000/minio/health/live"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      <<: *minio-credential
+    volumes:
+      - minio-data:/bitnami/minio/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
   kafka-console:
     restart: unless-stopped
     depends_on:
@@ -97,6 +113,8 @@ services:
       timeout: 3s
       retries: 3
     depends_on:
+      minio:
+        condition: service_healthy
       mongo-primary:
         condition: service_started
       redis:
@@ -109,6 +127,8 @@ services:
       - "5000:5000"
 volumes:
   var-lib-zookeeper-data:
-    name: var-lib-zookeeper-data
+      name: var-lib-zookeeper-data
   bitnami-mongodb:
     name: bitnami-mongodb
+  minio-data:
+    name: minio-data
