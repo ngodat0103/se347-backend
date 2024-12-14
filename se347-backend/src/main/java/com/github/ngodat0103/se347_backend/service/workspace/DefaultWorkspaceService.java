@@ -2,6 +2,7 @@ package com.github.ngodat0103.se347_backend.service.workspace;
 
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 
+import com.github.ngodat0103.se347_backend.config.minio.MinioProperties;
 import com.github.ngodat0103.se347_backend.dto.mapper.WorkspaceMapper;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
@@ -12,12 +13,19 @@ import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.*;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.github.ngodat0103.se347_backend.service.minio.DefaultMinioService;
+import com.github.ngodat0103.se347_backend.service.minio.MinioService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +35,9 @@ public class DefaultWorkspaceService implements WorkspaceService {
   private final WorkspaceRepository workspaceRepository;
   private final UserRepository userRepository;
   private final WorkspaceMapper workspaceMapper;
+  private final MinioProperties minioProperties;
+  private static final String WORKSPACE_STORAGE_PREFIX = "workspace/";
+  private final MinioService minioService;
 
   @Override
   public WorkspaceDto create(WorkspaceDto workspaceDto) {
@@ -85,35 +96,12 @@ public class DefaultWorkspaceService implements WorkspaceService {
   }
 
   @Override
-  public Map<String, WorkspaceMemberDto> getWorkspaceMember(String workspaceId) {
-
-    Workspace callerWorkspace =
-        workspaceRepository
-            .findById(workspaceId)
+  public String uploadImageWorkspace(String workspaceId, InputStream inputStream, MediaType mediaType) throws IOException {
+    Workspace workspace = workspaceRepository.findById(workspaceId)
             .orElseThrow(() -> new NotFoundException("Workspace with this Id is not found"));
-
-    LinkedHashMap<String, WorkspaceMemberDto> workspaceMemberDtoLinkedHashMap =
-        new LinkedHashMap<>();
-
-    callerWorkspace
-        .getMembers()
-        .forEach(
-            (k, v) -> {
-              User currentUser =
-                  userRepository
-                      .findById(k)
-                      .orElseThrow(
-                          () -> new NotFoundException("Account with this Id is not found"));
-              WorkspaceMemberDto workspaceMemberDto1 =
-                  WorkspaceMemberDto.builder()
-                      .nickName(currentUser.getNickName())
-                      .email(currentUser.getEmail())
-                      .role(v.getRole())
-                      .status(v.getStatus())
-                      .build();
-              workspaceMemberDtoLinkedHashMap.put(k, workspaceMemberDto1);
-            });
-    return workspaceMemberDtoLinkedHashMap;
+    String callerUserId = getUserIdFromAuthentication();
+    checkPermission(workspace,callerUserId);
+    return  minioService.uploadFile(WORKSPACE_STORAGE_PREFIX+workspaceId,inputStream, inputStream.available(),mediaType);
   }
 
   private void checkPermission(Workspace workspace, String accountId) {

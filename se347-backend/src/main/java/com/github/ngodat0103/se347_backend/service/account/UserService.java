@@ -6,10 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public interface UserService extends BaseService<UserDto> {
   UserDto create(UserDto userDto);
-
   UserDto create(UserDto userDto, HttpServletRequest request);
-
   UserDto update(UserDto userDto);
-
   UserDto getMe();
 }
