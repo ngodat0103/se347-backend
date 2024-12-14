@@ -3,6 +3,10 @@ package com.github.ngodat0103.se347_backend.service.minio;
 import com.github.ngodat0103.se347_backend.config.minio.MinioProperties;
 import io.minio.*;
 import io.minio.errors.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -11,21 +15,26 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
 @Service
 @AllArgsConstructor
 @Slf4j
-public class DefaultMinioService implements ApplicationListener<ApplicationReadyEvent>,MinioService {
+public class DefaultMinioService
+    implements ApplicationListener<ApplicationReadyEvent>, MinioService {
   private MinioClient minioClient;
   private MinioProperties minioProperties;
   private final ApplicationContext applicationContext;
+
   @Override
   public void createBucket()
-          throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidResponseException, XmlParserException, InternalException, InvalidKeyException {
+      throws ServerException,
+          InsufficientDataException,
+          ErrorResponseException,
+          IOException,
+          NoSuchAlgorithmException,
+          InvalidResponseException,
+          XmlParserException,
+          InternalException,
+          InvalidKeyException {
     BucketExistsArgs bucketExistsArgs =
         BucketExistsArgs.builder().bucket(minioProperties.getBucket()).build();
     MakeBucketArgs makeBucketArgs =
@@ -47,14 +56,15 @@ public class DefaultMinioService implements ApplicationListener<ApplicationReady
     }
   }
 
-  public String uploadFile(String objectId, InputStream inputStream, long size, MediaType mediaType) {
+  public String uploadFile(
+      String objectId, InputStream inputStream, long size, MediaType mediaType) {
     PutObjectArgs putObjectArgs =
-            PutObjectArgs.builder()
-                    .bucket(minioProperties.getBucket())
-                    .object(objectId)
-                    .contentType(mediaType.toString())
-                    .stream(inputStream, size, -1)
-                    .build();
+        PutObjectArgs.builder()
+            .bucket(minioProperties.getBucket())
+            .object(objectId)
+            .contentType(mediaType.toString())
+            .stream(inputStream, size, -1)
+            .build();
     try {
       minioClient.putObject(putObjectArgs);
     } catch (Exception e) {
@@ -65,12 +75,9 @@ public class DefaultMinioService implements ApplicationListener<ApplicationReady
     log.info("File uploaded successfully: {}", publicUrl);
     return publicUrl;
   }
-  private String getObjectPublicUrl(String objectId){
-    return minioProperties.getApiServer()
-            + "/"
-            + minioProperties.getBucket()
-            + "/"
-            + objectId;
+
+  private String getObjectPublicUrl(String objectId) {
+    return minioProperties.getApiServer() + "/" + minioProperties.getBucket() + "/" + objectId;
   }
 
   private String readDefaultPolicyFromFile(ApplicationContext applicationContext) {

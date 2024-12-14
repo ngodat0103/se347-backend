@@ -9,14 +9,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class MinioProperties {
   private static final String DEFAULT_API_SERVER = "http://localhost:9000";
   private static final String DEFAULT_BUCKET = "default";
+
   @Value("${minio.api-server}")
   private String apiServer;
+
   @Value("${minio.server.access-key}")
   private String accessKey;
+
   @Value("${minio.server.secret-key}")
   private String secretKey;
+
   @Value("${minio.bucket}")
   private String bucket;
+
   private String region;
 
   private static final String DEFAULT_POLICY = "";

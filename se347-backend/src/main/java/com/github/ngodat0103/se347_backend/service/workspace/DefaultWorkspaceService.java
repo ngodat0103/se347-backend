@@ -2,10 +2,8 @@ package com.github.ngodat0103.se347_backend.service.workspace;
 
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 
-import com.github.ngodat0103.se347_backend.config.minio.MinioProperties;
 import com.github.ngodat0103.se347_backend.dto.mapper.WorkspaceMapper;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
-import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.NotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
@@ -13,17 +11,13 @@ import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.*;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
-
+import com.github.ngodat0103.se347_backend.service.minio.MinioService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.github.ngodat0103.se347_backend.service.minio.DefaultMinioService;
-import com.github.ngodat0103.se347_backend.service.minio.MinioService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,7 +29,6 @@ public class DefaultWorkspaceService implements WorkspaceService {
   private final WorkspaceRepository workspaceRepository;
   private final UserRepository userRepository;
   private final WorkspaceMapper workspaceMapper;
-  private final MinioProperties minioProperties;
   private static final String WORKSPACE_STORAGE_PREFIX = "workspace/";
   private final MinioService minioService;
 
@@ -73,8 +66,9 @@ public class DefaultWorkspaceService implements WorkspaceService {
         userRepository
             .findByEmailAndUserStatus(email, UserStatus.ACTIVE)
             .orElseThrow(() -> new NotFoundException("User with this email is not exists"));
-    if(invitedUser.getAccountId().equals(callerUserId)){
-      throw new ConflictException("You can not invite yourself", ConflictException.Type.ALREADY_EXISTS);
+    if (invitedUser.getAccountId().equals(callerUserId)) {
+      throw new ConflictException(
+          "You can not invite yourself", ConflictException.Type.ALREADY_EXISTS);
     }
     Workspace callerWorkspace =
         workspaceRepository
@@ -99,12 +93,20 @@ public class DefaultWorkspaceService implements WorkspaceService {
   }
 
   @Override
-  public String uploadImageWorkspace(String workspaceId, InputStream inputStream, MediaType mediaType) throws IOException {
-    Workspace workspace = workspaceRepository.findById(workspaceId)
+  public String uploadImageWorkspace(
+      String workspaceId, InputStream inputStream, MediaType mediaType) throws IOException {
+    Workspace workspace =
+        workspaceRepository
+            .findById(workspaceId)
             .orElseThrow(() -> new NotFoundException("Workspace with this Id is not found"));
     String callerUserId = getUserIdFromAuthentication();
-    checkPermission(workspace,callerUserId);
-    String imagePublicUrl =  minioService.uploadFile(WORKSPACE_STORAGE_PREFIX+workspaceId,inputStream, inputStream.available(),mediaType);
+    checkPermission(workspace, callerUserId);
+    String imagePublicUrl =
+        minioService.uploadFile(
+            WORKSPACE_STORAGE_PREFIX + workspaceId,
+            inputStream,
+            inputStream.available(),
+            mediaType);
     workspace.setImageUrl(imagePublicUrl);
     workspaceRepository.save(workspace);
     return imagePublicUrl;
@@ -115,7 +117,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
       return;
     }
     WorkSpaceMember workSpaceMember = workspace.getMembers().get(accountId);
-    if (workSpaceMember == null|| workSpaceMember.getRole() != WorkspaceRole.EDITOR) {
+    if (workSpaceMember == null || workSpaceMember.getRole() != WorkspaceRole.EDITOR) {
       throw new AccessDeniedException("You do not have permission to edit this resource");
     }
   }
