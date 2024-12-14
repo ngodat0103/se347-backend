@@ -16,7 +16,7 @@ public class WorkspaceDto {
 
   @NotNull(message = "Name is required")
   private String name;
-
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String ownerId;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
