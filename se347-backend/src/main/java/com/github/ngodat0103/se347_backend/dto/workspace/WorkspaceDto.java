@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 public class WorkspaceDto {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private String workspaceId;
+  private String id;
 
   @NotNull(message = "Name is required")
   private String name;
