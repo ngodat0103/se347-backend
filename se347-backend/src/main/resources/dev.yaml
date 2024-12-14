@@ -1,48 +1,22 @@
-management:
-  health:
-    readinessstate:
-      enabled: true
-    livenessstate:
-      enabled: true
-  endpoint:
-    health:
-      probes:
-        enabled: true
-logging:
-  level:
-#    org.springframework.web.server.handler: DEBUG
-    com.github.ngodat0103.usersvc.service: INFO
-#    org.springframework.kafka: DEBUG
-#    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
-#    org.springframework.security: DEBUG
-#    org.springframework.web.reactive: DEBUG
-#    org.springframework.data.mongodb: DEBUG
-#    org.springframework.data.redis: DEBUG
-    web: debug
 spring:
-  webflux:
-    problemdetails:
-      enabled: true
-  elasticsearch:
-    uris: http://localhost:9200
-  kafka:
-    bootstrap-servers: kafka-svc:9092
   config:
     activate:
-      on-profile: 'dev'
+      on-profile: dev
+  kafka:
+    producer:
+      bootstrap-servers: kafka-svc
   data:
+    mongodb:
+      host: 127.0.0.1
+      username: dev
+      password: dev
+      database: se347-backend
+      auto-index-creation: true
     redis:
       repositories:
         enabled: false
-      host: 127.0.0.1
-#      username: dev
-#      password: dev
-      client-name: usersvc
+      client-name: se347-backend
       client-type: lettuce
-    mongodb:
-      username: dev
-      password: dev
-      database: user-svc
       host: 127.0.0.1
 jwk:
   rsa: #Dev credential

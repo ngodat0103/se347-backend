@@ -14,7 +14,8 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @EqualsAndHashCode(callSuper = true)
 @CompoundIndex(name = "workspace_idx", def = "{'name': 1,'owner': 1}", unique = true)
 public class Workspace extends BaseDocument {
-  @MongoId private String id;
+  @MongoId
+  private String id;
   private String name;
   private String owner;
   private Map<String, WorkspaceRole> members;

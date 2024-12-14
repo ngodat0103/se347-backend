@@ -2,6 +2,8 @@ package com.github.ngodat0103.usersvc.controller;
 
 import com.github.ngodat0103.usersvc.dto.account.CredentialDto;
 import com.github.ngodat0103.usersvc.service.user.UserService;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.RSAKey;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.util.Map;
@@ -29,6 +31,15 @@ public class AuthController {
     Map<String, Object> claims = jwtAuthenticationToken.getTokenAttributes();
     return Mono.just(claims);
   }
+
+  @GetMapping(path = "/jwk")
+  public Mono<JWK> getJwk(RSAKey key){
+    RsaPublicKey
+    key.getPublicExponent()
+            key.getModulus()
+
+  }
+
 
   @PostMapping(path = "/login")
   public Mono<OAuth2AccessTokenResponse> login(@RequestBody @Valid CredentialDto credentialDto) {
