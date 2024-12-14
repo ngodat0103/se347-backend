@@ -101,7 +101,10 @@ public class DefaultWorkspaceService implements WorkspaceService {
             .orElseThrow(() -> new NotFoundException("Workspace with this Id is not found"));
     String callerUserId = getUserIdFromAuthentication();
     checkPermission(workspace,callerUserId);
-    return  minioService.uploadFile(WORKSPACE_STORAGE_PREFIX+workspaceId,inputStream, inputStream.available(),mediaType);
+    String imagePublicUrl =  minioService.uploadFile(WORKSPACE_STORAGE_PREFIX+workspaceId,inputStream, inputStream.available(),mediaType);
+    workspace.setImageUrl(imagePublicUrl);
+    workspaceRepository.save(workspace);
+    return imagePublicUrl;
   }
 
   private void checkPermission(Workspace workspace, String accountId) {

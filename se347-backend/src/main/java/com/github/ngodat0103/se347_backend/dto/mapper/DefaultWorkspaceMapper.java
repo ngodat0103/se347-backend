@@ -42,6 +42,7 @@ public class DefaultWorkspaceMapper implements WorkspaceMapper {
         .workspaceId(workspace.getWorkspaceId())
         .name(workspace.getName())
             .ownerId(workspace.getOwnerId())
+            .imageUrl(workspace.getImageUrl())
         .createdDate(workspace.getCreatedDate())
         .lastUpdatedDate(workspace.getLastUpdatedDate())
         .members(workspaceMemberDtoLinkedHashMap)

@@ -52,7 +52,7 @@ public class DefaultMinioService implements ApplicationListener<ApplicationReady
             PutObjectArgs.builder()
                     .bucket(minioProperties.getBucket())
                     .object(objectId)
-                    .contentType(mediaType.getType())
+                    .contentType(mediaType.toString())
                     .stream(inputStream, size, -1)
                     .build();
     try {
@@ -66,7 +66,7 @@ public class DefaultMinioService implements ApplicationListener<ApplicationReady
     return publicUrl;
   }
   private String getObjectPublicUrl(String objectId){
-    return minioProperties.getEndpoint()
+    return minioProperties.getApiServer()
             + "/"
             + minioProperties.getBucket()
             + "/"

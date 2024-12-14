@@ -96,8 +96,8 @@ public class WorkspaceController {
           HttpServletRequest request) throws Exception {
 
     try (InputStream inputStream = new ByteArrayInputStream(imageBytes)) {
-      workspaceService.uploadImageWorkspace(workspaceId, inputStream, MediaType.valueOf(request.getContentType()));
-      return ("Image updated successfully");
+      return workspaceService.uploadImageWorkspace(workspaceId, inputStream, MediaType.valueOf(request.getContentType()));
+
     } catch (IOException e) {
       log.error("Failed to update image workspace", e);
       throw new InternalException("Error when upload image {}", e.toString());
