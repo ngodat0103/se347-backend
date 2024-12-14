@@ -2,9 +2,9 @@ package com.github.ngodat0103.se347_backend.service.auth;
 
 import com.github.ngodat0103.se347_backend.dto.account.CredentialDto;
 import com.github.ngodat0103.se347_backend.exception.NotFoundException;
-import com.github.ngodat0103.se347_backend.persistence.document.account.Account;
-import com.github.ngodat0103.se347_backend.persistence.document.account.AccountStatus;
-import com.github.ngodat0103.se347_backend.persistence.repository.AccountRepository;
+import com.github.ngodat0103.se347_backend.persistence.document.user.User;
+import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
+import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.Instant;
@@ -30,22 +30,22 @@ import org.springframework.stereotype.Service;
 public class JwtAuthService implements AuthService {
   private static final Duration ACCESS_TOKEN_DURATION = Duration.ofHours(7); // Dev only
   private static final String INVALID_EMAIL_OR_PASSWORD = "Invalid email or password";
-  private final AccountRepository accountRepository;
+  private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtEncoder jwtEncoder;
   private final RedisTemplate<String, String> redisTemplate;
 
   @Override
   public OAuth2AccessTokenResponse login(CredentialDto credentialDto) {
-    Account account =
-        accountRepository
-            .findByEmailAndAccountStatus(credentialDto.getEmail(), AccountStatus.ACTIVE)
-            .orElseThrow(() -> new NotFoundException("Account with email is not exists"));
-    if (!passwordEncoder.matches(credentialDto.getPassword(), account.getPassword())) {
+    User user =
+        userRepository
+            .findByEmailAndUserStatus(credentialDto.getEmail(), UserStatus.ACTIVE)
+            .orElseThrow(() -> new NotFoundException("User with email is not exists"));
+    if (!passwordEncoder.matches(credentialDto.getPassword(), user.getPassword())) {
       throw new BadCredentialsException(INVALID_EMAIL_OR_PASSWORD);
     }
-    log.info("User {} logged in", account.getEmail());
-    return this.createAccessTokenResponse(account);
+    log.info("User {} logged in", user.getEmail());
+    return this.createAccessTokenResponse(user);
   }
 
   @Override
@@ -69,12 +69,12 @@ public class JwtAuthService implements AuthService {
     throw new NotImplementedException("Not implemented yet");
   }
 
-  public OAuth2AccessTokenResponse createAccessTokenResponse(Account account) {
+  public OAuth2AccessTokenResponse createAccessTokenResponse(User user) {
     Instant now = Instant.now();
     Instant expireAt = now.plusSeconds(ACCESS_TOKEN_DURATION.getSeconds());
     JwtClaimsSet jwtClaimsSet =
         JwtClaimsSet.builder()
-            .subject(account.getAccountId().toString())
+            .subject(user.getAccountId().toString())
             .issuedAt(now)
             .expiresAt(expireAt)
             .issuer("se347-backend")

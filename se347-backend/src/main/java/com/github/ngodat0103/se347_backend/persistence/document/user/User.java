@@ -1,4 +1,4 @@
-package com.github.ngodat0103.se347_backend.persistence.document.account;
+package com.github.ngodat0103.se347_backend.persistence.document.user;
 
 import com.github.ngodat0103.se347_backend.persistence.document.BaseDocument;
 import jakarta.validation.constraints.Email;
@@ -12,9 +12,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Data
-@Document(collection = "accounts")
+@Document(collection = "users")
 @Builder
-public class Account extends BaseDocument {
+public class User extends BaseDocument {
 
   @MongoId private String accountId;
 
@@ -28,7 +28,7 @@ public class Account extends BaseDocument {
   @Size(min = 8, message = "Password should have at least 8 characters")
   private String password;
 
-  private AccountStatus accountStatus;
+  private UserStatus userStatus;
   private boolean emailVerified;
   private String zoneInfo;
   private String imageUrl;

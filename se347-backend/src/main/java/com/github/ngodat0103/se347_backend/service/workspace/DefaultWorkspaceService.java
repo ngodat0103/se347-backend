@@ -7,10 +7,10 @@ import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.NotFoundException;
-import com.github.ngodat0103.se347_backend.persistence.document.account.Account;
-import com.github.ngodat0103.se347_backend.persistence.document.account.AccountStatus;
+import com.github.ngodat0103.se347_backend.persistence.document.user.User;
+import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.*;
-import com.github.ngodat0103.se347_backend.persistence.repository.AccountRepository;
+import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class DefaultWorkspaceService implements WorkspaceService {
   private final WorkspaceRepository workspaceRepository;
-  private final AccountRepository accountRepository;
+  private final UserRepository userRepository;
   private final WorkspaceMapper workspaceMapper;
 
   @Override
@@ -58,9 +58,9 @@ public class DefaultWorkspaceService implements WorkspaceService {
   @Override
   public WorkspaceDto addMember(String workspaceId, String email) {
     String callerUserId = getUserIdFromAuthentication();
-    Account invitedAccount =
-        accountRepository
-            .findByEmailAndAccountStatus(email, AccountStatus.ACTIVE)
+    User invitedUser =
+        userRepository
+            .findByEmailAndUserStatus(email, UserStatus.ACTIVE)
             .orElseThrow(() -> new NotFoundException("User with this email is not exists"));
     Workspace callerWorkspace =
         workspaceRepository
@@ -70,7 +70,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
 
     Map<String, WorkSpaceMember> memberMap = callerWorkspace.getMembers();
     memberMap.put(
-        invitedAccount.getAccountId(),
+        invitedUser.getAccountId(),
         new WorkSpaceMember(WorkspaceRole.MEMBER, WorkSpaceMemberStatus.PENDING));
     callerWorkspace = workspaceRepository.save(callerWorkspace);
     return workspaceMapper.toDto(callerWorkspace);
@@ -99,15 +99,15 @@ public class DefaultWorkspaceService implements WorkspaceService {
         .getMembers()
         .forEach(
             (k, v) -> {
-              Account currentAccount =
-                  accountRepository
+              User currentUser =
+                  userRepository
                       .findById(k)
                       .orElseThrow(
                           () -> new NotFoundException("Account with this Id is not found"));
               WorkspaceMemberDto workspaceMemberDto1 =
                   WorkspaceMemberDto.builder()
-                      .nickName(currentAccount.getNickName())
-                      .email(currentAccount.getEmail())
+                      .nickName(currentUser.getNickName())
+                      .email(currentUser.getEmail())
                       .role(v.getRole())
                       .status(v.getStatus())
                       .build();

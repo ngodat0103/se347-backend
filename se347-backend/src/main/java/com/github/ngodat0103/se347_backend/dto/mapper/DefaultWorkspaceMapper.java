@@ -2,9 +2,9 @@ package com.github.ngodat0103.se347_backend.dto.mapper;
 
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
-import com.github.ngodat0103.se347_backend.persistence.document.account.Account;
+import com.github.ngodat0103.se347_backend.persistence.document.user.User;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.Workspace;
-import com.github.ngodat0103.se347_backend.persistence.repository.AccountRepository;
+import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import java.util.LinkedHashMap;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class DefaultWorkspaceMapper implements WorkspaceMapper {
 
-  private final AccountRepository accountRepository;
+  private final UserRepository userRepository;
 
   @Override
   public WorkspaceDto toDto(Workspace workspace) {
@@ -25,12 +25,12 @@ public class DefaultWorkspaceMapper implements WorkspaceMapper {
         .getMembers()
         .forEach(
             (k, v) -> {
-              Account currentAccount = accountRepository.findById(k).orElse(null);
-              if (currentAccount != null) {
+              User currentUser = userRepository.findById(k).orElse(null);
+              if (currentUser != null) {
                 WorkspaceMemberDto workspaceMemberDto =
                     WorkspaceMemberDto.builder()
-                        .nickName(currentAccount.getNickName())
-                        .email(currentAccount.getEmail())
+                        .nickName(currentUser.getNickName())
+                        .email(currentUser.getEmail())
                         .status(v.getStatus())
                         .role(v.getRole())
                         .build();
@@ -39,7 +39,7 @@ public class DefaultWorkspaceMapper implements WorkspaceMapper {
             });
 
     return WorkspaceDto.builder()
-        .id(workspace.getId())
+        .workspaceId(workspace.getWorkspaceId())
         .name(workspace.getName())
             .ownerId(workspace.getOwnerId())
         .createdDate(workspace.getCreatedDate())

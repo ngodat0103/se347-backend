@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class AccountDto {
+public class UserDto {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String accountId;
 

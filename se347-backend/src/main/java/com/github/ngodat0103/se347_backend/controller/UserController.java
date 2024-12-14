@@ -1,7 +1,7 @@
 package com.github.ngodat0103.se347_backend.controller;
 
-import com.github.ngodat0103.se347_backend.dto.account.AccountDto;
-import com.github.ngodat0103.se347_backend.service.account.AccountService;
+import com.github.ngodat0103.se347_backend.dto.account.UserDto;
+import com.github.ngodat0103.se347_backend.service.account.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -13,20 +13,20 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @AllArgsConstructor
 @RequestMapping(path = "/api/v1/users")
-public class AccountController {
-  private AccountService accountService;
+public class UserController {
+  private UserService userService;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public AccountDto createUser(
-      @Valid @RequestBody AccountDto accountDto, HttpServletRequest request) {
-    return accountService.create(accountDto, request);
+  public UserDto createUser(
+          @Valid @RequestBody UserDto userDto, HttpServletRequest request) {
+    return userService.create(userDto, request);
   }
 
   @PreAuthorize("isAuthenticated()")
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping(path = "/me")
-  public AccountDto getMe() {
-    return accountService.getMe();
+  public UserDto getMe() {
+    return userService.getMe();
   }
 }
