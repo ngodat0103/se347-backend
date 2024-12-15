@@ -85,8 +85,6 @@ services:
   se347-backend:
     mem_limit: 512m
     restart: unless-stopped
-    profiles:
-      - all
     #cpus: 1
     image: ${DOCKER_REGISTRY:-ghcr.io}/${IMAGE:-ngodat0103/se347-backend}:${IMAGE_VERSION:-dev-latest}
     volumes:

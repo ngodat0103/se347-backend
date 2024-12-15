@@ -2,6 +2,8 @@ package com.github.ngodat0103.se347_backend.controller;
 
 import com.github.ngodat0103.se347_backend.dto.account.CredentialDto;
 import com.github.ngodat0103.se347_backend.service.auth.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -20,19 +22,15 @@ public class AuthController {
 
   private final AuthService authSvc;
 
-  @GetMapping(path = "/isValidJwt")
-  @SecurityRequirement(name = "bearerAuth")
-  @ResponseStatus(HttpStatus.ACCEPTED)
-  @PreAuthorize("isAuthenticated()")
-  public Map<String, Object> isValidJwt(JwtAuthenticationToken jwtAuthenticationToken) {
-    return jwtAuthenticationToken.getTokenAttributes();
-  }
-
+  @Operation(summary = "Login", description = "Authenticate user and return access token")
+  @ApiResponse(responseCode = "200", description = "Successful login")
   @PostMapping(path = "/login")
   public OAuth2AccessTokenResponse login(@RequestBody @Valid CredentialDto credentialDto) {
     return authSvc.login(credentialDto);
   }
 
+  @Operation(summary = "Logout", description = "Logout user and blacklist token")
+  @ApiResponse(responseCode = "200", description = "Successful logout")
   @SecurityRequirement(name = "bearerAuth")
   @PreAuthorize("isAuthenticated()")
   @GetMapping(path = "/logout")
@@ -40,16 +38,28 @@ public class AuthController {
     return this.authSvc.logout(jwtAuthenticationToken);
   }
 
+  @Operation(summary = "Verify Email", description = "Verify user email with the provided code")
+  @ApiResponse(responseCode = "200", description = "Email verified successfully")
   @GetMapping(path = "/verify-email")
   public String verifyEmail(@RequestParam String code) {
     return authSvc.verifyEmail(code);
   }
 
-  @PreAuthorize("isAuthenticated()")
+  @Operation(summary = "Resend Email Verification", description = "Resend email verification link")
+  @ApiResponse(responseCode = "202", description = "Email verification link resent")
   @SecurityRequirement(name = "bearerAuth")
+  @PreAuthorize("isAuthenticated()")
   @GetMapping(path = "/resend-email")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public String resendEmailVerification(HttpServletRequest request) {
     return authSvc.resendEmailVerification(request);
+  }
+
+  @GetMapping(path = "/isValidJwt")
+  @SecurityRequirement(name = "bearerAuth")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  @PreAuthorize("isAuthenticated()")
+  public Map<String, Object> isValidJwt(JwtAuthenticationToken jwtAuthenticationToken) {
+    return jwtAuthenticationToken.getTokenAttributes();
   }
 }
