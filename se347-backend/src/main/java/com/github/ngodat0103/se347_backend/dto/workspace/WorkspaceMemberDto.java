@@ -11,6 +11,7 @@ import lombok.Getter;
 public class WorkspaceMemberDto {
   private String email;
   private String nickName;
+  private String imageUrl;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private WorkspaceRole role;

@@ -1,4 +1,4 @@
-package com.github.ngodat0103.se347_backend.service.account;
+package com.github.ngodat0103.se347_backend.service.user;
 
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 
@@ -61,6 +61,11 @@ public class DefaultUserService implements UserService {
   }
 
   @Override
+  public UserDto update(String userId, UserDto userDto) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public UserDto getMe() {
     String accountId = getUserIdFromAuthentication();
     User user =
@@ -71,7 +76,7 @@ public class DefaultUserService implements UserService {
   }
 
   @Override
-  public UserDto delete(Long id) {
+  public String delete(String id) {
     return null;
   }
 }

@@ -49,14 +49,16 @@ public class DefaultWorkspaceService implements WorkspaceService {
     return workspaceMapper.toDto(workspace);
   }
 
-  @Override
-  public WorkspaceDto update(WorkspaceDto workspaceDto) {
-    return null;
-  }
 
   @Override
-  public WorkspaceDto delete(Long id) {
-    return null;
+  public String delete(String workspaceId) {
+    Workspace workspace = getWorkspaceById(workspaceId);
+    String callerUserId = getUserIdFromAuthentication();
+    if (!workspace.getOwnerId().equals(callerUserId)) {
+      throw new AccessDeniedException("You do not have permission to delete this resource");
+    }
+    workspaceRepository.deleteById(workspaceId);
+    return "Delete successfully";
   }
 
   @Override
@@ -70,20 +72,28 @@ public class DefaultWorkspaceService implements WorkspaceService {
       throw new ConflictException(
           "You can not invite yourself", ConflictException.Type.ALREADY_EXISTS);
     }
-    Workspace callerWorkspace =
-        workspaceRepository
-            .findById(workspaceId)
-            .orElseThrow(() -> new NotFoundException("Workspace with this id is not found"));
+    Workspace callerWorkspace = getWorkspaceById(workspaceId);
     checkPermission(callerWorkspace, callerUserId);
 
     Map<String, WorkSpaceMember> memberMap = callerWorkspace.getMembers();
     memberMap.put(
         invitedUser.getAccountId(),
         new WorkSpaceMember(WorkspaceRole.MEMBER, WorkSpaceMemberStatus.PENDING));
+    callerWorkspace.setLastUpdatedDate(Instant.now());
     callerWorkspace = workspaceRepository.save(callerWorkspace);
     return workspaceMapper.toDto(callerWorkspace);
   }
 
+  @Override
+  public WorkspaceDto update(String workspaceId, WorkspaceDto workspaceDto) {
+    Workspace workspace = getWorkspaceById(workspaceId);
+    String callerUserId = getUserIdFromAuthentication();
+    checkPermission(workspace, callerUserId);
+    workspace.setName(workspaceDto.getName());
+    workspace.setLastUpdatedDate(Instant.now());
+    workspace = workspaceRepository.save(workspace);
+    return workspaceMapper.toDto(workspace);
+  }
   @Override
   public Set<WorkspaceDto> getWorkspaces() {
     String accountId = getUserIdFromAuthentication();
@@ -95,10 +105,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   @Override
   public String uploadImageWorkspace(
       String workspaceId, InputStream inputStream, MediaType mediaType) throws IOException {
-    Workspace workspace =
-        workspaceRepository
-            .findById(workspaceId)
-            .orElseThrow(() -> new NotFoundException("Workspace with this Id is not found"));
+    Workspace workspace = getWorkspaceById(workspaceId);
     String callerUserId = getUserIdFromAuthentication();
     checkPermission(workspace, callerUserId);
     String imagePublicUrl =
@@ -112,6 +119,11 @@ public class DefaultWorkspaceService implements WorkspaceService {
     return imagePublicUrl;
   }
 
+   private Workspace getWorkspaceById(String workspaceId) {
+     return workspaceRepository
+             .findById(workspaceId)
+             .orElseThrow(() -> new NotFoundException("Workspace with this id is not found"));
+   }
   private void checkPermission(Workspace workspace, String accountId) {
     if (workspace.getOwnerId().equals(accountId)) {
       return;

@@ -4,7 +4,7 @@ public interface BaseService<DTO> {
 
   DTO create(DTO dto);
 
-  DTO update(DTO dto);
+  DTO update(String id, DTO dto);
 
-  DTO delete(Long id);
+  String delete(String  id);
 }
