@@ -64,6 +64,12 @@ public class WorkspaceController {
   }
 
 
+
+     @PatchMapping("/{workspaceId}")
+      public WorkspaceDto update(@PathVariable String workspaceId, @RequestBody WorkspaceDto workspaceDto) {
+          return workspaceService.update(workspaceId,workspaceDto);
+      }
+
       @DeleteMapping("/{workspaceId}")
       @ResponseStatus(HttpStatus.NO_CONTENT)
       public String delete(@PathVariable String workspaceId) {

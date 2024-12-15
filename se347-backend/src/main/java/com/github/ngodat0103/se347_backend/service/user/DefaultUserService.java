@@ -61,6 +61,11 @@ public class DefaultUserService implements UserService {
   }
 
   @Override
+  public UserDto update(String userId, UserDto userDto) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public UserDto getMe() {
     String accountId = getUserIdFromAuthentication();
     User user =
