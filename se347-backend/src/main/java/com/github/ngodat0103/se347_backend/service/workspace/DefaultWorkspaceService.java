@@ -55,8 +55,16 @@ public class DefaultWorkspaceService implements WorkspaceService {
   }
 
   @Override
-  public WorkspaceDto delete(Long id) {
-    return null;
+  public String delete(String workspaceId) {
+    Workspace workspace = workspaceRepository.findById(workspaceId)
+            .orElseThrow(() -> new NotFoundException("Workspace with this id is not found"));
+
+    String callerUserId = getUserIdFromAuthentication();
+    if (!workspace.getOwnerId().equals(callerUserId)) {
+      throw new AccessDeniedException("You do not have permission to delete this resource");
+    }
+    workspaceRepository.deleteById(workspaceId);
+    return "Delete successfully";
   }
 
   @Override
@@ -80,6 +88,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     memberMap.put(
         invitedUser.getAccountId(),
         new WorkSpaceMember(WorkspaceRole.MEMBER, WorkSpaceMemberStatus.PENDING));
+    callerWorkspace.setLastUpdatedDate(Instant.now());
     callerWorkspace = workspaceRepository.save(callerWorkspace);
     return workspaceMapper.toDto(callerWorkspace);
   }

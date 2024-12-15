@@ -32,35 +32,6 @@ public class WorkspaceController {
   public WorkspaceDto create(@RequestBody @Valid WorkspaceDto workspaceDto) {
     return workspaceService.create(workspaceDto);
   }
-
-  //    @PostMapping(
-  //            value = "/{workspaceId}/image",
-  //            consumes = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE},
-  //            produces = MediaType.TEXT_PLAIN_VALUE)
-  //    public Mono<String> updatePicture(
-  //            @RequestBody Flux<DataBuffer> dataBufferFlux,
-  //            @PathVariable String workspaceId,
-  //            ServerHttpRequest request,
-  //            Authentication authentication) {
-  //        String contentType =
-  // Objects.requireNonNull(request.getHeaders().getContentType()).toString();
-  //
-  //        Mono<InputStream> inputStreamMono =
-  //                DataBufferUtils.join(dataBufferFlux).map(DataBuffer::asInputStream);
-  //
-  //        return inputStreamMono.flatMap(
-  //                inputStream -> {
-  //                    try {
-  //                        return workspaceService.updatePicture(
-  //                                workspaceId, authentication.getName(), inputStream,
-  // contentType);
-  //                    } catch (IOException e) {
-  //                        log.error("Failed to update image workspace", e);
-  //                        return Mono.error(e);
-  //                    }
-  //                });
-  //    }
-  //
   @GetMapping(path = "/me")
   public Set<WorkspaceDto> getWorkspaces() {
     return workspaceService.getWorkspaces();
@@ -92,9 +63,10 @@ public class WorkspaceController {
     }
   }
 
-  //
-  //    @DeleteMapping("/{id}")
-  //    public Mono<Void> delete(@PathVariable String id) {
-  //        return workspaceService.delete(id);
-  //    }
+
+      @DeleteMapping("/{workspaceId}")
+      @ResponseStatus(HttpStatus.NO_CONTENT)
+      public String delete(@PathVariable String workspaceId) {
+          return workspaceService.delete(workspaceId);
+      }
 }

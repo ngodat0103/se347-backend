@@ -1,7 +1,7 @@
 package com.github.ngodat0103.se347_backend.controller;
 
 import com.github.ngodat0103.se347_backend.dto.account.UserDto;
-import com.github.ngodat0103.se347_backend.service.account.UserService;
+import com.github.ngodat0103.se347_backend.service.user.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
