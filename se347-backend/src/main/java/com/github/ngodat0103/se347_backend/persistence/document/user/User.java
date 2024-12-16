@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @Builder
 public class User extends BaseDocument {
 
-  @MongoId private String accountId;
+  @MongoId private String userId;
 
   @NotNull(message = "Nick name should not be null")
   private String nickName;

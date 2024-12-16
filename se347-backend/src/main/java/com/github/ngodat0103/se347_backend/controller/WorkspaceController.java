@@ -1,6 +1,7 @@
 package com.github.ngodat0103.se347_backend.controller;
 
 import com.github.ngodat0103.se347_backend.dto.workspace.AddWorkspaceMemberDto;
+import com.github.ngodat0103.se347_backend.dto.workspace.MemberRoleUpdateDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.se347_backend.service.workspace.WorkspaceService;
@@ -88,4 +89,16 @@ public class WorkspaceController {
     public String delete(@PathVariable String workspaceId) {
         return workspaceService.delete(workspaceId);
     }
+
+    @PutMapping("/{workspaceId}/members/{memberId}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public WorkspaceDto updateMember(@PathVariable String workspaceId,@PathVariable String memberId, @RequestBody @Valid MemberRoleUpdateDto memberRoleUpdateDto) {
+        return workspaceService.updateMemberRole(workspaceId, memberId, memberRoleUpdateDto);
+    }
+    @DeleteMapping("/{workspaceId}/members/{memberId}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public String removeMember(@PathVariable String workspaceId, @PathVariable String memberId) {
+        return workspaceService.removeMember(workspaceId, memberId);
+    }
+
 }

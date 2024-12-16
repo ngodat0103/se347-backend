@@ -3,7 +3,9 @@ package com.github.ngodat0103.se347_backend.service.workspace;
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 
 import com.github.ngodat0103.se347_backend.dto.mapper.WorkspaceMapper;
+import com.github.ngodat0103.se347_backend.dto.workspace.MemberRoleUpdateDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
+import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.NotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
@@ -68,7 +70,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
         userRepository
             .findByEmailAndUserStatus(email, UserStatus.ACTIVE)
             .orElseThrow(() -> new NotFoundException("User with this email is not exists"));
-    if (invitedUser.getAccountId().equals(callerUserId)) {
+    if (invitedUser.getUserId().equals(callerUserId)) {
       throw new ConflictException(
           "You can not invite yourself", ConflictException.Type.ALREADY_EXISTS);
     }
@@ -77,11 +79,41 @@ public class DefaultWorkspaceService implements WorkspaceService {
 
     Map<String, WorkSpaceMember> memberMap = callerWorkspace.getMembers();
     memberMap.put(
-        invitedUser.getAccountId(),
+        invitedUser.getUserId(),
         new WorkSpaceMember(WorkspaceRole.MEMBER, WorkSpaceMemberStatus.PENDING));
     callerWorkspace.setLastUpdatedDate(Instant.now());
     callerWorkspace = workspaceRepository.save(callerWorkspace);
     return workspaceMapper.toDto(callerWorkspace);
+  }
+
+  @Override
+  public WorkspaceDto updateMemberRole(String workspaceId, String userId,MemberRoleUpdateDto memberRoleUpdateDto) {
+    Workspace callerWorkspace = getWorkspaceById(workspaceId);
+    String callerUserId = getUserIdFromAuthentication();
+    checkPermission(callerWorkspace, callerUserId);
+    WorkSpaceMember workSpaceMember = callerWorkspace.getMembers().get(userId);
+    if (workSpaceMember == null) {
+      throw new NotFoundException("Member with this id is not found");
+    }
+    workSpaceMember.setRole(memberRoleUpdateDto.getNewRole());
+    callerWorkspace.setLastUpdatedDate(Instant.now());
+
+    callerWorkspace = workspaceRepository.save(callerWorkspace);
+    return workspaceMapper.toDto(callerWorkspace);
+  }
+
+  @Override
+  public String removeMember(String workspaceId, String userId) {
+    var callerWorkspace = getWorkspaceById(workspaceId);
+    var callerUserId = getUserIdFromAuthentication();
+    checkPermission(callerWorkspace, callerUserId);
+    if (callerUserId.equals(userId)) {
+      throw new ConflictException("You can not remove yourself", ConflictException.Type.ALREADY_EXISTS);
+    }
+    callerWorkspace.getMembers().remove(userId);
+    callerWorkspace.setLastUpdatedDate(Instant.now());
+    workspaceRepository.save(callerWorkspace);
+    return "Remove member successfully";
   }
 
   @Override

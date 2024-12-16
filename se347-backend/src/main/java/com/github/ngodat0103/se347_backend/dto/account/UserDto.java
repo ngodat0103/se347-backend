@@ -13,7 +13,7 @@ import lombok.Data;
 @Builder
 public class UserDto {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private String accountId;
+  private String userId;
 
   private String nickName;
 

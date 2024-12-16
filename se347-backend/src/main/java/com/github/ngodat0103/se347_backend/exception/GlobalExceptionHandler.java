@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -116,4 +117,15 @@ public class GlobalExceptionHandler {
     problemDetails.setInstance(URI.create(request.getRequestURI()));
     return problemDetails;
   }
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleHttpMessageNotReadableException(
+        HttpMessageNotReadableException e, HttpServletRequest request) {
+      ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+      problemDetails.setType(URI.create("https://problems-registry.smartbear.com/bad-request"));
+      problemDetails.setTitle("Bad Request");
+      problemDetails.setDetail(e.getMessage());
+      problemDetails.setInstance(URI.create(request.getRequestURI()));
+      return problemDetails;
+    }
 }
