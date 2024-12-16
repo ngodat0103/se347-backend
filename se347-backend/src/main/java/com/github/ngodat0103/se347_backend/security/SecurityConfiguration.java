@@ -41,7 +41,6 @@ public class SecurityConfiguration {
       throws Exception {
     this.configureCors(httpSecurity);
     this.configureCsrf(httpSecurity);
-    //      httpSecurity.addFilterBefore(blackListTokenFilter, AuthenticationFilter.class);
     this.configureResourceServer(httpSecurity, objectMapper);
     return httpSecurity.build();
   }
@@ -52,7 +51,7 @@ public class SecurityConfiguration {
           CorsConfiguration configuration = new CorsConfiguration();
           configuration.setAllowedOriginPatterns(List.of(allowedOrigin));
           configuration.setAllowedHeaders(List.of("*"));
-          configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+          configuration.setAllowedMethods(List.of("*"));
           UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
           source.registerCorsConfiguration("/**", configuration);
           cors.configurationSource(source);

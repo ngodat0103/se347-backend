@@ -76,7 +76,7 @@ public class WorkspaceController {
 
     @Operation(summary = "Update Workspace", description = "Update workspace details")
     @ApiResponse(responseCode = "200", description = "Workspace updated successfully")
-    @PatchMapping("/{workspaceId}")
+    @PutMapping("/{workspaceId}")
     public WorkspaceDto update(@PathVariable String workspaceId, @RequestBody WorkspaceDto workspaceDto) {
         return workspaceService.update(workspaceId, workspaceDto);
     }
