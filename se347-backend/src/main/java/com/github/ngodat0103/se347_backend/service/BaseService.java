@@ -6,5 +6,5 @@ public interface BaseService<DTO> {
 
   DTO update(String id, DTO dto);
 
-  String delete(String  id);
+  String delete(String id);
 }

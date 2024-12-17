@@ -39,6 +39,17 @@
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
         <sonar.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.jacoco.xmlReportPaths>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

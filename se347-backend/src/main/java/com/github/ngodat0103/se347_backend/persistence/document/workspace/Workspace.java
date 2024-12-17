@@ -1,6 +1,7 @@
 package com.github.ngodat0103.se347_backend.persistence.document.workspace;
 
 import com.github.ngodat0103.se347_backend.persistence.document.BaseDocument;
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +24,7 @@ public class Workspace extends BaseDocument {
   private Map<String, WorkSpaceMember> members;
   private Set<String> projects;
   private String imageUrl;
+  private WorkspaceInviteCode inviteCode;
   private boolean softDeleted;
 
   public Workspace(String name) {
