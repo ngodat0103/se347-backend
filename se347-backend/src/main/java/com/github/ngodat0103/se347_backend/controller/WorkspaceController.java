@@ -97,7 +97,7 @@ public class WorkspaceController {
 
   @PutMapping("/{workspaceId}/members/{memberId}")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @Operation(tags = "Workspace member", summary = "Update Member Role", description = "Update role of a member in a workspace")
+  @Operation(tags = "Workspace members", summary = "Update Member Role", description = "Update role of a member in a workspace")
   public WorkspaceDto updateMember(
       @PathVariable String workspaceId,
       @PathVariable String memberId,
@@ -107,21 +107,21 @@ public class WorkspaceController {
 
   @DeleteMapping("/{workspaceId}/members/{memberId}")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @Operation(tags = "Workspace member", summary = "Remove Member", description = "Remove a member from a workspace")
+  @Operation(tags = "Workspace members", summary = "Remove Member", description = "Remove a member from a workspace")
   public String removeMember(@PathVariable String workspaceId, @PathVariable String memberId) {
     return workspaceService.removeMember(workspaceId, memberId);
   }
 
   @PutMapping(path = "/{workspaceId}/reset-invite-code")
-  @Operation(tags = "Workspace member", summary = "Re-generate Invite Code", description = "Re-generate invite code for a workspace")
+  @Operation(tags = "Workspace members", summary = "Re-generate Invite Code", description = "Re-generate invite code for a workspace")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public WorkspaceDto reGenerateInviteCode(
       @PathVariable String workspaceId, HttpServletRequest request) {
     return workspaceService.reGenerateInviteCode(workspaceId, getForwardedHeaders(request));
   }
 
-  @GetMapping(path = "/join")
-  @Operation(tags = "Workspace member", summary = "Join Workspace", description = "Join a workspace")
+  @PostMapping(path = "/join")
+  @Operation(tags = "Workspace members", summary = "Join Workspace", description = "Join a workspace")
   public WorkspaceDto joinByInviteCode(@RequestParam String inviteCode) {
     return workspaceService.addMemberByInviteCode(inviteCode);
   }
