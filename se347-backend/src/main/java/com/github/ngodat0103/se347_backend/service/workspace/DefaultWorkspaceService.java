@@ -127,6 +127,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
         ForwardedHeaderUtils.adaptFromForwardedHeaders(BASE_WORKSPACE_ENDPOINT, forwardHeaders);
     uriComponentsBuilder.path("/join");
     uriComponentsBuilder.query("inviteCode=" + inviteCode);
+    uriComponentsBuilder.host(forwardHeaders.getFirst(HttpHeaders.HOST));
     WorkspaceInviteCode workspaceInviteCode = new WorkspaceInviteCode(inviteCode, uriComponentsBuilder.build().toUri());
     callerWorkspace.setInviteCode(workspaceInviteCode);
     callerWorkspace.setLastUpdatedDate(Instant.now());

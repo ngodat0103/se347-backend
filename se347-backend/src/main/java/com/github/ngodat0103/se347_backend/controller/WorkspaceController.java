@@ -128,7 +128,7 @@ public class WorkspaceController {
 
   private HttpHeaders getForwardedHeaders(HttpServletRequest request) {
     HttpHeaders headers = new HttpHeaders();
-    headers.add("X-Forwarded-Host", request.getHeader("X-Forwarded-Host"));
+    headers.add(HttpHeaders.HOST, request.getHeader(HttpHeaders.HOST));
     headers.add("X-Forwarded-Port", request.getHeader("X-Forwarded-Port"));
     headers.add("X-Forwarded-Proto", request.getHeader("X-Forwarded-Proto"));
     return headers;
