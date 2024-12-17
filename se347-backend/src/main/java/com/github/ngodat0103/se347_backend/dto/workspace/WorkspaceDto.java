@@ -31,6 +31,7 @@ public class WorkspaceDto {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String imageUrl;
 
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private URI inviteCodeUrl;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
