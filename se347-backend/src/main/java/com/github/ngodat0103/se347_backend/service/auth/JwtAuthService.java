@@ -74,7 +74,7 @@ public class JwtAuthService implements AuthService {
     Instant expireAt = now.plusSeconds(ACCESS_TOKEN_DURATION.getSeconds());
     JwtClaimsSet jwtClaimsSet =
         JwtClaimsSet.builder()
-            .subject(user.getAccountId().toString())
+            .subject(user.getUserId())
             .issuedAt(now)
             .expiresAt(expireAt)
             .issuer("se347-backend")
