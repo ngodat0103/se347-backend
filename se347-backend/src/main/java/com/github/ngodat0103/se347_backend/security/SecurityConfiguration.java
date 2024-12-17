@@ -33,7 +33,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @ConfigurationProperties("jwk")
 @EnableMethodSecurity
 public class SecurityConfiguration {
-  private String allowedOrigin = "http://localhost:4200";
+  private final String allowedOrigin = "http://localhost:4200";
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, ObjectMapper objectMapper)

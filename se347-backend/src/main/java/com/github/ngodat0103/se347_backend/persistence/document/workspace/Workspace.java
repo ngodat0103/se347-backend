@@ -1,7 +1,6 @@
 package com.github.ngodat0103.se347_backend.persistence.document.workspace;
 
 import com.github.ngodat0103.se347_backend.persistence.document.BaseDocument;
-import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;

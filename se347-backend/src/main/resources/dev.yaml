@@ -18,9 +18,6 @@ spring:
       client-name: se347-backend
       client-type: lettuce
       host: 127.0.0.1
-  cloud:
-    inetutils:
-      default-hostname: localhost
 jwk:
   rsa: #Dev credential
     key-value: |-
