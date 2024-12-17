@@ -37,8 +37,8 @@ public class WorkspaceController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public WorkspaceDto create(
-      @RequestBody @Valid WorkspaceDto workspaceDto, HttpServletRequest request) {
-    return workspaceService.create(workspaceDto, getForwardedHeaders(request));
+      @RequestBody @Valid WorkspaceDto workspaceDto) {
+    return workspaceService.create(workspaceDto);
   }
 
   @Operation(
@@ -116,15 +116,20 @@ public class WorkspaceController {
   @Operation(tags = "Workspace members", summary = "Re-generate Invite Code", description = "Re-generate invite code for a workspace")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public WorkspaceDto reGenerateInviteCode(
-      @PathVariable String workspaceId, HttpServletRequest request) {
-    return workspaceService.reGenerateInviteCode(workspaceId, getForwardedHeaders(request));
+      @PathVariable String workspaceId) {
+    return workspaceService.reGenerateInviteCode(workspaceId);
   }
 
   @PostMapping(path = "/join")
-  @Operation(tags = "Workspace members", summary = "Join Workspace", description = "Join a workspace")
+  @Operation(tags = "Workspace join by invite code", summary = "Join Workspace", description = "Join a workspace")
   public WorkspaceDto joinByInviteCode(@RequestParam String inviteCode) {
     return workspaceService.addMemberByInviteCode(inviteCode);
   }
+  @GetMapping(path = "/join")
+    @Operation(tags = "Workspace join by invite code", summary = "Get Workspace by Invite Code", description = "Get workspace by invite code")
+    public WorkspaceDto getWorkspaceByInviteCode(@RequestParam String inviteCode) {
+        return workspaceService.getWorkspaceByInviteCode(inviteCode);
+    }
 
   private HttpHeaders getForwardedHeaders(HttpServletRequest request) {
     HttpHeaders headers = new HttpHeaders();

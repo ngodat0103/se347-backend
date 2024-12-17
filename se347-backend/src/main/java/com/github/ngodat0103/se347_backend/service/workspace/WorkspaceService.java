@@ -10,13 +10,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 public interface WorkspaceService extends BaseService<WorkspaceDto> {
-  WorkspaceDto create(WorkspaceDto workspaceDto, HttpHeaders forwardHeaders);
+  WorkspaceDto create(WorkspaceDto workspaceDto);
 
   WorkspaceDto addMemberByEmail(String workspaceId, String email);
 
   WorkspaceDto addMemberByInviteCode(String inviteCode);
 
-  WorkspaceDto reGenerateInviteCode(String workspaceId, HttpHeaders forwardHeaders);
+  WorkspaceDto reGenerateInviteCode(String workspaceId);
 
   WorkspaceDto updateMemberRole(
       String workspaceId, String memberId, MemberRoleUpdateDto memberRoleUpdateDto);
@@ -24,6 +24,7 @@ public interface WorkspaceService extends BaseService<WorkspaceDto> {
   String removeMember(String workspaceId, String userId);
 
   Set<WorkspaceDto> getWorkspaces();
+  WorkspaceDto getWorkspaceByInviteCode(String inviteCode);
 
   String uploadImageWorkspace(String workspaceId, InputStream inputStream, MediaType mediaType)
       throws IOException;

@@ -36,13 +36,8 @@ public class DefaultWorkspaceService implements WorkspaceService {
   private final WorkspaceMapper workspaceMapper;
   private static final String WORKSPACE_STORAGE_PREFIX = "workspace/";
   private final MinioService minioService;
-  private static final URI BASE_WORKSPACE_ENDPOINT =
-      URI.create("http://localhost:5000/api/v1/workspaces");
-
-  @Override
-  public WorkspaceDto create(WorkspaceDto workspaceDto) {
-    throw new UnsupportedOperationException("Not implemented yet");
-  }
+  private static final URI BASE_WORKSPACE_FRONTEND_ENDPOINT =
+      URI.create("http://localhost:4200/workspaces/join");
 
   @Override
   public String delete(String workspaceId) {
@@ -56,7 +51,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   }
 
   @Override
-  public WorkspaceDto create(WorkspaceDto workspaceDto, HttpHeaders forwardHeaders) {
+  public WorkspaceDto create(WorkspaceDto workspaceDto) {
     String callerUserId = getUserIdFromAuthentication();
 
     Workspace workspace = new Workspace(workspaceDto.getName());
@@ -69,7 +64,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     workspace.setCreatedDate(instantNow);
     workspace.setLastUpdatedDate(instantNow);
     workspace = workspaceRepository.save(workspace);
-    this.updateInviteCode(workspace, forwardHeaders);
+    this.updateInviteCode(workspace);
     workspace = workspaceRepository.save(workspace);
     return workspaceMapper.toDto(workspace);
   }
@@ -113,22 +108,19 @@ public class DefaultWorkspaceService implements WorkspaceService {
   }
 
   @Override
-  public WorkspaceDto reGenerateInviteCode(String workspaceId, HttpHeaders forwardHeaders) {
+  public WorkspaceDto reGenerateInviteCode(String workspaceId) {
     Workspace callerWorkspace = getWorkspaceById(workspaceId);
     String callerUserId = getUserIdFromAuthentication();
     checkPermission(callerWorkspace, callerUserId);
-    updateInviteCode(callerWorkspace, forwardHeaders);
+    updateInviteCode(callerWorkspace);
     callerWorkspace = workspaceRepository.save(callerWorkspace);
     return workspaceMapper.toDto(callerWorkspace);
   }
 
-  private void updateInviteCode(Workspace callerWorkspace, HttpHeaders forwardHeaders) {
+  private void updateInviteCode(Workspace callerWorkspace) {
     String inviteCode = generateInviteCode();
-    UriComponentsBuilder uriComponentsBuilder =
-        ForwardedHeaderUtils.adaptFromForwardedHeaders(BASE_WORKSPACE_ENDPOINT, forwardHeaders);
-    uriComponentsBuilder.path("/join");
+    UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUri(BASE_WORKSPACE_FRONTEND_ENDPOINT);
     uriComponentsBuilder.query("inviteCode=" + inviteCode);
-    uriComponentsBuilder.host(forwardHeaders.getFirst(HttpHeaders.HOST));
     WorkspaceInviteCode workspaceInviteCode = new WorkspaceInviteCode(inviteCode, uriComponentsBuilder.build().toUri());
     callerWorkspace.setInviteCode(workspaceInviteCode);
     callerWorkspace.setLastUpdatedDate(Instant.now());
@@ -190,6 +182,16 @@ public class DefaultWorkspaceService implements WorkspaceService {
     Set<Workspace> workspaces = workspaceRepository.findByOwnerIdOrMemberId(accountId);
 
     return workspaces.stream().map(workspaceMapper::toDto).collect(Collectors.toUnmodifiableSet());
+  }
+
+  @Override
+  public WorkspaceDto getWorkspaceByInviteCode(String inviteCode) {
+    Workspace workspace =
+        workspaceRepository
+            .findByInviteCode_InviteCode(inviteCode)
+            .orElseThrow(
+                () -> new NotFoundException("Workspace with this invite code is not found"));
+    return workspaceMapper.toDto(workspace);
   }
 
   @Override
