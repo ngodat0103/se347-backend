@@ -70,6 +70,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     workspace.setLastUpdatedDate(instantNow);
     workspace = workspaceRepository.save(workspace);
     this.updateInviteCode(workspace, forwardHeaders);
+    workspace = workspaceRepository.save(workspace);
     return workspaceMapper.toDto(workspace);
   }
 
