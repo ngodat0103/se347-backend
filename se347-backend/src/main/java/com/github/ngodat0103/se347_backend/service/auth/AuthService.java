@@ -1,6 +1,6 @@
 package com.github.ngodat0103.se347_backend.service.auth;
 
-import com.github.ngodat0103.se347_backend.dto.account.CredentialDto;
+import com.github.ngodat0103.se347_backend.dto.user.CredentialDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;

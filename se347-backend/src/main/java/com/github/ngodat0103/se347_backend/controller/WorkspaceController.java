@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,12 +31,14 @@ public class WorkspaceController {
 
   private WorkspaceService workspaceService;
 
-  @Operation(summary = "Create Workspace", description = "Create a new workspace",tags = "Workspace")
+  @Operation(
+      summary = "Create Workspace",
+      description = "Create a new workspace",
+      tags = "Workspace")
   @ApiResponse(responseCode = "201", description = "Workspace created successfully")
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public WorkspaceDto create(
-      @RequestBody @Valid WorkspaceDto workspaceDto) {
+  public WorkspaceDto create(@RequestBody @Valid WorkspaceDto workspaceDto) {
     return workspaceService.create(workspaceDto);
   }
 
@@ -51,7 +52,10 @@ public class WorkspaceController {
     return workspaceService.getWorkspaces();
   }
 
-  @Operation(summary = "Add Member to Workspace",tags = "Workspace members", description = "Invite a user to join a workspace")
+  @Operation(
+      summary = "Add Member to Workspace",
+      tags = "Workspace members",
+      description = "Invite a user to join a workspace")
   @ApiResponse(responseCode = "201", description = "Member added successfully")
   @PostMapping(path = "/{workspaceId}/members/addByEmail")
   @ResponseStatus(HttpStatus.CREATED)
@@ -61,7 +65,10 @@ public class WorkspaceController {
     return workspaceService.addMemberByEmail(workspaceId, addWorkspaceMemberDto.getEmail());
   }
 
-  @Operation(summary = "Upload Workspace Image", description = "Upload an image for a workspace",tags = "Workspace")
+  @Operation(
+      summary = "Upload Workspace Image",
+      description = "Upload an image for a workspace",
+      tags = "Workspace")
   @ApiResponse(responseCode = "200", description = "Image uploaded successfully")
   @PostMapping(
       value = "/{workspaceId}/image",
@@ -79,7 +86,10 @@ public class WorkspaceController {
     }
   }
 
-  @Operation(summary = "Update Workspace", description = "Update workspace details",tags = "Workspace")
+  @Operation(
+      summary = "Update Workspace",
+      description = "Update workspace details",
+      tags = "Workspace")
   @ApiResponse(responseCode = "200", description = "Workspace updated successfully")
   @PutMapping("/{workspaceId}")
   public WorkspaceDto update(
@@ -87,7 +97,7 @@ public class WorkspaceController {
     return workspaceService.update(workspaceId, workspaceDto);
   }
 
-  @Operation(summary = "Delete Workspace", description = "Delete a workspace",tags = "Workspace")
+  @Operation(summary = "Delete Workspace", description = "Delete a workspace", tags = "Workspace")
   @ApiResponse(responseCode = "204", description = "Workspace deleted successfully")
   @DeleteMapping("/{workspaceId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -97,7 +107,10 @@ public class WorkspaceController {
 
   @PutMapping("/{workspaceId}/members/{memberId}")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @Operation(tags = "Workspace members", summary = "Update Member Role", description = "Update role of a member in a workspace")
+  @Operation(
+      tags = "Workspace members",
+      summary = "Update Member Role",
+      description = "Update role of a member in a workspace")
   public WorkspaceDto updateMember(
       @PathVariable String workspaceId,
       @PathVariable String memberId,
@@ -107,35 +120,39 @@ public class WorkspaceController {
 
   @DeleteMapping("/{workspaceId}/members/{memberId}")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @Operation(tags = "Workspace members", summary = "Remove Member", description = "Remove a member from a workspace")
+  @Operation(
+      tags = "Workspace members",
+      summary = "Remove Member",
+      description = "Remove a member from a workspace")
   public String removeMember(@PathVariable String workspaceId, @PathVariable String memberId) {
     return workspaceService.removeMember(workspaceId, memberId);
   }
 
   @PutMapping(path = "/{workspaceId}/reset-invite-code")
-  @Operation(tags = "Workspace members", summary = "Re-generate Invite Code", description = "Re-generate invite code for a workspace")
+  @Operation(
+      tags = "Workspace members",
+      summary = "Re-generate Invite Code",
+      description = "Re-generate invite code for a workspace")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  public WorkspaceDto reGenerateInviteCode(
-      @PathVariable String workspaceId) {
+  public WorkspaceDto reGenerateInviteCode(@PathVariable String workspaceId) {
     return workspaceService.reGenerateInviteCode(workspaceId);
   }
 
   @PostMapping(path = "/join")
-  @Operation(tags = "Workspace join by invite code", summary = "Join Workspace", description = "Join a workspace")
+  @Operation(
+      tags = "Workspace join by invite code",
+      summary = "Join Workspace",
+      description = "Join a workspace")
   public WorkspaceDto joinByInviteCode(@RequestParam String inviteCode) {
     return workspaceService.addMemberByInviteCode(inviteCode);
   }
-  @GetMapping(path = "/join")
-    @Operation(tags = "Workspace join by invite code", summary = "Get Workspace by Invite Code", description = "Get workspace by invite code")
-    public WorkspaceDto getWorkspaceByInviteCode(@RequestParam String inviteCode) {
-        return workspaceService.getWorkspaceByInviteCode(inviteCode);
-    }
 
-  private HttpHeaders getForwardedHeaders(HttpServletRequest request) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.add(HttpHeaders.HOST, request.getHeader(HttpHeaders.HOST));
-    headers.add("X-Forwarded-Port", request.getHeader("X-Forwarded-Port"));
-    headers.add("X-Forwarded-Proto", request.getHeader("X-Forwarded-Proto"));
-    return headers;
+  @GetMapping(path = "/join")
+  @Operation(
+      tags = "Workspace join by invite code",
+      summary = "Get Workspace by Invite Code",
+      description = "Get workspace by invite code")
+  public WorkspaceDto getWorkspaceByInviteCode(@RequestParam String inviteCode) {
+    return workspaceService.getWorkspaceByInviteCode(inviteCode);
   }
 }

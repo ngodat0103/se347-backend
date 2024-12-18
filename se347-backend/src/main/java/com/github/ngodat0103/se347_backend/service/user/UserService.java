@@ -1,6 +1,6 @@
 package com.github.ngodat0103.se347_backend.service.user;
 
-import com.github.ngodat0103.se347_backend.dto.account.UserDto;
+import com.github.ngodat0103.se347_backend.dto.user.UserDto;
 import com.github.ngodat0103.se347_backend.service.BaseService;
 import jakarta.servlet.http.HttpServletRequest;
 

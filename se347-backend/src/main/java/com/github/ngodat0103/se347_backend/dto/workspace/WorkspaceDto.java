@@ -2,7 +2,6 @@ package com.github.ngodat0103.se347_backend.dto.workspace;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
-import java.net.URI;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import lombok.Builder;
@@ -32,7 +31,7 @@ public class WorkspaceDto {
   private String imageUrl;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private URI inviteCodeUrl;
+  private String inviteCode;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private Instant createdDate;

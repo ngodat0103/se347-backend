@@ -1,5 +1,7 @@
 package com.github.ngodat0103.se347_backend.service.workspace;
+
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
+
 import com.github.ngodat0103.se347_backend.dto.mapper.WorkspaceMapper;
 import com.github.ngodat0103.se347_backend.dto.workspace.MemberRoleUpdateDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
@@ -21,12 +23,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.ForwardedHeaderUtils;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @AllArgsConstructor
@@ -97,7 +96,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     String callerUserId = getUserIdFromAuthentication();
     Workspace workspace =
         workspaceRepository
-            .findByInviteCode_InviteCode(inviteCode)
+            .findByInviteCode(inviteCode)
             .orElseThrow(
                 () -> new NotFoundException("Workspace with this invite code is not found"));
     validateUserIsNotMember(workspace, callerUserId);
@@ -119,10 +118,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
 
   private void updateInviteCode(Workspace callerWorkspace) {
     String inviteCode = generateInviteCode();
-    UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUri(BASE_WORKSPACE_FRONTEND_ENDPOINT);
-    uriComponentsBuilder.query("inviteCode=" + inviteCode);
-    WorkspaceInviteCode workspaceInviteCode = new WorkspaceInviteCode(inviteCode, uriComponentsBuilder.build().toUri());
-    callerWorkspace.setInviteCode(workspaceInviteCode);
+    callerWorkspace.setInviteCode(inviteCode);
     callerWorkspace.setLastUpdatedDate(Instant.now());
   }
 
@@ -188,7 +184,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   public WorkspaceDto getWorkspaceByInviteCode(String inviteCode) {
     Workspace workspace =
         workspaceRepository
-            .findByInviteCode_InviteCode(inviteCode)
+            .findByInviteCode(inviteCode)
             .orElseThrow(
                 () -> new NotFoundException("Workspace with this invite code is not found"));
     return workspaceMapper.toDto(workspace);

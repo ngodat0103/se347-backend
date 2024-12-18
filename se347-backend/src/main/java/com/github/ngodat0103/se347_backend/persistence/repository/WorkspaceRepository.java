@@ -12,5 +12,5 @@ public interface WorkspaceRepository extends MongoRepository<Workspace, String> 
   @Query("{$or: [{'ownerId': ?0},{'members.?0':{$exists:  true}}]}")
   LinkedHashSet<Workspace> findByOwnerIdOrMemberId(String accountId);
 
-  Optional<Workspace> findByInviteCode_InviteCode(String inviteCodeUrl);
+  Optional<Workspace> findByInviteCode(String inviteCode);
 }

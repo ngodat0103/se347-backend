@@ -6,7 +6,6 @@ import com.github.ngodat0103.se347_backend.service.BaseService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 public interface WorkspaceService extends BaseService<WorkspaceDto> {
@@ -24,6 +23,7 @@ public interface WorkspaceService extends BaseService<WorkspaceDto> {
   String removeMember(String workspaceId, String userId);
 
   Set<WorkspaceDto> getWorkspaces();
+
   WorkspaceDto getWorkspaceByInviteCode(String inviteCode);
 
   String uploadImageWorkspace(String workspaceId, InputStream inputStream, MediaType mediaType)
