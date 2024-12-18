@@ -16,6 +16,7 @@ public class WorkspaceDto {
 
   @NotNull(message = "Name is required")
   private String name;
+
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String ownerId;
 
@@ -28,6 +29,9 @@ public class WorkspaceDto {
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String imageUrl;
+
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  private String inviteCode;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private Instant createdDate;

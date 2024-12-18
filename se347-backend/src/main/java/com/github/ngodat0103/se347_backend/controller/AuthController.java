@@ -1,6 +1,6 @@
 package com.github.ngodat0103.se347_backend.controller;
 
-import com.github.ngodat0103.se347_backend.dto.account.CredentialDto;
+import com.github.ngodat0103.se347_backend.dto.user.CredentialDto;
 import com.github.ngodat0103.se347_backend.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

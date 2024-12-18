@@ -1,4 +1,4 @@
-package com.github.ngodat0103.se347_backend.dto.account;
+package com.github.ngodat0103.se347_backend.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;

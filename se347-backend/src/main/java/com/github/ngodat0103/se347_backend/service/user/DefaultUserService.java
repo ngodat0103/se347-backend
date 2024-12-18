@@ -2,10 +2,10 @@ package com.github.ngodat0103.se347_backend.service.user;
 
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 
-import com.github.ngodat0103.se347_backend.dto.account.UserDto;
 import com.github.ngodat0103.se347_backend.dto.mapper.UserMapper;
 import com.github.ngodat0103.se347_backend.dto.topic.KeyTopic;
 import com.github.ngodat0103.se347_backend.dto.topic.ValueTopicRegisteredUser;
+import com.github.ngodat0103.se347_backend.dto.user.UserDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.NotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;

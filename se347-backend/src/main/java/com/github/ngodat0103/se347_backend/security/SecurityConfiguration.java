@@ -9,7 +9,6 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.proc.SecurityContext;
 import java.net.URI;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,7 +33,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @ConfigurationProperties("jwk")
 @EnableMethodSecurity
 public class SecurityConfiguration {
-  private String allowedOrigin = "http://localhost:4200";
+  private final String allowedOrigin = "http://localhost:4200";
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, ObjectMapper objectMapper)

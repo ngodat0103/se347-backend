@@ -23,6 +23,7 @@ public class Workspace extends BaseDocument {
   private Map<String, WorkSpaceMember> members;
   private Set<String> projects;
   private String imageUrl;
+  private String inviteCode;
   private boolean softDeleted;
 
   public Workspace(String name) {

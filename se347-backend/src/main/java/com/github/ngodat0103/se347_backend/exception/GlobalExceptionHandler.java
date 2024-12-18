@@ -117,15 +117,16 @@ public class GlobalExceptionHandler {
     problemDetails.setInstance(URI.create(request.getRequestURI()));
     return problemDetails;
   }
+
   @ExceptionHandler(HttpMessageNotReadableException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ProblemDetail handleHttpMessageNotReadableException(
-        HttpMessageNotReadableException e, HttpServletRequest request) {
-      ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-      problemDetails.setType(URI.create("https://problems-registry.smartbear.com/bad-request"));
-      problemDetails.setTitle("Bad Request");
-      problemDetails.setDetail(e.getMessage());
-      problemDetails.setInstance(URI.create(request.getRequestURI()));
-      return problemDetails;
-    }
+  public ProblemDetail handleHttpMessageNotReadableException(
+      HttpMessageNotReadableException e, HttpServletRequest request) {
+    ProblemDetail problemDetails = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+    problemDetails.setType(URI.create("https://problems-registry.smartbear.com/bad-request"));
+    problemDetails.setTitle("Bad Request");
+    problemDetails.setDetail(e.getMessage());
+    problemDetails.setInstance(URI.create(request.getRequestURI()));
+    return problemDetails;
+  }
 }
