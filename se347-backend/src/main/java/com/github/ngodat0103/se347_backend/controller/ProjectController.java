@@ -3,6 +3,7 @@ package com.github.ngodat0103.se347_backend.controller;
 
 import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
 import com.github.ngodat0103.se347_backend.service.project.ProjectService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping(path = "/api/v1/workspaces/{workspaceId}/projects")
+@SecurityRequirement(name = "bearerAuth")
 @AllArgsConstructor
 public class ProjectController {
 
