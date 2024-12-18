@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -63,6 +64,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     workspace.setCreatedDate(instantNow);
     workspace.setLastUpdatedDate(instantNow);
     workspace = workspaceRepository.save(workspace);
+    workspace.setProjects(new LinkedHashSet<>());
     this.updateInviteCode(workspace);
     workspace = workspaceRepository.save(workspace);
     return workspaceMapper.toDto(workspace);
@@ -80,7 +82,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
           "You can not invite yourself", ConflictException.Type.ALREADY_EXISTS);
     }
     Workspace callerWorkspace = getWorkspaceById(workspaceId);
-    checkPermission(callerWorkspace, callerUserId);
+    checkWritePermission(callerWorkspace, callerUserId);
 
     Map<String, WorkSpaceMember> memberMap = callerWorkspace.getMembers();
     memberMap.put(
@@ -110,7 +112,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   public WorkspaceDto reGenerateInviteCode(String workspaceId) {
     Workspace callerWorkspace = getWorkspaceById(workspaceId);
     String callerUserId = getUserIdFromAuthentication();
-    checkPermission(callerWorkspace, callerUserId);
+    checkWritePermission(callerWorkspace, callerUserId);
     updateInviteCode(callerWorkspace);
     callerWorkspace = workspaceRepository.save(callerWorkspace);
     return workspaceMapper.toDto(callerWorkspace);
@@ -134,7 +136,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
       String workspaceId, String userId, MemberRoleUpdateDto memberRoleUpdateDto) {
     Workspace callerWorkspace = getWorkspaceById(workspaceId);
     String callerUserId = getUserIdFromAuthentication();
-    checkPermission(callerWorkspace, callerUserId);
+    checkWritePermission(callerWorkspace, callerUserId);
     WorkSpaceMember workSpaceMember = callerWorkspace.getMembers().get(userId);
     if (workSpaceMember == null) {
       throw new NotFoundException("Member with this id is not found");
@@ -150,7 +152,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   public String removeMember(String workspaceId, String userId) {
     var callerWorkspace = getWorkspaceById(workspaceId);
     var callerUserId = getUserIdFromAuthentication();
-    checkPermission(callerWorkspace, callerUserId);
+    checkWritePermission(callerWorkspace, callerUserId);
     if (callerUserId.equals(userId)) {
       throw new ConflictException(
           "You can not remove yourself", ConflictException.Type.ALREADY_EXISTS);
@@ -165,7 +167,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   public WorkspaceDto update(String workspaceId, WorkspaceDto workspaceDto) {
     Workspace workspace = getWorkspaceById(workspaceId);
     String callerUserId = getUserIdFromAuthentication();
-    checkPermission(workspace, callerUserId);
+    checkWritePermission(workspace, callerUserId);
     workspace.setName(workspaceDto.getName());
     workspace.setLastUpdatedDate(Instant.now());
     workspace = workspaceRepository.save(workspace);
@@ -195,7 +197,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
       String workspaceId, InputStream inputStream, MediaType mediaType) throws IOException {
     Workspace workspace = getWorkspaceById(workspaceId);
     String callerUserId = getUserIdFromAuthentication();
-    checkPermission(workspace, callerUserId);
+    checkWritePermission(workspace, callerUserId);
     String imagePublicUrl =
         minioService.uploadFile(
             WORKSPACE_STORAGE_PREFIX + workspaceId,
@@ -211,16 +213,6 @@ public class DefaultWorkspaceService implements WorkspaceService {
     return workspaceRepository
         .findById(workspaceId)
         .orElseThrow(() -> new NotFoundException("Workspace with this id is not found"));
-  }
-
-  private void checkPermission(Workspace workspace, String accountId) {
-    if (workspace.getOwnerId().equals(accountId)) {
-      return;
-    }
-    WorkSpaceMember workSpaceMember = workspace.getMembers().get(accountId);
-    if (workSpaceMember == null || workSpaceMember.getRole() != WorkspaceRole.EDITOR) {
-      throw new AccessDeniedException("You do not have permission to edit this resource");
-    }
   }
 
   private void validateUserIsNotMember(Workspace workspace, String userId) {
