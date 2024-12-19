@@ -74,7 +74,7 @@ public class WorkspaceController {
       value = "/{workspaceId}/image",
       consumes = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE},
       produces = MediaType.TEXT_PLAIN_VALUE)
-  public String updatePicture(
+  public String updateImage(
       @RequestBody byte[] imageBytes, @PathVariable String workspaceId, HttpServletRequest request)
       throws Exception {
     try (InputStream inputStream = new ByteArrayInputStream(imageBytes)) {
