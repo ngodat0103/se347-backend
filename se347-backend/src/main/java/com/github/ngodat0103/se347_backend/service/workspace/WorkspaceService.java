@@ -32,6 +32,7 @@ public interface WorkspaceService extends BaseService<WorkspaceDto> {
 
   String uploadImageWorkspace(String workspaceId, InputStream inputStream, MediaType mediaType)
       throws IOException;
+
   default void checkWritePermission(Workspace workspace, String callerUserId) {
     if (workspace.getOwnerId().equals(callerUserId)) {
       return;
@@ -41,6 +42,7 @@ public interface WorkspaceService extends BaseService<WorkspaceDto> {
       throw new AccessDeniedException("You do not have permission to edit this resource");
     }
   }
+
   default void checkReadPermission(Workspace workspace, String callerUserId) {
     if (workspace.getOwnerId().equals(callerUserId)) {
       return;

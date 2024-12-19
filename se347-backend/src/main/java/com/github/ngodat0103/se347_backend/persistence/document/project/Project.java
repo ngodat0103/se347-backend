@@ -11,10 +11,9 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @CompoundIndex(name = "project_idx", def = "{'workspaceId': 1, 'name': 1}", unique = true)
-public class Project  extends BaseDocument {
-    @MongoId
-    private String id;
-    private String workspaceId;
-    private String name;
-    private String imageUrl;
+public class Project extends BaseDocument {
+  @MongoId private String id;
+  private String workspaceId;
+  private String name;
+  private String imageUrl;
 }

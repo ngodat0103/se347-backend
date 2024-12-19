@@ -6,6 +6,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface ProjectMapper {
-    ProjectDto toDto(Project project);
-    Project toDocument(ProjectDto projectDto);
+  ProjectDto toDto(Project project);
+
+  Project toDocument(ProjectDto projectDto);
 }
