@@ -6,7 +6,8 @@ import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapper;
 import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapperImpl;
 import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
-import com.github.ngodat0103.se347_backend.exception.NotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.ProjectNotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.project.Project;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.Workspace;
 import com.github.ngodat0103.se347_backend.persistence.repository.ProjectRepository;
@@ -34,8 +35,15 @@ public class DefaultProjectService implements ProjectService {
   private final MinioService minioService;
 
   @Override
-  public ProjectDto get(String workspaceId, String projectId) {
-    return null;
+  public ProjectDto getProjectById(String workspaceId, String projectId) {
+    Workspace workspace =
+        workspaceRepository
+            .findById(workspaceId)
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
+    this.workspaceService.checkReadPermission(workspace, getUserIdFromAuthentication());
+    Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
+    return projectMapper.toDto(project);
   }
 
   @Override
@@ -44,7 +52,7 @@ public class DefaultProjectService implements ProjectService {
         workspaceRepository
             .findById(workspaceId)
             .orElseThrow(
-                () -> new NotFoundException("Workspace with id " + workspaceId + " not found"));
+                () -> new WorkspaceNotFoundException("id", workspaceId));
     String callUserId = getUserIdFromAuthentication();
     workspaceService.checkReadPermission(workspace, callUserId);
     Set<String> projectIds = workspace.getProjects();
@@ -61,7 +69,7 @@ public class DefaultProjectService implements ProjectService {
     Workspace workspace =
         workspaceRepository
             .findById(workspaceId)
-            .orElseThrow(() -> new NotFoundException("Workspace not found"));
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
     Project project = projectMapper.toDocument(projectDto);
     if (projectRepository.existsByNameAndWorkspaceId(project.getName(), workspaceId)) {
       throw new ConflictException(
@@ -91,12 +99,12 @@ public class DefaultProjectService implements ProjectService {
     Workspace workspace =
         workspaceRepository
             .findById(workspaceId)
-            .orElseThrow(() -> new NotFoundException("Workspace not found"));
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
     this.workspaceService.checkWritePermission(workspace, getUserIdFromAuthentication());
     Project project =
         projectRepository
             .findById(projectId)
-            .orElseThrow(() -> new NotFoundException("Project not found"));
+            .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
     String objectName = "workspace/" + workspaceId + "/project/" + projectId + "/image";
     String publicUrl;
     try {

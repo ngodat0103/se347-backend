@@ -2,7 +2,9 @@ package com.github.ngodat0103.se347_backend.service.task;
 
 import com.github.ngodat0103.se347_backend.dto.mapper.TaskMapper;
 import com.github.ngodat0103.se347_backend.dto.task.TaskDto;
-import com.github.ngodat0103.se347_backend.exception.NotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.ProjectNotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.task.Task;
 import com.github.ngodat0103.se347_backend.persistence.document.task.TaskStatus;
 import com.github.ngodat0103.se347_backend.persistence.repository.ProjectRepository;
@@ -31,13 +33,13 @@ public class DefaultTaskService implements TaskService {
     newTask.setProjectId(projectId);
     newTask.setStatus(TaskStatus.TODO);
     if (!workspaceRepository.existsById(workspaceId)) {
-      throw new NotFoundException("Workspace not found");
+      throw new WorkspaceNotFoundException("id",workspaceId);
     }
     if (!projectRepository.existsById(projectId)) {
-      throw new NotFoundException("Project not found");
+      throw new ProjectNotFoundException("id",projectId);
     }
     if (taskDto.getAssigneeId() != null && !userRepository.existsById(taskDto.getAssigneeId())) {
-      throw new NotFoundException("User not found");
+      throw new UserNotFoundException("id",taskDto.getAssigneeId());
     }
     return taskMapper.toDto(taskRepository.save(newTask));
   }

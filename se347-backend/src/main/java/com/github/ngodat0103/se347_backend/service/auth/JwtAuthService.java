@@ -1,7 +1,8 @@
 package com.github.ngodat0103.se347_backend.service.auth;
 
 import com.github.ngodat0103.se347_backend.dto.user.CredentialDto;
-import com.github.ngodat0103.se347_backend.exception.NotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.NotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
 import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
@@ -40,7 +41,7 @@ public class JwtAuthService implements AuthService {
     User user =
         userRepository
             .findByEmailAndUserStatus(credentialDto.getEmail(), UserStatus.ACTIVE)
-            .orElseThrow(() -> new NotFoundException("User with email is not exists"));
+            .orElseThrow(() -> new UserNotFoundException("email", credentialDto.getEmail()));
     if (!passwordEncoder.matches(credentialDto.getPassword(), user.getPassword())) {
       throw new BadCredentialsException(INVALID_EMAIL_OR_PASSWORD);
     }

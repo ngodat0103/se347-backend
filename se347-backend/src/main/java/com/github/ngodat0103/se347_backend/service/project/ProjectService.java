@@ -6,7 +6,7 @@ import java.util.Set;
 import org.springframework.http.MediaType;
 
 public interface ProjectService {
-  ProjectDto get(String workspaceId, String projectId);
+  ProjectDto getProjectById(String workspaceId, String projectId);
 
   Set<ProjectDto> getProjects(String workspaceId);
 
