@@ -5,6 +5,7 @@ import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 import com.github.ngodat0103.se347_backend.dto.mapper.WorkspaceMapper;
 import com.github.ngodat0103.se347_backend.dto.workspace.MemberRoleUpdateDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
+import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
 import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
@@ -69,6 +70,33 @@ public class DefaultWorkspaceService implements WorkspaceService {
     this.updateInviteCode(workspace);
     workspace = workspaceRepository.save(workspace);
     return workspaceMapper.toDto(workspace);
+  }
+
+  @Override
+  public Set<WorkspaceMemberDto> getMembers(String workspaceId) {
+    Workspace workspace =
+        workspaceRepository
+            .findById(workspaceId)
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
+    String callerUserId = getUserIdFromAuthentication();
+    checkReadPermission(workspace, callerUserId);
+    Set<String> memberIds = workspace.getMembers().keySet();
+    return memberIds.stream()
+        .map(
+            memberId -> {
+              User user =
+                  userRepository
+                      .findById(memberId)
+                      .orElseGet(() -> User.builder().email("Unknown").nickName("Unknown").build());
+              WorkSpaceMember workSpaceMember = workspace.getMembers().get(memberId);
+              return WorkspaceMemberDto.builder()
+                  .nickName(user.getNickName())
+                  .email(user.getEmail())
+                  .status(workSpaceMember.getStatus())
+                  .role(workSpaceMember.getRole())
+                  .build();
+            })
+        .collect(Collectors.toUnmodifiableSet());
   }
 
   @Override
@@ -214,12 +242,12 @@ public class DefaultWorkspaceService implements WorkspaceService {
         .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
   }
 
-  private void validateUserIsNotMember(Workspace workspace, String userId) {
-    if (userId.equals(workspace.getOwnerId())) {
+  private void validateUserIsNotMember(Workspace workspace, String callerUserId) {
+    if (callerUserId.equals(workspace.getOwnerId())) {
       throw new ConflictException(
           "You are the owner of this workspace", ConflictException.Type.ALREADY_EXISTS);
     }
-    if (workspace.getMembers().containsKey(userId)) {
+    if (workspace.getMembers().containsKey(callerUserId)) {
       throw new ConflictException(
           "You are already a member of this workspace", ConflictException.Type.ALREADY_EXISTS);
     }

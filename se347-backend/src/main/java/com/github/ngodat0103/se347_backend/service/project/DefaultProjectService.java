@@ -91,7 +91,7 @@ public class DefaultProjectService implements ProjectService {
       workspace.setLastUpdatedDate(Instant.now());
       workspaceRepository.save(workspace);
     }
-    log.info("User {} delete project {}",callerUserId, projectId);
+    log.info("User {} delete project {}", callerUserId, projectId);
     return "Project deleted successfully";
   }
 

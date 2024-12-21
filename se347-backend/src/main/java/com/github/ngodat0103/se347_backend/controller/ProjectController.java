@@ -50,7 +50,7 @@ public class ProjectController {
 
   @DeleteMapping(path = "/{projectId}")
   public String deleteProject(@PathVariable String workspaceId, @PathVariable String projectId) {
-      return projectService.deleteProject(workspaceId, projectId);
+    return projectService.deleteProject(workspaceId, projectId);
   }
 
   @PostMapping(
