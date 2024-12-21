@@ -9,6 +9,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class WorkspaceMemberDto {
+  private String id;
   private String email;
   private String nickName;
   private String imageUrl;

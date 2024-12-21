@@ -90,6 +90,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
                       .orElseGet(() -> User.builder().email("Unknown").nickName("Unknown").build());
               WorkSpaceMember workSpaceMember = workspace.getMembers().get(memberId);
               return WorkspaceMemberDto.builder()
+                    .id(user.getUserId())
                   .nickName(user.getNickName())
                   .email(user.getEmail())
                   .status(workSpaceMember.getStatus())
