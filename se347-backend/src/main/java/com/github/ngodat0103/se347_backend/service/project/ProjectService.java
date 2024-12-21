@@ -8,6 +8,10 @@ import org.springframework.http.MediaType;
 public interface ProjectService {
   ProjectDto getProjectById(String workspaceId, String projectId);
 
+  ProjectDto updateProject(String workspaceId, String projectId, ProjectDto projectDto);
+
+  String deleteProject(String workspaceId, String projectId);
+
   Set<ProjectDto> getProjects(String workspaceId);
 
   ProjectDto create(String workspaceId, ProjectDto projectDto);

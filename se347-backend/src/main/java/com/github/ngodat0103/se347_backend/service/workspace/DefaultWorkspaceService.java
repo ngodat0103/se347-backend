@@ -100,8 +100,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     Workspace workspace =
         workspaceRepository
             .findByInviteCode(inviteCode)
-            .orElseThrow(
-                () -> new WorkspaceNotFoundException("inviteCode", inviteCode));
+            .orElseThrow(() -> new WorkspaceNotFoundException("inviteCode", inviteCode));
     validateUserIsNotMember(workspace, callerUserId);
     addNewMemberToWorkspace(workspace, callerUserId);
     workspace.setLastUpdatedDate(Instant.now());
@@ -188,8 +187,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     Workspace workspace =
         workspaceRepository
             .findByInviteCode(inviteCode)
-            .orElseThrow(
-                () -> new WorkspaceNotFoundException("inviteCode", inviteCode));
+            .orElseThrow(() -> new WorkspaceNotFoundException("inviteCode", inviteCode));
     return workspaceMapper.toDto(workspace);
   }
 

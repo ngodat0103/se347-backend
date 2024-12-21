@@ -1,7 +1,6 @@
 package com.github.ngodat0103.se347_backend.service.auth;
 
 import com.github.ngodat0103.se347_backend.dto.user.CredentialDto;
-import com.github.ngodat0103.se347_backend.exception.notfound.NotFoundException;
 import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
 import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;

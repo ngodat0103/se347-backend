@@ -33,13 +33,13 @@ public class DefaultTaskService implements TaskService {
     newTask.setProjectId(projectId);
     newTask.setStatus(TaskStatus.TODO);
     if (!workspaceRepository.existsById(workspaceId)) {
-      throw new WorkspaceNotFoundException("id",workspaceId);
+      throw new WorkspaceNotFoundException("id", workspaceId);
     }
     if (!projectRepository.existsById(projectId)) {
-      throw new ProjectNotFoundException("id",projectId);
+      throw new ProjectNotFoundException("id", projectId);
     }
     if (taskDto.getAssigneeId() != null && !userRepository.existsById(taskDto.getAssigneeId())) {
-      throw new UserNotFoundException("id",taskDto.getAssigneeId());
+      throw new UserNotFoundException("id", taskDto.getAssigneeId());
     }
     return taskMapper.toDto(taskRepository.save(newTask));
   }
