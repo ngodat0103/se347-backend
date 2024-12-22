@@ -3,13 +3,13 @@ package com.github.ngodat0103.se347_backend.service.task;
 import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapper;
 import com.github.ngodat0103.se347_backend.dto.mapper.TaskMapper;
 import com.github.ngodat0103.se347_backend.dto.mapper.UserMapper;
-import com.github.ngodat0103.se347_backend.dto.task.TaskDto;
+import com.github.ngodat0103.se347_backend.dto.task.CreateTaskDto;
+import com.github.ngodat0103.se347_backend.dto.task.ResponseTaskDto;
 import com.github.ngodat0103.se347_backend.exception.notfound.ProjectNotFoundException;
 import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
 import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.project.Project;
 import com.github.ngodat0103.se347_backend.persistence.document.task.Task;
-import com.github.ngodat0103.se347_backend.persistence.document.task.TaskStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
 import com.github.ngodat0103.se347_backend.persistence.repository.ProjectRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.TaskRepository;
@@ -33,39 +33,40 @@ public class DefaultTaskService implements TaskService {
   private final ProjectMapper projectMapper;
 
   @Override
-  public TaskDto createTask(String workspaceId, String projectId, TaskDto taskDto) {
+  public ResponseTaskDto createTask(
+      String workspaceId, String projectId, CreateTaskDto createTaskDto) {
 
-    Task newTask = taskMapper.toDocument(taskDto);
+    Task newTask = taskMapper.toDocument(createTaskDto);
     newTask.setWorkspaceId(workspaceId);
     newTask.setProjectId(projectId);
-    newTask.setStatus(TaskStatus.TODO);
     if (!workspaceRepository.existsById(workspaceId)) {
       throw new WorkspaceNotFoundException("id", workspaceId);
     }
     if (!projectRepository.existsById(projectId)) {
       throw new ProjectNotFoundException("id", projectId);
     }
-    if (taskDto.getAssigneeId() != null && !userRepository.existsById(taskDto.getAssigneeId())) {
-      throw new UserNotFoundException("id", taskDto.getAssigneeId());
+    if (createTaskDto.getAssigneeId() != null
+        && !userRepository.existsById(createTaskDto.getAssigneeId())) {
+      throw new UserNotFoundException("id", createTaskDto.getAssigneeId());
     }
     Task savedTask = taskRepository.save(newTask);
     return getTaskDto(savedTask);
   }
 
   @NotNull
-  private TaskDto getTaskDto(Task savedTask) {
-    TaskDto savedTaskDto = taskMapper.toDto(savedTask);
+  private ResponseTaskDto getTaskDto(Task savedTask) {
+    ResponseTaskDto savedCreateTaskDto = taskMapper.toDto(savedTask);
     if (savedTask.getAssigneeId() != null) {
       User assignee = userRepository.findById(savedTask.getAssigneeId()).orElse(null);
-      savedTaskDto.setAssignee(userMapper.toDto(assignee));
+      savedCreateTaskDto.setAssignee(userMapper.toDto(assignee));
     }
     Project project = projectRepository.findById(savedTask.getProjectId()).orElse(null);
-    savedTaskDto.setProject(projectMapper.toDto(project));
-    return savedTaskDto;
+    savedCreateTaskDto.setProject(projectMapper.toDto(project));
+    return savedCreateTaskDto;
   }
 
   @Override
-  public Set<TaskDto> getTasks(String workspaceId, String projectId) {
+  public Set<ResponseTaskDto> getTasks(String workspaceId, String projectId) {
     Set<Task> tasks = taskRepository.findByWorkspaceIdAndProjectId(workspaceId, projectId);
     return tasks.stream().map(this::getTaskDto).collect(Collectors.toUnmodifiableSet());
   }

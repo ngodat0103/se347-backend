@@ -1,10 +1,11 @@
 package com.github.ngodat0103.se347_backend.service.task;
 
-import com.github.ngodat0103.se347_backend.dto.task.TaskDto;
+import com.github.ngodat0103.se347_backend.dto.task.CreateTaskDto;
+import com.github.ngodat0103.se347_backend.dto.task.ResponseTaskDto;
 import java.util.Set;
 
 public interface TaskService {
-  TaskDto createTask(String workspaceId, String projectId, TaskDto taskDto);
+  ResponseTaskDto createTask(String workspaceId, String projectId, CreateTaskDto createTaskDto);
 
-  Set<TaskDto> getTasks(String workspaceId, String projectId);
+  Set<ResponseTaskDto> getTasks(String workspaceId, String projectId);
 }

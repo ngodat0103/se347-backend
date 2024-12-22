@@ -1,11 +1,13 @@
 package com.github.ngodat0103.se347_backend.controller;
 
-import com.github.ngodat0103.se347_backend.dto.task.TaskDto;
+import com.github.ngodat0103.se347_backend.dto.task.CreateTaskDto;
+import com.github.ngodat0103.se347_backend.dto.task.ResponseTaskDto;
 import com.github.ngodat0103.se347_backend.service.task.TaskService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,15 +20,17 @@ public class TaskController {
   private final TaskService taskService;
 
   @PostMapping
-  public TaskDto createTask(
+  @ResponseStatus(HttpStatus.CREATED)
+  public ResponseTaskDto createTask(
       @PathVariable String workspaceId,
       @PathVariable String projectId,
-      @RequestBody @Valid TaskDto taskDto) {
-    return taskService.createTask(workspaceId, projectId, taskDto);
+      @RequestBody @Valid CreateTaskDto createTaskDto) {
+    return taskService.createTask(workspaceId, projectId, createTaskDto);
   }
 
   @GetMapping
-  public Set<TaskDto> getTasks(@PathVariable String workspaceId, @PathVariable String projectId) {
+  public Set<ResponseTaskDto> getTasks(
+      @PathVariable String workspaceId, @PathVariable String projectId) {
     return taskService.getTasks(workspaceId, projectId);
   }
 }
