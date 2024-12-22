@@ -157,13 +157,12 @@ public class WorkspaceController {
     return workspaceService.getWorkspaceByInviteCode(inviteCode);
   }
 
-
   @GetMapping(path = "/{workspaceId}/members")
-    @Operation(
-        tags = "Workspace members",
-        summary = "Get Members",
-        description = "Get all members of a workspace")
-    public Set<WorkspaceMemberDto> getMembers(@PathVariable String workspaceId) {
-        return workspaceService.getMembers(workspaceId);
+  @Operation(
+      tags = "Workspace members",
+      summary = "Get Members",
+      description = "Get all members of a workspace")
+  public Set<WorkspaceMemberDto> getMembers(@PathVariable String workspaceId) {
+    return workspaceService.getMembers(workspaceId);
   }
 }

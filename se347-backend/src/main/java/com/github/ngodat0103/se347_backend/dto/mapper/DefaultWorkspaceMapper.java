@@ -30,7 +30,7 @@ public class DefaultWorkspaceMapper implements WorkspaceMapper {
                 WorkspaceMemberDto workspaceMemberDto =
                     WorkspaceMemberDto.builder()
                         .nickName(currentUser.getNickName())
-                            .id(currentUser.getUserId())
+                        .id(currentUser.getUserId())
                         .email(currentUser.getEmail())
                         .status(v.getStatus())
                         .role(v.getRole())

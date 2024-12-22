@@ -66,8 +66,9 @@ public class DefaultWorkspaceService implements WorkspaceService {
     Instant instantNow = Instant.now();
     workspace.setCreatedDate(instantNow);
     workspace.setLastUpdatedDate(instantNow);
-    LinkedHashMap<String,WorkSpaceMember> members = new LinkedHashMap<>();
-    WorkSpaceMember workSpaceMember = new WorkSpaceMember(WorkspaceRole.OWNER, WorkSpaceMemberStatus.ACTIVE);
+    LinkedHashMap<String, WorkSpaceMember> members = new LinkedHashMap<>();
+    WorkSpaceMember workSpaceMember =
+        new WorkSpaceMember(WorkspaceRole.OWNER, WorkSpaceMemberStatus.ACTIVE);
     members.put(callerUserId, workSpaceMember);
     workspace.setMembers(members);
     workspace = workspaceRepository.save(workspace);
@@ -95,7 +96,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
                       .orElseGet(() -> User.builder().email("Unknown").nickName("Unknown").build());
               WorkSpaceMember workSpaceMember = workspace.getMembers().get(memberId);
               return WorkspaceMemberDto.builder()
-                    .id(user.getUserId())
+                  .id(user.getUserId())
                   .nickName(user.getNickName())
                   .email(user.getEmail())
                   .status(workSpaceMember.getStatus())

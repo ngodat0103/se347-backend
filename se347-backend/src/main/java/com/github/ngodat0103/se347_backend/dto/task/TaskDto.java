@@ -1,11 +1,14 @@
 package com.github.ngodat0103.se347_backend.dto.task;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
+import com.github.ngodat0103.se347_backend.dto.user.UserDto;
 import com.github.ngodat0103.se347_backend.persistence.document.task.TaskStatus;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 @Builder
 @Getter
@@ -22,7 +25,12 @@ public class TaskDto {
   @Null private String assigneeId;
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private String projectId;
+  @Setter
+  private ProjectDto project;
+
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  @Setter
+  private UserDto assignee;
 
   //    private int position;
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
