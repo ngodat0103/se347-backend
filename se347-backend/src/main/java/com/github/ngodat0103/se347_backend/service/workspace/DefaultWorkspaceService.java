@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -65,6 +66,10 @@ public class DefaultWorkspaceService implements WorkspaceService {
     Instant instantNow = Instant.now();
     workspace.setCreatedDate(instantNow);
     workspace.setLastUpdatedDate(instantNow);
+    LinkedHashMap<String,WorkSpaceMember> members = new LinkedHashMap<>();
+    WorkSpaceMember workSpaceMember = new WorkSpaceMember(WorkspaceRole.OWNER, WorkSpaceMemberStatus.ACTIVE);
+    members.put(callerUserId, workSpaceMember);
+    workspace.setMembers(members);
     workspace = workspaceRepository.save(workspace);
     workspace.setProjects(new LinkedHashSet<>());
     this.updateInviteCode(workspace);
