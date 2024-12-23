@@ -132,4 +132,14 @@ public class DefaultTaskService implements TaskService {
         .sorted(Comparator.comparing(ResponseTaskDto::getStatus))
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
+
+  @Override
+  public ResponseTaskDto getTaskById(String workspaceId, String projectId, String taskId) {
+    Workspace callerWorkspace = workspaceRepository.findById(workspaceId)
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
+    this.workspaceService.checkReadPermission(callerWorkspace, getUserIdFromAuthentication());
+    Task task = taskRepository.findByIdAndProjectId(taskId, projectId)
+            .orElseThrow(() -> new TaskNotFoundException("id", taskId));
+    return getTaskDto(task);
+  }
 }

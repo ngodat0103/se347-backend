@@ -14,4 +14,5 @@ public interface TaskService {
   void deleteTask(String workspaceId, String projectId, String taskId);
 
   Set<ResponseTaskDto> getTasks(String workspaceId, String projectId);
+  ResponseTaskDto getTaskById(String workspaceId, String projectId, String taskId);
 }
