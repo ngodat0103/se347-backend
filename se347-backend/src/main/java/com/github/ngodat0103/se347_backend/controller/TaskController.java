@@ -53,4 +53,12 @@ public class TaskController {
       @PathVariable String taskId) {
     taskService.deleteTask(workspaceId, projectId, taskId);
   }
+
+  @GetMapping(path = "/{taskId}")
+  public ResponseTaskDto getTaskById(
+      @PathVariable String workspaceId,
+      @PathVariable String projectId,
+      @PathVariable String taskId) {
+    return taskService.getTaskById(workspaceId, projectId, taskId);
+  }
 }
