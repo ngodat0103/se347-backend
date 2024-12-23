@@ -18,7 +18,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.bind.support.WebExchangeBindException;
 
 @RestControllerAdvice
 @Slf4j
@@ -57,7 +56,7 @@ public class GlobalExceptionHandler {
     problemDetails.setTitle("Validation Error.");
     problemDetails.setInstance(URI.create(request.getContextPath()));
     Set<Error> errors = new HashSet<>();
-    if (e instanceof WebExchangeBindException exception) {
+    if (e instanceof MethodArgumentNotValidException exception) {
       exception
           .getFieldErrors()
           .forEach(
