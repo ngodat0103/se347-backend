@@ -48,6 +48,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>10.1.31</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -128,7 +133,6 @@
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -157,5 +161,6 @@
 
         </plugins>
     </build>
+
 
 </project>
