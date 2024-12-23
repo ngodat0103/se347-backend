@@ -17,10 +17,13 @@ import java.io.InputStream;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import javax.swing.*;
 
 @RestController
 @AllArgsConstructor
@@ -49,8 +52,11 @@ public class WorkspaceController {
       description = "Retrieve all workspaces for the current user")
   @ApiResponse(responseCode = "200", description = "Workspaces retrieved successfully")
   @GetMapping(path = "/me")
-  public Set<WorkspaceDto> getWorkspaces() {
-    return workspaceService.getWorkspaces();
+  public Set<WorkspaceDto> getWorkspaces(@RequestParam(required = false, defaultValue = "name") String sortField,
+      @RequestParam(required = false, defaultValue = "ASC") Sort.Direction sortOrder) {
+
+    Sort sort = Sort.by(sortOrder, sortField);
+    return workspaceService.getWorkspaces(sort);
   }
 
   @Operation(

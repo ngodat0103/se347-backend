@@ -27,9 +27,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+
+import javax.swing.*;
 
 @Service
 @AllArgsConstructor
@@ -209,12 +212,12 @@ public class DefaultWorkspaceService implements WorkspaceService {
     return workspaceMapper.toDto(workspace);
   }
 
-  @Override
-  public Set<WorkspaceDto> getWorkspaces() {
-    String accountId = getUserIdFromAuthentication();
-    Set<Workspace> workspaces = workspaceRepository.findByOwnerIdOrMemberId(accountId);
 
-    return workspaces.stream().map(workspaceMapper::toDto).collect(Collectors.toUnmodifiableSet());
+  @Override
+  public Set<WorkspaceDto> getWorkspaces(Sort sort) {
+    String callUserId = getUserIdFromAuthentication();
+    Set<Workspace> workspaces = workspaceRepository.findByOwnerIdOrMemberId(callUserId,sort);
+    return workspaces.stream().map(workspaceMapper::toDto).collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   @Override
