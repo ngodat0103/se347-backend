@@ -10,12 +10,9 @@ import com.github.ngodat0103.se347_backend.service.BaseService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
-
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
-
-import javax.swing.*;
 
 public interface WorkspaceService extends BaseService<WorkspaceDto> {
   WorkspaceDto create(WorkspaceDto workspaceDto);

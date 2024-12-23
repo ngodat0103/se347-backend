@@ -21,18 +21,13 @@ import java.io.InputStream;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
-import javax.swing.*;
 
 @Service
 @AllArgsConstructor
@@ -91,22 +86,26 @@ public class DefaultWorkspaceService implements WorkspaceService {
     checkReadPermission(workspace, callerUserId);
     Set<String> memberIds = workspace.getMembers().keySet();
     return memberIds.stream()
-        .map(
-            memberId -> {
-              User user =
-                  userRepository
-                      .findById(memberId)
-                      .orElseGet(() -> User.builder().email("Unknown").nickName("Unknown").build());
-              WorkSpaceMember workSpaceMember = workspace.getMembers().get(memberId);
-              return WorkspaceMemberDto.builder()
-                  .id(user.getUserId())
-                  .nickName(user.getNickName())
-                  .email(user.getEmail())
-                  .status(workSpaceMember.getStatus())
-                  .role(workSpaceMember.getRole())
-                  .build();
-            })
-        .collect(Collectors.toUnmodifiableSet());
+        .map(memberId -> this.getWorkspaceMemberDto(memberId, workspace))
+        .sorted(
+            Comparator.comparing(WorkspaceMemberDto::getRole)
+                .thenComparing(WorkspaceMemberDto::getNickName))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  private WorkspaceMemberDto getWorkspaceMemberDto(String memberId, Workspace workspace) {
+    User user =
+        userRepository
+            .findById(memberId)
+            .orElseGet(() -> User.builder().email("Unknown").nickName("Unknown").build());
+    WorkSpaceMember workSpaceMember = workspace.getMembers().get(memberId);
+    return WorkspaceMemberDto.builder()
+        .id(user.getUserId())
+        .nickName(user.getNickName())
+        .email(user.getEmail())
+        .status(workSpaceMember.getStatus())
+        .role(workSpaceMember.getRole())
+        .build();
   }
 
   @Override
@@ -212,12 +211,13 @@ public class DefaultWorkspaceService implements WorkspaceService {
     return workspaceMapper.toDto(workspace);
   }
 
-
   @Override
   public Set<WorkspaceDto> getWorkspaces(Sort sort) {
     String callUserId = getUserIdFromAuthentication();
-    Set<Workspace> workspaces = workspaceRepository.findByOwnerIdOrMemberId(callUserId,sort);
-    return workspaces.stream().map(workspaceMapper::toDto).collect(Collectors.toCollection(LinkedHashSet::new));
+    Set<Workspace> workspaces = workspaceRepository.findByOwnerIdOrMemberId(callUserId, sort);
+    return workspaces.stream()
+        .map(workspaceMapper::toDto)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   @Override
