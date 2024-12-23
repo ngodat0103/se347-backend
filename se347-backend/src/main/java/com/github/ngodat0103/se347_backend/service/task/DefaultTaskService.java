@@ -15,6 +15,8 @@ import com.github.ngodat0103.se347_backend.persistence.repository.ProjectReposit
 import com.github.ngodat0103.se347_backend.persistence.repository.TaskRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -68,6 +70,8 @@ public class DefaultTaskService implements TaskService {
   @Override
   public Set<ResponseTaskDto> getTasks(String workspaceId, String projectId) {
     Set<Task> tasks = taskRepository.findByWorkspaceIdAndProjectId(workspaceId, projectId);
-    return tasks.stream().map(this::getTaskDto).collect(Collectors.toUnmodifiableSet());
+    return tasks.stream().map(this::getTaskDto)
+            .sorted(Comparator.comparing(ResponseTaskDto::getStatus))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 }

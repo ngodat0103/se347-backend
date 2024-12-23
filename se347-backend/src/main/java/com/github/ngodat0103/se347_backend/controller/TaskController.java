@@ -30,7 +30,8 @@ public class TaskController {
 
   @GetMapping
   public Set<ResponseTaskDto> getTasks(
-      @PathVariable String workspaceId, @PathVariable String projectId) {
+      @PathVariable String workspaceId,
+      @PathVariable String projectId) {
     return taskService.getTasks(workspaceId, projectId);
   }
 }

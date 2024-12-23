@@ -1,10 +1,10 @@
 package com.github.ngodat0103.se347_backend.persistence.document.task;
 
 public enum TaskStatus {
-  BACKLOG,
+  TODO,
   IN_PROGRESS,
+  IN_REVIEW,
   DONE,
   CANCELLED,
-  IN_REVIEW,
-  TODO
+  BACKLOG,
 }
