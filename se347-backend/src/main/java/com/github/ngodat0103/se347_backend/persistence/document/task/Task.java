@@ -1,5 +1,6 @@
 package com.github.ngodat0103.se347_backend.persistence.document.task;
 
+import java.time.Instant;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -14,5 +15,6 @@ public class Task {
   private String projectId;
   //    private int position;
   private String workspaceId;
+  private Instant dueDate;
   private String description;
 }

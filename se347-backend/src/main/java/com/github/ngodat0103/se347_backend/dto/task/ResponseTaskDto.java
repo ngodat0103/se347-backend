@@ -1,32 +1,33 @@
 package com.github.ngodat0103.se347_backend.dto.task;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
+import com.github.ngodat0103.se347_backend.dto.user.UserDto;
 import com.github.ngodat0103.se347_backend.persistence.document.task.TaskStatus;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
-@Builder
 @Getter
-public class TaskDto {
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+@Builder
+public class ResponseTaskDto {
   private String id;
 
   @NotNull(message = "Name is required")
   private String name;
 
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  @NotNull(message = "Status is required")
   private TaskStatus status;
 
-  @Null private String assigneeId;
+  private Instant dueDate;
 
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private String projectId;
-
+  @Setter private ProjectDto project;
+  @Setter private UserDto assignee;
   //    private int position;
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String workspaceId;
-
   private String description;
+
+  private Instant createdDate;
+  private Instant lastModifiedDate;
 }

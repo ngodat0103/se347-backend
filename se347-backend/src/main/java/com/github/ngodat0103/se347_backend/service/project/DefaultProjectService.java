@@ -6,7 +6,8 @@ import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapper;
 import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapperImpl;
 import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
-import com.github.ngodat0103.se347_backend.exception.NotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.ProjectNotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.project.Project;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.Workspace;
 import com.github.ngodat0103.se347_backend.persistence.repository.ProjectRepository;
@@ -21,11 +22,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class DefaultProjectService implements ProjectService {
   private final ProjectRepository projectRepository;
   private final WorkspaceRepository workspaceRepository;
@@ -34,8 +37,62 @@ public class DefaultProjectService implements ProjectService {
   private final MinioService minioService;
 
   @Override
-  public ProjectDto get(String workspaceId, String projectId) {
-    return null;
+  public ProjectDto getProjectById(String workspaceId, String projectId) {
+    Workspace workspace =
+        workspaceRepository
+            .findById(workspaceId)
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
+    String callUserId = getUserIdFromAuthentication();
+    this.workspaceService.checkReadPermission(workspace, callUserId);
+    Project project =
+        projectRepository
+            .findById(projectId)
+            .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
+
+    log.info("User {} get project {}", callUserId, projectId);
+    return projectMapper.toDto(project);
+  }
+
+  @Override
+  public ProjectDto updateProject(String workspaceId, String projectId, ProjectDto projectDto) {
+    Workspace workspace =
+        workspaceRepository
+            .findById(workspaceId)
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
+    String callUserId = getUserIdFromAuthentication();
+    this.workspaceService.checkWritePermission(workspace, getUserIdFromAuthentication());
+    Project project =
+        projectRepository
+            .findById(projectId)
+            .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
+    project.setLastUpdatedDate(Instant.now());
+    project.setName(projectDto.getName());
+    log.info("User {} update project {}", callUserId, projectId);
+    return projectMapper.toDto(projectRepository.save(project));
+  }
+
+  @Override
+  public String deleteProject(String workspaceId, String projectId) {
+    Workspace workspace =
+        workspaceRepository
+            .findById(workspaceId)
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
+    String callerUserId = getUserIdFromAuthentication();
+    this.workspaceService.checkWritePermission(workspace, callerUserId);
+    Project project =
+        projectRepository
+            .findById(projectId)
+            .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
+    projectRepository.delete(project);
+    Set<String> projectIds = workspace.getProjects();
+    if (projectIds != null) {
+      projectIds.remove(projectId);
+      workspace.setProjects(projectIds);
+      workspace.setLastUpdatedDate(Instant.now());
+      workspaceRepository.save(workspace);
+    }
+    log.info("User {} delete project {}", callerUserId, projectId);
+    return "Project deleted successfully";
   }
 
   @Override
@@ -43,8 +100,7 @@ public class DefaultProjectService implements ProjectService {
     Workspace workspace =
         workspaceRepository
             .findById(workspaceId)
-            .orElseThrow(
-                () -> new NotFoundException("Workspace with id " + workspaceId + " not found"));
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
     String callUserId = getUserIdFromAuthentication();
     workspaceService.checkReadPermission(workspace, callUserId);
     Set<String> projectIds = workspace.getProjects();
@@ -61,7 +117,7 @@ public class DefaultProjectService implements ProjectService {
     Workspace workspace =
         workspaceRepository
             .findById(workspaceId)
-            .orElseThrow(() -> new NotFoundException("Workspace not found"));
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
     Project project = projectMapper.toDocument(projectDto);
     if (projectRepository.existsByNameAndWorkspaceId(project.getName(), workspaceId)) {
       throw new ConflictException(
@@ -91,12 +147,13 @@ public class DefaultProjectService implements ProjectService {
     Workspace workspace =
         workspaceRepository
             .findById(workspaceId)
-            .orElseThrow(() -> new NotFoundException("Workspace not found"));
-    this.workspaceService.checkWritePermission(workspace, getUserIdFromAuthentication());
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
+    String callerUserId = getUserIdFromAuthentication();
+    this.workspaceService.checkWritePermission(workspace, callerUserId);
     Project project =
         projectRepository
             .findById(projectId)
-            .orElseThrow(() -> new NotFoundException("Project not found"));
+            .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
     String objectName = "workspace/" + workspaceId + "/project/" + projectId + "/image";
     String publicUrl;
     try {
@@ -105,7 +162,9 @@ public class DefaultProjectService implements ProjectService {
       throw new RuntimeException(e);
     }
     project.setImageUrl(publicUrl);
+    project.setLastUpdatedDate(Instant.now());
     projectRepository.save(project);
+    log.info("User {} update image project {}", callerUserId, projectId);
     return publicUrl;
   }
 }

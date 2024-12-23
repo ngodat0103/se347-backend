@@ -1,6 +1,7 @@
 package com.github.ngodat0103.se347_backend.exception;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.ngodat0103.se347_backend.exception.notfound.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.Collections;

@@ -7,7 +7,7 @@ import com.github.ngodat0103.se347_backend.dto.topic.KeyTopic;
 import com.github.ngodat0103.se347_backend.dto.topic.ValueTopicRegisteredUser;
 import com.github.ngodat0103.se347_backend.dto.user.UserDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
-import com.github.ngodat0103.se347_backend.exception.NotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
 import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
@@ -67,11 +67,9 @@ public class DefaultUserService implements UserService {
 
   @Override
   public UserDto getMe() {
-    String accountId = getUserIdFromAuthentication();
+    String userId = getUserIdFromAuthentication();
     User user =
-        userRepository
-            .findById(accountId)
-            .orElseThrow(() -> new NotFoundException("Account not exists"));
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("id", userId));
     return userMapper.toDto(user);
   }
 

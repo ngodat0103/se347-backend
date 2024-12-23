@@ -5,8 +5,10 @@ import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 import com.github.ngodat0103.se347_backend.dto.mapper.WorkspaceMapper;
 import com.github.ngodat0103.se347_backend.dto.workspace.MemberRoleUpdateDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
+import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
-import com.github.ngodat0103.se347_backend.exception.NotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
+import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
 import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.*;
@@ -19,6 +21,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -63,6 +66,11 @@ public class DefaultWorkspaceService implements WorkspaceService {
     Instant instantNow = Instant.now();
     workspace.setCreatedDate(instantNow);
     workspace.setLastUpdatedDate(instantNow);
+    LinkedHashMap<String, WorkSpaceMember> members = new LinkedHashMap<>();
+    WorkSpaceMember workSpaceMember =
+        new WorkSpaceMember(WorkspaceRole.OWNER, WorkSpaceMemberStatus.ACTIVE);
+    members.put(callerUserId, workSpaceMember);
+    workspace.setMembers(members);
     workspace = workspaceRepository.save(workspace);
     workspace.setProjects(new LinkedHashSet<>());
     this.updateInviteCode(workspace);
@@ -71,12 +79,40 @@ public class DefaultWorkspaceService implements WorkspaceService {
   }
 
   @Override
+  public Set<WorkspaceMemberDto> getMembers(String workspaceId) {
+    Workspace workspace =
+        workspaceRepository
+            .findById(workspaceId)
+            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
+    String callerUserId = getUserIdFromAuthentication();
+    checkReadPermission(workspace, callerUserId);
+    Set<String> memberIds = workspace.getMembers().keySet();
+    return memberIds.stream()
+        .map(
+            memberId -> {
+              User user =
+                  userRepository
+                      .findById(memberId)
+                      .orElseGet(() -> User.builder().email("Unknown").nickName("Unknown").build());
+              WorkSpaceMember workSpaceMember = workspace.getMembers().get(memberId);
+              return WorkspaceMemberDto.builder()
+                  .id(user.getUserId())
+                  .nickName(user.getNickName())
+                  .email(user.getEmail())
+                  .status(workSpaceMember.getStatus())
+                  .role(workSpaceMember.getRole())
+                  .build();
+            })
+        .collect(Collectors.toUnmodifiableSet());
+  }
+
+  @Override
   public WorkspaceDto addMemberByEmail(String workspaceId, String email) {
     String callerUserId = getUserIdFromAuthentication();
     User invitedUser =
         userRepository
             .findByEmailAndUserStatus(email, UserStatus.ACTIVE)
-            .orElseThrow(() -> new NotFoundException("User with this email is not exists"));
+            .orElseThrow(() -> new UserNotFoundException("email", email));
     if (invitedUser.getUserId().equals(callerUserId)) {
       throw new ConflictException(
           "You can not invite yourself", ConflictException.Type.ALREADY_EXISTS);
@@ -99,8 +135,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     Workspace workspace =
         workspaceRepository
             .findByInviteCode(inviteCode)
-            .orElseThrow(
-                () -> new NotFoundException("Workspace with this invite code is not found"));
+            .orElseThrow(() -> new WorkspaceNotFoundException("inviteCode", inviteCode));
     validateUserIsNotMember(workspace, callerUserId);
     addNewMemberToWorkspace(workspace, callerUserId);
     workspace.setLastUpdatedDate(Instant.now());
@@ -139,7 +174,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     checkWritePermission(callerWorkspace, callerUserId);
     WorkSpaceMember workSpaceMember = callerWorkspace.getMembers().get(userId);
     if (workSpaceMember == null) {
-      throw new NotFoundException("Member with this id is not found");
+      throw new UserNotFoundException("userId", userId);
     }
     workSpaceMember.setRole(memberRoleUpdateDto.getNewRole());
     callerWorkspace.setLastUpdatedDate(Instant.now());
@@ -187,8 +222,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
     Workspace workspace =
         workspaceRepository
             .findByInviteCode(inviteCode)
-            .orElseThrow(
-                () -> new NotFoundException("Workspace with this invite code is not found"));
+            .orElseThrow(() -> new WorkspaceNotFoundException("inviteCode", inviteCode));
     return workspaceMapper.toDto(workspace);
   }
 
@@ -212,15 +246,15 @@ public class DefaultWorkspaceService implements WorkspaceService {
   private Workspace getWorkspaceById(String workspaceId) {
     return workspaceRepository
         .findById(workspaceId)
-        .orElseThrow(() -> new NotFoundException("Workspace with this id is not found"));
+        .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
   }
 
-  private void validateUserIsNotMember(Workspace workspace, String userId) {
-    if (userId.equals(workspace.getOwnerId())) {
+  private void validateUserIsNotMember(Workspace workspace, String callerUserId) {
+    if (callerUserId.equals(workspace.getOwnerId())) {
       throw new ConflictException(
           "You are the owner of this workspace", ConflictException.Type.ALREADY_EXISTS);
     }
-    if (workspace.getMembers().containsKey(userId)) {
+    if (workspace.getMembers().containsKey(callerUserId)) {
       throw new ConflictException(
           "You are already a member of this workspace", ConflictException.Type.ALREADY_EXISTS);
     }

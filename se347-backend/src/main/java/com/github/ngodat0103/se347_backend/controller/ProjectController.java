@@ -30,8 +30,27 @@ public class ProjectController {
   }
 
   @GetMapping
-  public Set<ProjectDto> getProject(@PathVariable String workspaceId) {
+  public Set<ProjectDto> getProjects(@PathVariable String workspaceId) {
     return projectService.getProjects(workspaceId);
+  }
+
+  @GetMapping(path = "/{projectId}")
+  public ProjectDto getProjectById(
+      @PathVariable String workspaceId, @PathVariable String projectId) {
+    return projectService.getProjectById(workspaceId, projectId);
+  }
+
+  @PutMapping(path = "/{projectId}")
+  public ProjectDto updateProject(
+      @PathVariable String workspaceId,
+      @PathVariable String projectId,
+      @RequestBody @Valid ProjectDto projectDto) {
+    return projectService.updateProject(workspaceId, projectId, projectDto);
+  }
+
+  @DeleteMapping(path = "/{projectId}")
+  public String deleteProject(@PathVariable String workspaceId, @PathVariable String projectId) {
+    return projectService.deleteProject(workspaceId, projectId);
   }
 
   @PostMapping(
