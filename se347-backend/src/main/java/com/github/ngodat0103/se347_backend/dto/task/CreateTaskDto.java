@@ -21,7 +21,7 @@ public class CreateTaskDto {
   private TaskStatus status;
 
   private Instant dueDate;
-  @Null private String assigneeId;
+  private String assigneeId;
 
   //    private int position;
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
