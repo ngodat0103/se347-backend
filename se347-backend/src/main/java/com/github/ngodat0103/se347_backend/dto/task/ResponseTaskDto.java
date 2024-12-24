@@ -27,7 +27,4 @@ public class ResponseTaskDto {
   //    private int position;
   private String workspaceId;
   private String description;
-
-  private Instant createdDate;
-  private Instant lastModifiedDate;
 }

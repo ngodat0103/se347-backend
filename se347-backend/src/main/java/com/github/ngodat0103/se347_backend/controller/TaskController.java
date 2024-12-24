@@ -2,6 +2,7 @@ package com.github.ngodat0103.se347_backend.controller;
 
 import com.github.ngodat0103.se347_backend.dto.task.CreateTaskDto;
 import com.github.ngodat0103.se347_backend.dto.task.ResponseTaskDto;
+import com.github.ngodat0103.se347_backend.dto.task.UpdateTaskDto;
 import com.github.ngodat0103.se347_backend.service.task.TaskService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -30,8 +31,34 @@ public class TaskController {
 
   @GetMapping
   public Set<ResponseTaskDto> getTasks(
-      @PathVariable String workspaceId,
-      @PathVariable String projectId) {
+      @PathVariable String workspaceId, @PathVariable String projectId) {
     return taskService.getTasks(workspaceId, projectId);
+  }
+
+  @PutMapping(path = "/{taskId}")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  public ResponseTaskDto updateTask(
+      @PathVariable String workspaceId,
+      @PathVariable String projectId,
+      @PathVariable String taskId,
+      @RequestBody @Valid UpdateTaskDto updateTaskDto) {
+    return taskService.updateTask(workspaceId, projectId, taskId, updateTaskDto);
+  }
+
+  @DeleteMapping(path = "/{taskId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteTask(
+      @PathVariable String workspaceId,
+      @PathVariable String projectId,
+      @PathVariable String taskId) {
+    taskService.deleteTask(workspaceId, projectId, taskId);
+  }
+
+  @GetMapping(path = "/{taskId}")
+  public ResponseTaskDto getTaskById(
+      @PathVariable String workspaceId,
+      @PathVariable String projectId,
+      @PathVariable String taskId) {
+    return taskService.getTaskById(workspaceId, projectId, taskId);
   }
 }
