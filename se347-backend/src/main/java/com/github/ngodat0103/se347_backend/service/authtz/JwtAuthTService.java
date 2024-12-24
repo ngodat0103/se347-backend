@@ -1,4 +1,4 @@
-package com.github.ngodat0103.se347_backend.service.auth;
+package com.github.ngodat0103.se347_backend.service.authtz;
 
 import com.github.ngodat0103.se347_backend.dto.user.CredentialDto;
 import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class JwtAuthService implements AuthService {
+public class JwtAuthTService implements AuthTService {
   private static final Duration ACCESS_TOKEN_DURATION = Duration.ofHours(7); // Dev only
   private static final String INVALID_EMAIL_OR_PASSWORD = "Invalid email or password";
   private final UserRepository userRepository;

@@ -1,7 +1,7 @@
 package com.github.ngodat0103.se347_backend.controller;
 
 import com.github.ngodat0103.se347_backend.dto.user.CredentialDto;
-import com.github.ngodat0103.se347_backend.service.auth.AuthService;
+import com.github.ngodat0103.se347_backend.service.authtz.AuthTService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = "/api/v1/auth")
 public class AuthController {
 
-  private final AuthService authSvc;
+  private final AuthTService authSvc;
 
   @Operation(summary = "Login", description = "Authenticate user and return access token")
   @ApiResponse(responseCode = "200", description = "Successful login")

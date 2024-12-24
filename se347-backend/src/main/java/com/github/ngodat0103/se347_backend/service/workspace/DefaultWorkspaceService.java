@@ -14,6 +14,7 @@ import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.*;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
+import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
 import com.github.ngodat0103.se347_backend.service.minio.MinioService;
 import com.nimbusds.jose.util.Base64URL;
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   private final WorkspaceMapper workspaceMapper;
   private static final String WORKSPACE_STORAGE_PREFIX = "workspace/";
   private final MinioService minioService;
+  private final AuthZService authZService;
   private static final URI BASE_WORKSPACE_FRONTEND_ENDPOINT =
       URI.create("http://localhost:4200/workspaces/join");
 
@@ -82,8 +84,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
         workspaceRepository
             .findById(workspaceId)
             .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
-    String callerUserId = getUserIdFromAuthentication();
-    checkReadPermission(workspace, callerUserId);
+    this.authZService.checkReadWorkspacePermission(workspaceId);
     Set<String> memberIds = workspace.getMembers().keySet();
     return memberIds.stream()
         .map(memberId -> this.getWorkspaceMemberDto(memberId, workspace))
@@ -120,7 +121,6 @@ public class DefaultWorkspaceService implements WorkspaceService {
           "You can not invite yourself", ConflictException.Type.ALREADY_EXISTS);
     }
     Workspace callerWorkspace = getWorkspaceById(workspaceId);
-    checkWritePermission(callerWorkspace, callerUserId);
 
     Map<String, WorkSpaceMember> memberMap = callerWorkspace.getMembers();
     memberMap.put(
@@ -148,8 +148,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   @Override
   public WorkspaceDto reGenerateInviteCode(String workspaceId) {
     Workspace callerWorkspace = getWorkspaceById(workspaceId);
-    String callerUserId = getUserIdFromAuthentication();
-    checkWritePermission(callerWorkspace, callerUserId);
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     updateInviteCode(callerWorkspace);
     callerWorkspace = workspaceRepository.save(callerWorkspace);
     return workspaceMapper.toDto(callerWorkspace);
@@ -172,8 +171,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   public WorkspaceDto updateMemberRole(
       String workspaceId, String userId, MemberRoleUpdateDto memberRoleUpdateDto) {
     Workspace callerWorkspace = getWorkspaceById(workspaceId);
-    String callerUserId = getUserIdFromAuthentication();
-    checkWritePermission(callerWorkspace, callerUserId);
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     WorkSpaceMember workSpaceMember = callerWorkspace.getMembers().get(userId);
     if (workSpaceMember == null) {
       throw new UserNotFoundException("userId", userId);
@@ -189,7 +187,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   public String removeMember(String workspaceId, String userId) {
     var callerWorkspace = getWorkspaceById(workspaceId);
     var callerUserId = getUserIdFromAuthentication();
-    checkWritePermission(callerWorkspace, callerUserId);
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     if (callerUserId.equals(userId)) {
       throw new ConflictException(
           "You can not remove yourself", ConflictException.Type.ALREADY_EXISTS);
@@ -203,8 +201,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   @Override
   public WorkspaceDto update(String workspaceId, WorkspaceDto workspaceDto) {
     Workspace workspace = getWorkspaceById(workspaceId);
-    String callerUserId = getUserIdFromAuthentication();
-    checkWritePermission(workspace, callerUserId);
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     workspace.setName(workspaceDto.getName());
     workspace.setLastUpdatedDate(Instant.now());
     workspace = workspaceRepository.save(workspace);
@@ -233,8 +230,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   public String uploadImageWorkspace(
       String workspaceId, InputStream inputStream, MediaType mediaType) throws IOException {
     Workspace workspace = getWorkspaceById(workspaceId);
-    String callerUserId = getUserIdFromAuthentication();
-    checkWritePermission(workspace, callerUserId);
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     String imagePublicUrl =
         minioService.uploadFile(
             WORKSPACE_STORAGE_PREFIX + workspaceId,

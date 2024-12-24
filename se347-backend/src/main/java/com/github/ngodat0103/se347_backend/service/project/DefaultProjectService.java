@@ -12,6 +12,7 @@ import com.github.ngodat0103.se347_backend.persistence.document.project.Project;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.Workspace;
 import com.github.ngodat0103.se347_backend.persistence.repository.ProjectRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
+import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
 import com.github.ngodat0103.se347_backend.service.minio.MinioService;
 import com.github.ngodat0103.se347_backend.service.workspace.WorkspaceService;
 import java.io.IOException;
@@ -32,18 +33,14 @@ import org.springframework.stereotype.Service;
 public class DefaultProjectService implements ProjectService {
   private final ProjectRepository projectRepository;
   private final WorkspaceRepository workspaceRepository;
-  private final WorkspaceService workspaceService;
+  private final AuthZService authZService;
   private final ProjectMapper projectMapper = new ProjectMapperImpl();
   private final MinioService minioService;
 
   @Override
   public ProjectDto getProjectById(String workspaceId, String projectId) {
-    Workspace workspace =
-        workspaceRepository
-            .findById(workspaceId)
-            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
     String callUserId = getUserIdFromAuthentication();
-    this.workspaceService.checkReadPermission(workspace, callUserId);
+    this.authZService.checkReadWorkspacePermission(workspaceId);
     Project project =
         projectRepository
             .findById(projectId)
@@ -55,12 +52,8 @@ public class DefaultProjectService implements ProjectService {
 
   @Override
   public ProjectDto updateProject(String workspaceId, String projectId, ProjectDto projectDto) {
-    Workspace workspace =
-        workspaceRepository
-            .findById(workspaceId)
-            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
     String callUserId = getUserIdFromAuthentication();
-    this.workspaceService.checkWritePermission(workspace, getUserIdFromAuthentication());
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     Project project =
         projectRepository
             .findById(projectId)
@@ -78,7 +71,7 @@ public class DefaultProjectService implements ProjectService {
             .findById(workspaceId)
             .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
     String callerUserId = getUserIdFromAuthentication();
-    this.workspaceService.checkWritePermission(workspace, callerUserId);
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     Project project =
         projectRepository
             .findById(projectId)
@@ -101,8 +94,7 @@ public class DefaultProjectService implements ProjectService {
         workspaceRepository
             .findById(workspaceId)
             .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
-    String callUserId = getUserIdFromAuthentication();
-    workspaceService.checkReadPermission(workspace, callUserId);
+    this.authZService.checkReadWorkspacePermission(workspaceId);
     Set<String> projectIds = workspace.getProjects();
     if (projectIds == null) {
       return Set.of();
@@ -123,8 +115,7 @@ public class DefaultProjectService implements ProjectService {
       throw new ConflictException(
           "Project name already exists for this workspace", ConflictException.Type.ALREADY_EXISTS);
     }
-    String callUserId = getUserIdFromAuthentication();
-    workspaceService.checkWritePermission(workspace, callUserId);
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     project.setWorkspaceId(workspaceId);
     Instant now = Instant.now();
     project.setCreatedDate(now);
@@ -144,12 +135,7 @@ public class DefaultProjectService implements ProjectService {
   @Override
   public String updateImageProject(
       String workspaceId, String projectId, InputStream image, MediaType mediaType) {
-    Workspace workspace =
-        workspaceRepository
-            .findById(workspaceId)
-            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
-    String callerUserId = getUserIdFromAuthentication();
-    this.workspaceService.checkWritePermission(workspace, callerUserId);
+    this.authZService.checkWriteWorkspacePermission(workspaceId);
     Project project =
         projectRepository
             .findById(projectId)
@@ -164,6 +150,7 @@ public class DefaultProjectService implements ProjectService {
     project.setImageUrl(publicUrl);
     project.setLastUpdatedDate(Instant.now());
     projectRepository.save(project);
+    String callerUserId = getUserIdFromAuthentication();
     log.info("User {} update image project {}", callerUserId, projectId);
     return publicUrl;
   }
