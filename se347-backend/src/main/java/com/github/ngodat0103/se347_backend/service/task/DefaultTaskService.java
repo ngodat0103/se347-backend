@@ -15,12 +15,11 @@ import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundE
 import com.github.ngodat0103.se347_backend.persistence.document.project.Project;
 import com.github.ngodat0103.se347_backend.persistence.document.task.Task;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
-import com.github.ngodat0103.se347_backend.persistence.document.workspace.Workspace;
 import com.github.ngodat0103.se347_backend.persistence.repository.ProjectRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.TaskRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
-import com.github.ngodat0103.se347_backend.service.workspace.WorkspaceService;
+import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -41,7 +40,7 @@ public class DefaultTaskService implements TaskService {
   private final TaskMapper taskMapper;
   private final UserMapper userMapper;
   private final ProjectMapper projectMapper;
-  private final WorkspaceService workspaceService;
+  private final AuthZService authZService;
 
   @Override
   public ResponseTaskDto createTask(
@@ -67,26 +66,24 @@ public class DefaultTaskService implements TaskService {
   @Override
   public ResponseTaskDto updateTask(
       String workspaceId, String projectId, String taskId, UpdateTaskDto updateTaskDto) {
-    Workspace workspace =
-        workspaceRepository
-            .findById(workspaceId)
-            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
-    this.workspaceService.checkWritePermission(workspace, getUserIdFromAuthentication());
-    Project project =
+    this.authZService.checkWriteTasksPermission(workspaceId);
+    Task callerTask =
+        taskRepository
+            .findByIdAndProjectIdAndWorkspaceId(taskId, projectId, workspaceId)
+            .orElseThrow(() -> new TaskNotFoundException("id", taskId));
+    callerTask.setStatus(updateTaskDto.getStatus());
+    callerTask.setAssigneeId(updateTaskDto.getAssigneeId());
+    callerTask.setName(updateTaskDto.getName());
+    callerTask.setDescription(updateTaskDto.getDescription());
+    Project callerProject =
         projectRepository
             .findById(projectId)
             .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
-    Task task =
-        taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException("id", taskId));
-    task.setStatus(updateTaskDto.getStatus());
-    task.setAssigneeId(updateTaskDto.getAssigneeId());
-    task.setName(updateTaskDto.getName());
-    task.setDescription(updateTaskDto.getDescription());
-    task.setProjectId(projectId);
-    Task savedTask = taskRepository.save(task);
+    callerTask.setProjectId(projectId);
+    Task savedTask = taskRepository.save(callerTask);
     log.info("Task with id {} has been updated", taskId);
     ResponseTaskDto responseTaskDto = taskMapper.toDto(savedTask);
-    responseTaskDto.setProject(projectMapper.toDto(project));
+    responseTaskDto.setProject(projectMapper.toDto(callerProject));
     if (savedTask.getAssigneeId() != null) {
       User assignee = userRepository.findById(savedTask.getAssigneeId()).orElse(null);
       responseTaskDto.setAssignee(userMapper.toDto(assignee));
@@ -96,12 +93,7 @@ public class DefaultTaskService implements TaskService {
 
   @Override
   public void deleteTask(String workspaceId, String projectId, String taskId) {
-
-    Workspace workspace =
-        workspaceRepository
-            .findById(workspaceId)
-            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
-    this.workspaceService.checkWritePermission(workspace, getUserIdFromAuthentication());
+    this.authZService.checkWriteTasksPermission(workspaceId);
     if (!projectRepository.existsById(projectId)) {
       throw new ProjectNotFoundException("id", projectId);
     }
@@ -135,15 +127,12 @@ public class DefaultTaskService implements TaskService {
 
   @Override
   public ResponseTaskDto getTaskById(String workspaceId, String projectId, String taskId) {
-    Workspace callerWorkspace =
-        workspaceRepository
-            .findById(workspaceId)
-            .orElseThrow(() -> new WorkspaceNotFoundException("id", workspaceId));
-    this.workspaceService.checkReadPermission(callerWorkspace, getUserIdFromAuthentication());
-    Task task =
+
+    this.authZService.checkReadTasksPermission(workspaceId);
+    var callerTask =
         taskRepository
-            .findByIdAndProjectId(taskId, projectId)
+            .findByIdAndProjectIdAndWorkspaceId(taskId, projectId, workspaceId)
             .orElseThrow(() -> new TaskNotFoundException("id", taskId));
-    return getTaskDto(task);
+    return getTaskDto(callerTask);
   }
 }

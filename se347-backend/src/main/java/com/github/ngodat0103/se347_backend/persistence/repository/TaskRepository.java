@@ -10,4 +10,7 @@ public interface TaskRepository extends MongoRepository<Task, String> {
   Set<Task> findByWorkspaceIdAndProjectId(String workspaceId, String projectId);
 
   Optional<Task> findByIdAndProjectId(String id, String projectId);
+
+  Optional<Task> findByIdAndProjectIdAndWorkspaceId(
+      String id, String projectId, String workspaceId);
 }
