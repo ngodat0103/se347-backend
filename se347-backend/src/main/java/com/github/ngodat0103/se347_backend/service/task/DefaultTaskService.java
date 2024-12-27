@@ -22,6 +22,7 @@ import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepos
 import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -123,7 +124,7 @@ public class DefaultTaskService implements TaskService {
     Set<Task> tasks = taskRepository.findByWorkspaceIdAndProjectId(workspaceId, projectId);
     return tasks.stream()
         .map(this::getTaskDto)
-        .sorted(Comparator.comparing(ResponseTaskDto::getStatus))
+        .sorted(Comparator.comparing(ResponseTaskDto::getPosition))
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
@@ -139,11 +140,11 @@ public class DefaultTaskService implements TaskService {
   }
 
   private int generatePosition(String workspaceId, String projectId) {
-    int currentMaxPosition =
+    List<Task> tasks =
         taskRepository
-            .findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId)
-            .map(Task::getPosition)
-            .orElse(0);
+            .findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId);
+
+    int currentMaxPosition = tasks.getFirst().getPosition();
     if (currentMaxPosition == 0) {
       return 1000;
     }
