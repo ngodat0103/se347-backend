@@ -13,7 +13,7 @@ public class Task {
   private TaskStatus status;
   private String assigneeId;
   private String projectId;
-  //    private int position;
+  private int position;
   private String workspaceId;
   private Instant dueDate;
   private String description;

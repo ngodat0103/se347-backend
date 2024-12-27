@@ -36,6 +36,6 @@ jwk:
       }
 minio:
   bucket: dev-se347
-#logging:
-#  level:
-#    org.springframework.data.mongodb: DEBUG
+logging:
+  level:
+    org.springframework.data.mongodb: DEBUG

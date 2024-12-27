@@ -15,10 +15,9 @@ public class UpdateTaskDto {
   @NotNull(message = "Task status is required")
   private TaskStatus status;
 
-  @NotNull(message = "Assignee id is required")
   private String assigneeId;
-
-  @NotNull(message = "Due date is required")
+  @NotNull(message = "Task position is required")
+  private int position;
   private Instant dueDate;
 
   private String description;
