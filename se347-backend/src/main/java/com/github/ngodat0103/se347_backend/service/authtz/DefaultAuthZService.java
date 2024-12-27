@@ -22,7 +22,10 @@ public class DefaultAuthZService implements AuthZService {
   public void checkReadWorkspacePermission(String workspaceId) {
     var callerRole = this.getWorkspaceRole(workspaceId);
     if (callerRole == null) {
-      log.info("User {} doesn't have permission to read workspace {}", getUserIdFromAuthentication(), workspaceId);
+      log.info(
+          "User {} doesn't have permission to read workspace {}",
+          getUserIdFromAuthentication(),
+          workspaceId);
       throw new AccessDeniedException("You don't have permission to read this workspace");
     }
   }
@@ -31,15 +34,17 @@ public class DefaultAuthZService implements AuthZService {
   public void checkWriteWorkspacePermission(String workspaceId) {
     var callerRole = this.getWorkspaceRole(workspaceId);
     if (callerRole == null || callerRole.ordinal() >= WorkspaceRole.DEVELOPER.ordinal()) {
-      throw new AccessDeniedException("You don't have permission to write this workspace, your Role is " + callerRole);
+      throw new AccessDeniedException(
+          "You don't have permission to write this workspace, your Role is " + callerRole);
     }
   }
 
   @Override
   public void checkReadTasksPermission(String workspaceId) {
     var callerRole = this.getWorkspaceRole(workspaceId);
-    if (callerRole == null ) {
-      throw new AccessDeniedException("You don't have permission to read this task, your Role is " + callerRole);
+    if (callerRole == null) {
+      throw new AccessDeniedException(
+          "You don't have permission to read this task, your Role is " + callerRole);
     }
   }
 
@@ -47,7 +52,8 @@ public class DefaultAuthZService implements AuthZService {
   public void checkWriteTasksPermission(String workspaceId) {
     var callerRole = this.getWorkspaceRole(workspaceId);
     if (callerRole == null || callerRole.ordinal() >= WorkspaceRole.MEMBER.ordinal()) {
-      throw new AccessDeniedException("You don't have permission to write this task, your Role is " + callerRole);
+      throw new AccessDeniedException(
+          "You don't have permission to write this task, your Role is " + callerRole);
     }
   }
 

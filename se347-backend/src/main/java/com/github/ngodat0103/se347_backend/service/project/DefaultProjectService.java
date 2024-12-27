@@ -14,7 +14,6 @@ import com.github.ngodat0103.se347_backend.persistence.repository.ProjectReposit
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
 import com.github.ngodat0103.se347_backend.service.minio.MinioService;
-import com.github.ngodat0103.se347_backend.service.workspace.WorkspaceService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;

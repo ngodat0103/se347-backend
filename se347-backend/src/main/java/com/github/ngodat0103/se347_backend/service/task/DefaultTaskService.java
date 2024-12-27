@@ -59,6 +59,7 @@ public class DefaultTaskService implements TaskService {
         && !userRepository.existsById(createTaskDto.getAssigneeId())) {
       throw new UserNotFoundException("id", createTaskDto.getAssigneeId());
     }
+    newTask.setPosition(generatePosition(workspaceId, projectId));
     Task savedTask = taskRepository.save(newTask);
     return getTaskDto(savedTask);
   }
@@ -75,6 +76,7 @@ public class DefaultTaskService implements TaskService {
     callerTask.setAssigneeId(updateTaskDto.getAssigneeId());
     callerTask.setName(updateTaskDto.getName());
     callerTask.setDescription(updateTaskDto.getDescription());
+    callerTask.setPosition(updateTaskDto.getPosition());
     Project callerProject =
         projectRepository
             .findById(projectId)
@@ -134,5 +136,17 @@ public class DefaultTaskService implements TaskService {
             .findByIdAndProjectIdAndWorkspaceId(taskId, projectId, workspaceId)
             .orElseThrow(() -> new TaskNotFoundException("id", taskId));
     return getTaskDto(callerTask);
+  }
+
+  private int generatePosition(String workspaceId, String projectId) {
+    int currentMaxPosition =
+        taskRepository
+            .findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId)
+            .map(Task::getPosition)
+            .orElse(0);
+    if (currentMaxPosition == 0) {
+      return 1000;
+    }
+    return currentMaxPosition + 1000;
   }
 }

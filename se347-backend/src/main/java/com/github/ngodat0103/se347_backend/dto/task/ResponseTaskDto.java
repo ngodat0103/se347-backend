@@ -24,7 +24,7 @@ public class ResponseTaskDto {
 
   @Setter private ProjectDto project;
   @Setter private UserDto assignee;
-  //    private int position;
+  private int position;
   private String workspaceId;
   private String description;
 }
