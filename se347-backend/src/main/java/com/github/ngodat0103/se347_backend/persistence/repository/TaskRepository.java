@@ -1,7 +1,7 @@
 package com.github.ngodat0103.se347_backend.persistence.repository;
 
 import com.github.ngodat0103.se347_backend.persistence.document.task.Task;
-
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -19,4 +19,7 @@ public interface TaskRepository extends MongoRepository<Task, String> {
 
   @Query(value = "{ 'workspaceId' : ?0, 'projectId' : ?1 }", sort = "{ 'position' : -1 }")
   List<Task> findMaxPositionByWorkspaceIdAndProjectId(String workspaceId, String projectId);
+
+  List<Task> findTaskByWorkspaceIdAndProjectIdAndCreatedDateBetween(
+      String workspaceId, String projectId, Instant startDayOfMonth, Instant endDayOfMonth);
 }

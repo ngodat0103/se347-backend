@@ -1,25 +1,30 @@
 package com.github.ngodat0103.se347_backend.service.project;
 
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
+import static com.github.ngodat0103.se347_backend.service.ServiceUtil.*;
 
 import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapper;
 import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapperImpl;
 import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
+import com.github.ngodat0103.se347_backend.dto.task.DateRange;
+import com.github.ngodat0103.se347_backend.dto.task.TaskAnalytics;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.notfound.ProjectNotFoundException;
 import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.project.Project;
+import com.github.ngodat0103.se347_backend.persistence.document.project.ProjectAnalyticsDto;
+import com.github.ngodat0103.se347_backend.persistence.document.task.Task;
+import com.github.ngodat0103.se347_backend.persistence.document.task.TaskStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.Workspace;
 import com.github.ngodat0103.se347_backend.persistence.repository.ProjectRepository;
+import com.github.ngodat0103.se347_backend.persistence.repository.TaskRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
 import com.github.ngodat0103.se347_backend.service.minio.MinioService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +37,7 @@ import org.springframework.stereotype.Service;
 public class DefaultProjectService implements ProjectService {
   private final ProjectRepository projectRepository;
   private final WorkspaceRepository workspaceRepository;
+  private final TaskRepository taskRepository;
   private final AuthZService authZService;
   private final ProjectMapper projectMapper = new ProjectMapperImpl();
   private final MinioService minioService;
@@ -152,5 +158,45 @@ public class DefaultProjectService implements ProjectService {
     String callerUserId = getUserIdFromAuthentication();
     log.info("User {} update image project {}", callerUserId, projectId);
     return publicUrl;
+  }
+
+  @Override
+  public ProjectAnalyticsDto getProjectAnalytics(String workspaceId, String projectId) {
+    this.authZService.checkReadWorkspacePermission(workspaceId);
+
+    DateRange currentMonthRange = getDateRangeForCurrentMonth();
+    DateRange lastMonthRange = getDateRangeForLastMonth();
+
+    List<Task> currentMonthTasks =
+        taskRepository.findTaskByWorkspaceIdAndProjectIdAndCreatedDateBetween(
+            workspaceId, projectId, currentMonthRange.getStart(), currentMonthRange.getEnd());
+    List<Task> lastMonthTasks =
+        taskRepository.findTaskByWorkspaceIdAndProjectIdAndCreatedDateBetween(
+            workspaceId, projectId, lastMonthRange.getStart(), lastMonthRange.getEnd());
+
+    TaskAnalytics currentMonthAnalytics = computeTaskAnalytics(currentMonthTasks);
+    TaskAnalytics lastMonthAnalytics = computeTaskAnalytics(lastMonthTasks);
+
+    return ProjectAnalyticsDto.builder()
+        .taskCount(currentMonthAnalytics.getTaskCount())
+        .taskDifference(currentMonthAnalytics.getTaskCount() - lastMonthAnalytics.getTaskCount())
+        .assignedTaskCount(currentMonthAnalytics.getAssignedTaskCount())
+        .assignedTaskDifference(
+            currentMonthAnalytics.getAssignedTaskCount()
+                - lastMonthAnalytics.getAssignedTaskCount())
+        .completedTaskCount(currentMonthAnalytics.getCompletedTaskCount())
+        .completedTaskDifference(
+            currentMonthAnalytics.getCompletedTaskCount()
+                - lastMonthAnalytics.getCompletedTaskCount())
+        .build();
+  }
+
+  private TaskAnalytics computeTaskAnalytics(List<Task> tasks) {
+    int taskCount = tasks.size();
+    int assignedTaskCount =
+        (int) tasks.stream().filter(task -> task.getAssigneeId() != null).count();
+    int completedTaskCount =
+        (int) tasks.stream().filter(task -> task.getStatus().equals(TaskStatus.DONE)).count();
+    return new TaskAnalytics(taskCount, assignedTaskCount, completedTaskCount);
   }
 }

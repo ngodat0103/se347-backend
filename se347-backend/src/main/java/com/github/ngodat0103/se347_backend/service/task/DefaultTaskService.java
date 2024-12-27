@@ -20,6 +20,7 @@ import com.github.ngodat0103.se347_backend.persistence.repository.TaskRepository
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,6 +62,9 @@ public class DefaultTaskService implements TaskService {
       throw new UserNotFoundException("id", createTaskDto.getAssigneeId());
     }
     newTask.setPosition(generatePosition(workspaceId, projectId));
+    Instant now = Instant.now();
+    newTask.setCreatedDate(now);
+    newTask.setLastUpdatedDate(now);
     Task savedTask = taskRepository.save(newTask);
     return getTaskDto(savedTask);
   }
@@ -83,6 +87,7 @@ public class DefaultTaskService implements TaskService {
             .findById(projectId)
             .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
     callerTask.setProjectId(projectId);
+    callerTask.setLastUpdatedDate(Instant.now());
     Task savedTask = taskRepository.save(callerTask);
     log.info("Task with id {} has been updated", taskId);
     ResponseTaskDto responseTaskDto = taskMapper.toDto(savedTask);
@@ -141,8 +146,7 @@ public class DefaultTaskService implements TaskService {
 
   private int generatePosition(String workspaceId, String projectId) {
     List<Task> tasks =
-        taskRepository
-            .findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId);
+        taskRepository.findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId);
 
     int currentMaxPosition = tasks.getFirst().getPosition();
     if (currentMaxPosition == 0) {
