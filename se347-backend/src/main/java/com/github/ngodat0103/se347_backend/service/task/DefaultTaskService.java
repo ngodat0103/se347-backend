@@ -144,7 +144,7 @@ public class DefaultTaskService implements TaskService {
   private int generatePosition(String workspaceId, String projectId) {
     try {
       List<Task> tasks =
-              taskRepository.findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId);
+          taskRepository.findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId);
       int currentMaxPosition = tasks.getFirst().getPosition();
       if (currentMaxPosition == 0) {
         return 1000;

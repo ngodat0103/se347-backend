@@ -5,16 +5,21 @@ import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 import com.github.ngodat0103.se347_backend.dto.mapper.UserMapper;
 import com.github.ngodat0103.se347_backend.dto.topic.KeyTopic;
 import com.github.ngodat0103.se347_backend.dto.topic.ValueTopicRegisteredUser;
+import com.github.ngodat0103.se347_backend.dto.user.UpdateUserDto;
 import com.github.ngodat0103.se347_backend.dto.user.UserDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
 import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
+import com.github.ngodat0103.se347_backend.service.minio.MinioService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,13 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Slf4j
 public class DefaultUserService implements UserService {
-  private static final String EMAIL_ALREADY_VERIFIED = "Email already verified";
-  private static final String EMAIL = "email";
-  private static final String USER = "User";
   private UserRepository userRepository;
   private UserMapper userMapper;
   private final KafkaTemplate<KeyTopic, ValueTopicRegisteredUser> kafkaTemplate;
   private final PasswordEncoder passwordEncoder;
+  private final MinioService minioService;
 
   @Override
   public UserDto create(UserDto userDto) {
@@ -56,8 +59,34 @@ public class DefaultUserService implements UserService {
   }
 
   @Override
-  public UserDto update(UserDto userDto) {
-    return null;
+  public String updateAvatar(InputStream avatarImage, MediaType mediaType) {
+    String objectName = "users/" + getUserIdFromAuthentication() + "/avatar";
+    try {
+      User user =
+          userRepository
+              .findById(getUserIdFromAuthentication())
+              .orElseThrow(() -> new UserNotFoundException("id", getUserIdFromAuthentication()));
+      String publicUrl =
+          minioService.uploadFile(objectName, avatarImage, avatarImage.available(), mediaType);
+      user.setImageUrl(publicUrl);
+      userRepository.save(user);
+      return publicUrl;
+
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public UserDto update(UpdateUserDto updateUserDto) {
+    String callUserId = getUserIdFromAuthentication();
+    User user =
+        userRepository
+            .findById(callUserId)
+            .orElseThrow(() -> new UserNotFoundException("id", callUserId));
+    user.setNickName(updateUserDto.getNickName());
+    user =  userRepository.save(user);
+    return userMapper.toDto(user);
   }
 
   @Override
