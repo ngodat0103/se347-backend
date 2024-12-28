@@ -1,5 +1,6 @@
 package com.github.ngodat0103.se347_backend.service.project;
 
+import com.github.ngodat0103.se347_backend.dto.project.ProjectAnalyticsDto;
 import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
 import java.io.InputStream;
 import java.util.Set;
@@ -18,4 +19,6 @@ public interface ProjectService {
 
   String updateImageProject(
       String workspaceId, String projectId, InputStream image, MediaType mediaType);
+
+  ProjectAnalyticsDto getProjectAnalytics(String workspaceId, String projectId);
 }

@@ -1,5 +1,6 @@
 package com.github.ngodat0103.se347_backend.controller;
 
+import com.github.ngodat0103.se347_backend.dto.project.ProjectAnalyticsDto;
 import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
 import com.github.ngodat0103.se347_backend.service.project.ProjectService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,6 +33,12 @@ public class ProjectController {
   @GetMapping
   public Set<ProjectDto> getProjects(@PathVariable String workspaceId) {
     return projectService.getProjects(workspaceId);
+  }
+
+  @GetMapping(path = "/{projectId}/analytics")
+  public ProjectAnalyticsDto getProjectAnalytics(
+      @PathVariable String workspaceId, @PathVariable String projectId) {
+    return projectService.getProjectAnalytics(workspaceId, projectId);
   }
 
   @GetMapping(path = "/{projectId}")
