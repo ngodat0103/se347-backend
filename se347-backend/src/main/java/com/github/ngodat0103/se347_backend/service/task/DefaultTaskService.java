@@ -21,10 +21,7 @@ import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -145,13 +142,16 @@ public class DefaultTaskService implements TaskService {
   }
 
   private int generatePosition(String workspaceId, String projectId) {
-    List<Task> tasks =
-        taskRepository.findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId);
-
-    int currentMaxPosition = tasks.getFirst().getPosition();
-    if (currentMaxPosition == 0) {
+    try {
+      List<Task> tasks =
+              taskRepository.findMaxPositionByWorkspaceIdAndProjectId(workspaceId, projectId);
+      int currentMaxPosition = tasks.getFirst().getPosition();
+      if (currentMaxPosition == 0) {
+        return 1000;
+      }
+      return currentMaxPosition + 1000;
+    } catch (NoSuchElementException e) {
       return 1000;
     }
-    return currentMaxPosition + 1000;
   }
 }
