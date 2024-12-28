@@ -1,7 +1,7 @@
 package com.github.ngodat0103.se347_backend.controller;
 
+import com.github.ngodat0103.se347_backend.dto.project.ProjectAnalyticsDto;
 import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
-import com.github.ngodat0103.se347_backend.persistence.document.project.ProjectAnalyticsDto;
 import com.github.ngodat0103.se347_backend.service.project.ProjectService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 public class ProjectController {
   private final ProjectService projectService;
 
-
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public ProjectDto createProject(
@@ -37,8 +36,9 @@ public class ProjectController {
   }
 
   @GetMapping(path = "/{projectId}/analytics")
-  public ProjectAnalyticsDto getProjectAnalytics(@PathVariable String workspaceId, @PathVariable String projectId) {
-    return projectService.getProjectAnalytics(workspaceId,projectId);
+  public ProjectAnalyticsDto getProjectAnalytics(
+      @PathVariable String workspaceId, @PathVariable String projectId) {
+    return projectService.getProjectAnalytics(workspaceId, projectId);
   }
 
   @GetMapping(path = "/{projectId}")

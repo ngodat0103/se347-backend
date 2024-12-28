@@ -6,9 +6,10 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 
 public class ServiceUtil {
-    private ServiceUtil(){
-        throw new IllegalStateException("Utility class");
-    }
+  private ServiceUtil() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static DateRange getDateRangeForCurrentMonth() {
     YearMonth now = YearMonth.now();
     Instant start = now.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant();

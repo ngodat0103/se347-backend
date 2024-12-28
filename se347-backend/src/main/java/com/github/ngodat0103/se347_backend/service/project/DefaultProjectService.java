@@ -5,6 +5,7 @@ import static com.github.ngodat0103.se347_backend.service.ServiceUtil.*;
 
 import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapper;
 import com.github.ngodat0103.se347_backend.dto.mapper.ProjectMapperImpl;
+import com.github.ngodat0103.se347_backend.dto.project.ProjectAnalyticsDto;
 import com.github.ngodat0103.se347_backend.dto.project.ProjectDto;
 import com.github.ngodat0103.se347_backend.dto.task.DateRange;
 import com.github.ngodat0103.se347_backend.dto.task.TaskAnalytics;
@@ -12,7 +13,6 @@ import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.notfound.ProjectNotFoundException;
 import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
 import com.github.ngodat0103.se347_backend.persistence.document.project.Project;
-import com.github.ngodat0103.se347_backend.persistence.document.project.ProjectAnalyticsDto;
 import com.github.ngodat0103.se347_backend.persistence.document.task.Task;
 import com.github.ngodat0103.se347_backend.persistence.document.task.TaskStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.Workspace;
@@ -188,6 +188,11 @@ public class DefaultProjectService implements ProjectService {
         .completedTaskDifference(
             currentMonthAnalytics.getCompletedTaskCount()
                 - lastMonthAnalytics.getCompletedTaskCount())
+        .inCompletedTaskCount(
+            currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
+        .inCompletedTaskDifference(
+            (currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
+                - (lastMonthAnalytics.getTaskCount() - lastMonthAnalytics.getCompletedTaskCount()))
         .build();
   }
 
