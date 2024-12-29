@@ -13,14 +13,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = "/api/v1/workspaces/{workspaceId}/projects/{projectId}/tasks")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("isAuthenticated()")
 @AllArgsConstructor
 public class TaskController {
   private final TaskService taskService;
+  private static final String TASKS_BASE_PATH = "/api/v1/workspaces/{workspaceId}/projects/{projectId}/tasks";
 
-  @PostMapping
+  @PostMapping(path = TASKS_BASE_PATH)
   @ResponseStatus(HttpStatus.CREATED)
   public ResponseTaskDto createTask(
       @PathVariable String workspaceId,
@@ -29,13 +29,13 @@ public class TaskController {
     return taskService.createTask(workspaceId, projectId, createTaskDto);
   }
 
-  @GetMapping
+  @GetMapping(path = TASKS_BASE_PATH)
   public Set<ResponseTaskDto> getTasks(
       @PathVariable String workspaceId, @PathVariable String projectId) {
     return taskService.getTasks(workspaceId, projectId);
   }
 
-  @PutMapping(path = "/{taskId}")
+  @PutMapping(path = TASKS_BASE_PATH + "/{taskId}")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public ResponseTaskDto updateTask(
       @PathVariable String workspaceId,
@@ -45,7 +45,7 @@ public class TaskController {
     return taskService.updateTask(workspaceId, projectId, taskId, updateTaskDto);
   }
 
-  @DeleteMapping(path = "/{taskId}")
+  @DeleteMapping(path = TASKS_BASE_PATH+"/{taskId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteTask(
       @PathVariable String workspaceId,
@@ -54,11 +54,16 @@ public class TaskController {
     taskService.deleteTask(workspaceId, projectId, taskId);
   }
 
-  @GetMapping(path = "/{taskId}")
+  @GetMapping(path = TASKS_BASE_PATH+"/{taskId}")
   public ResponseTaskDto getTaskById(
       @PathVariable String workspaceId,
       @PathVariable String projectId,
       @PathVariable String taskId) {
     return taskService.getTaskById(workspaceId, projectId, taskId);
+  }
+
+  @GetMapping(path = "/api/v1/tasks/my-tasks")
+  public Set<ResponseTaskDto> getMyTasks() {
+    return taskService.getMyTasks();
   }
 }
