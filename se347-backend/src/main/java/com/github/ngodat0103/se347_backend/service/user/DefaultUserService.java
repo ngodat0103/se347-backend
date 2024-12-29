@@ -85,7 +85,7 @@ public class DefaultUserService implements UserService {
             .findById(callUserId)
             .orElseThrow(() -> new UserNotFoundException("id", callUserId));
     user.setNickName(updateUserDto.getNickName());
-    user =  userRepository.save(user);
+    user = userRepository.save(user);
     return userMapper.toDto(user);
   }
 

@@ -22,4 +22,6 @@ public interface TaskRepository extends MongoRepository<Task, String> {
 
   List<Task> findTaskByWorkspaceIdAndProjectIdAndCreatedDateBetween(
       String workspaceId, String projectId, Instant startDayOfMonth, Instant endDayOfMonth);
+
+  List<Task> findByAssigneeId(String assigneeId);
 }
