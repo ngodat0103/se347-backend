@@ -18,7 +18,8 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class TaskController {
   private final TaskService taskService;
-  private static final String TASKS_BASE_PATH = "/api/v1/workspaces/{workspaceId}/projects/{projectId}/tasks";
+  private static final String TASKS_BASE_PATH =
+      "/api/v1/workspaces/{workspaceId}/projects/{projectId}/tasks";
 
   @PostMapping(path = TASKS_BASE_PATH)
   @ResponseStatus(HttpStatus.CREATED)
@@ -45,7 +46,7 @@ public class TaskController {
     return taskService.updateTask(workspaceId, projectId, taskId, updateTaskDto);
   }
 
-  @DeleteMapping(path = TASKS_BASE_PATH+"/{taskId}")
+  @DeleteMapping(path = TASKS_BASE_PATH + "/{taskId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteTask(
       @PathVariable String workspaceId,
@@ -54,7 +55,7 @@ public class TaskController {
     taskService.deleteTask(workspaceId, projectId, taskId);
   }
 
-  @GetMapping(path = TASKS_BASE_PATH+"/{taskId}")
+  @GetMapping(path = TASKS_BASE_PATH + "/{taskId}")
   public ResponseTaskDto getTaskById(
       @PathVariable String workspaceId,
       @PathVariable String projectId,
@@ -65,5 +66,10 @@ public class TaskController {
   @GetMapping(path = "/api/v1/tasks/my-tasks")
   public Set<ResponseTaskDto> getMyTasks() {
     return taskService.getMyTasks();
+  }
+
+  @GetMapping(path = "/api/v1/workspaces/{workspaceId}/tasks")
+  public Set<ResponseTaskDto> getTasks(@PathVariable String workspaceId) {
+    return taskService.getTasks(workspaceId);
   }
 }
