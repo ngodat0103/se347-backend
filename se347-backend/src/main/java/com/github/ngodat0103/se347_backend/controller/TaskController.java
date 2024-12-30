@@ -63,9 +63,9 @@ public class TaskController {
     return taskService.getTaskById(workspaceId, projectId, taskId);
   }
 
-  @GetMapping(path = "/api/v1/tasks/my-tasks")
-  public Set<ResponseTaskDto> getMyTasks() {
-    return taskService.getMyTasks();
+  @GetMapping(path = "/api/v1/workspaces/{workspaceId}/my-tasks")
+  public Set<ResponseTaskDto> getMyTasks(@PathVariable String workspaceId) {
+    return taskService.getMyTasks(workspaceId);
   }
 
   @GetMapping(path = "/api/v1/workspaces/{workspaceId}/tasks")

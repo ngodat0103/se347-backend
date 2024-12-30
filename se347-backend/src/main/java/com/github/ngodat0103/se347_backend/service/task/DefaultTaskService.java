@@ -15,6 +15,7 @@ import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundE
 import com.github.ngodat0103.se347_backend.persistence.document.project.Project;
 import com.github.ngodat0103.se347_backend.persistence.document.task.Task;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
+import com.github.ngodat0103.se347_backend.persistence.document.workspace.Workspace;
 import com.github.ngodat0103.se347_backend.persistence.repository.ProjectRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.TaskRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
@@ -145,9 +146,10 @@ public class DefaultTaskService implements TaskService {
   }
 
   @Override
-  public Set<ResponseTaskDto> getMyTasks() {
+  public Set<ResponseTaskDto> getMyTasks(String workspaceId) {
     String callerUserId = getUserIdFromAuthentication();
-    List<Task> tasks = taskRepository.findByAssigneeId(callerUserId);
+    this.authZService.checkReadTasksPermission(workspaceId);
+    List<Task> tasks = taskRepository.findByWorkspaceIdAndAssigneeId(workspaceId, callerUserId);
     if (tasks.isEmpty()) {
       return new LinkedHashSet<>();
     }

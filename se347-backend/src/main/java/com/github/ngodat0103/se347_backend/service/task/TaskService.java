@@ -17,7 +17,7 @@ public interface TaskService {
 
   Set<ResponseTaskDto> getTasks(String workspaceId);
 
-  Set<ResponseTaskDto> getMyTasks();
+  Set<ResponseTaskDto> getMyTasks(String workspaceId);
 
   ResponseTaskDto getTaskById(String workspaceId, String projectId, String taskId);
 }
