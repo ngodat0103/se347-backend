@@ -313,6 +313,12 @@ public class DefaultWorkspaceService implements WorkspaceService {
         (int) tasks.stream().filter(task -> task.getAssigneeId() != null).count();
     int completedTaskCount =
         (int) tasks.stream().filter(task -> task.getStatus().equals(TaskStatus.DONE)).count();
-    return new TaskAnalytics(taskCount, assignedTaskCount, completedTaskCount);
+    int inCompletedTaskCount = taskCount - completedTaskCount;
+    int overdueTaskCount =
+        (int)
+            tasks.stream()
+                .filter(task -> task.getDueDate()!=null && task.getDueDate().isBefore(Instant.now()))
+                .count();
+    return new TaskAnalytics(taskCount, assignedTaskCount,inCompletedTaskCount ,completedTaskCount,overdueTaskCount);
   }
 }

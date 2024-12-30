@@ -206,7 +206,7 @@ public class DefaultProjectService implements ProjectService {
         (int) tasks.stream().filter(task -> task.getStatus().equals(TaskStatus.DONE)).count();
     int inCompletedTaskCount = taskCount - completedTaskCount;
     int overdueTaskCount =
-        (int) tasks.stream().filter(task -> task.getDueDate().isBefore(Instant.now())).count();
+        (int) tasks.stream().filter(task ->task.getDueDate()!=null&& task.getDueDate().isBefore(Instant.now())).count();
     return new TaskAnalytics(
         taskCount, assignedTaskCount, completedTaskCount, inCompletedTaskCount, overdueTaskCount);
   }
