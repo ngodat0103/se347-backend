@@ -3,15 +3,22 @@ package com.github.ngodat0103.se347_backend.service.workspace;
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 
 import com.github.ngodat0103.se347_backend.dto.mapper.WorkspaceMapper;
+import com.github.ngodat0103.se347_backend.dto.project.ProjectAnalyticsDto;
+import com.github.ngodat0103.se347_backend.dto.task.DateRange;
+import com.github.ngodat0103.se347_backend.dto.task.TaskAnalytics;
 import com.github.ngodat0103.se347_backend.dto.workspace.MemberRoleUpdateDto;
+import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceAnalyticsDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
 import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
 import com.github.ngodat0103.se347_backend.exception.notfound.UserNotFoundException;
 import com.github.ngodat0103.se347_backend.exception.notfound.WorkspaceNotFoundException;
+import com.github.ngodat0103.se347_backend.persistence.document.task.Task;
+import com.github.ngodat0103.se347_backend.persistence.document.task.TaskStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.user.User;
 import com.github.ngodat0103.se347_backend.persistence.document.user.UserStatus;
 import com.github.ngodat0103.se347_backend.persistence.document.workspace.*;
+import com.github.ngodat0103.se347_backend.persistence.repository.TaskRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.UserRepository;
 import com.github.ngodat0103.se347_backend.persistence.repository.WorkspaceRepository;
 import com.github.ngodat0103.se347_backend.service.authtz.AuthZService;
@@ -30,6 +37,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.TabableView;
+
+import static com.github.ngodat0103.se347_backend.service.ServiceUtil.*;
+
 @Service
 @AllArgsConstructor
 public class DefaultWorkspaceService implements WorkspaceService {
@@ -39,6 +50,7 @@ public class DefaultWorkspaceService implements WorkspaceService {
   private static final String WORKSPACE_STORAGE_PREFIX = "workspace/";
   private final MinioService minioService;
   private final AuthZService authZService;
+  private final TaskRepository taskRepository;
   private static final URI BASE_WORKSPACE_FRONTEND_ENDPOINT =
       URI.create("http://localhost:4200/workspaces/join");
 
@@ -242,6 +254,40 @@ public class DefaultWorkspaceService implements WorkspaceService {
     return imagePublicUrl;
   }
 
+  @Override
+  public WorkspaceAnalyticsDto getWorkspaceAnalytics(String workspaceId) {
+    this.authZService.checkReadWorkspacePermission(workspaceId);
+    DateRange currentMonthRange =getDateRangeForCurrentMonth();
+    DateRange lastMonthRange = getDateRangeForLastMonth();
+    List<Task> currentMonthTasks =
+            taskRepository.findTaskByWorkspaceIdAndCreatedDateBetween(
+                    workspaceId,currentMonthRange.getStart(), currentMonthRange.getEnd());
+    List<Task> lastMonthTasks =
+            taskRepository.findTaskByWorkspaceIdAndCreatedDateBetween(
+                    workspaceId, lastMonthRange.getStart(), lastMonthRange.getEnd());
+
+    TaskAnalytics currentMonthAnalytics = computeTaskAnalytics(currentMonthTasks);
+    TaskAnalytics lastMonthAnalytics = computeTaskAnalytics(lastMonthTasks);
+
+    return WorkspaceAnalyticsDto.builder()
+            .taskCount(currentMonthAnalytics.getTaskCount())
+            .taskDifference(currentMonthAnalytics.getTaskCount() - lastMonthAnalytics.getTaskCount())
+            .assignedTaskCount(currentMonthAnalytics.getAssignedTaskCount())
+            .assignedTaskDifference(
+                    currentMonthAnalytics.getAssignedTaskCount()
+                            - lastMonthAnalytics.getAssignedTaskCount())
+            .completedTaskCount(currentMonthAnalytics.getCompletedTaskCount())
+            .completedTaskDifference(
+                    currentMonthAnalytics.getCompletedTaskCount()
+                            - lastMonthAnalytics.getCompletedTaskCount())
+            .inCompletedTaskCount(
+                    currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
+            .inCompletedTaskDifference(
+                    (currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
+                            - (lastMonthAnalytics.getTaskCount() - lastMonthAnalytics.getCompletedTaskCount()))
+            .build();
+  }
+
   private Workspace getWorkspaceById(String workspaceId) {
     return workspaceRepository
         .findById(workspaceId)
@@ -263,5 +309,13 @@ public class DefaultWorkspaceService implements WorkspaceService {
     workspace
         .getMembers()
         .put(userId, new WorkSpaceMember(WorkspaceRole.MEMBER, WorkSpaceMemberStatus.ACTIVE));
+  }
+  private TaskAnalytics computeTaskAnalytics(List<Task> tasks) {
+    int taskCount = tasks.size();
+    int assignedTaskCount =
+            (int) tasks.stream().filter(task -> task.getAssigneeId() != null).count();
+    int completedTaskCount =
+            (int) tasks.stream().filter(task -> task.getStatus().equals(TaskStatus.DONE)).count();
+    return new TaskAnalytics(taskCount, assignedTaskCount, completedTaskCount);
   }
 }

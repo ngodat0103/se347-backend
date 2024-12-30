@@ -1,9 +1,6 @@
 package com.github.ngodat0103.se347_backend.controller;
 
-import com.github.ngodat0103.se347_backend.dto.workspace.AddWorkspaceMemberDto;
-import com.github.ngodat0103.se347_backend.dto.workspace.MemberRoleUpdateDto;
-import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceDto;
-import com.github.ngodat0103.se347_backend.dto.workspace.WorkspaceMemberDto;
+import com.github.ngodat0103.se347_backend.dto.workspace.*;
 import com.github.ngodat0103.se347_backend.service.workspace.WorkspaceService;
 import io.minio.errors.InternalException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -170,5 +167,13 @@ public class WorkspaceController {
       description = "Get all members of a workspace")
   public Set<WorkspaceMemberDto> getMembers(@PathVariable String workspaceId) {
     return workspaceService.getMembers(workspaceId);
+  }
+  @GetMapping(path = "/{workspaceId}/analytics")
+    @Operation(
+        tags = "Workspace analytics",
+        summary = "Get Workspace Analytics",
+        description = "Get analytics of a workspace")
+    public WorkspaceAnalyticsDto getWorkspaceAnalytics(@PathVariable String workspaceId) {
+        return workspaceService.getWorkspaceAnalytics(workspaceId);
   }
 }

@@ -131,10 +131,24 @@ public class DefaultTaskService implements TaskService {
   }
 
   @Override
+  public Set<ResponseTaskDto> getTasks(String workspaceId) {
+    this.authZService.checkReadWorkspacePermission(getUserIdFromAuthentication());
+    List<Task> tasks = taskRepository.findByWorkspaceId(workspaceId);
+    if (!tasks.isEmpty()) {
+      return tasks.stream()
+          .map(this::getTaskDto)
+          .sorted(Comparator.comparing(ResponseTaskDto::getPosition))
+          .sorted(Comparator.comparing(ResponseTaskDto::getStatus))
+          .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+    return Set.of();
+  }
+
+  @Override
   public Set<ResponseTaskDto> getMyTasks() {
     String callerUserId = getUserIdFromAuthentication();
     List<Task> tasks = taskRepository.findByAssigneeId(callerUserId);
-    if(tasks.isEmpty()) {
+    if (tasks.isEmpty()) {
       return new LinkedHashSet<>();
     }
     return tasks.stream()
