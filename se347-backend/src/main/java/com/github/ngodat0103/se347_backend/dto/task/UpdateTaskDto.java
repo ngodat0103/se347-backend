@@ -17,6 +17,7 @@ public class UpdateTaskDto {
 
   private String assigneeId;
   private String projectId;
+
   @NotNull(message = "Task position is required")
   private int position;
 

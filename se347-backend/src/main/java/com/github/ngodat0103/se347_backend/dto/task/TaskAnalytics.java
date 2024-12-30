@@ -9,4 +9,6 @@ public class TaskAnalytics {
   private int taskCount;
   private int assignedTaskCount;
   private int completedTaskCount;
+  private int inCompletedTaskCount;
+  private int overdueTaskCount;
 }
