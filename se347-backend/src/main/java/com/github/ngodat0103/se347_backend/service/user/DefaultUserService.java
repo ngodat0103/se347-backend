@@ -3,8 +3,6 @@ package com.github.ngodat0103.se347_backend.service.user;
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
 
 import com.github.ngodat0103.se347_backend.dto.mapper.UserMapper;
-import com.github.ngodat0103.se347_backend.dto.topic.KeyTopic;
-import com.github.ngodat0103.se347_backend.dto.topic.ValueTopicRegisteredUser;
 import com.github.ngodat0103.se347_backend.dto.user.UpdateUserDto;
 import com.github.ngodat0103.se347_backend.dto.user.UserDto;
 import com.github.ngodat0103.se347_backend.exception.ConflictException;
@@ -20,7 +18,6 @@ import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultUserService implements UserService {
   private UserRepository userRepository;
   private UserMapper userMapper;
-  private final KafkaTemplate<KeyTopic, ValueTopicRegisteredUser> kafkaTemplate;
   private final PasswordEncoder passwordEncoder;
   private final MinioService minioService;
 
