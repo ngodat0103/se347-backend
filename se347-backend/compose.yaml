@@ -5,24 +5,6 @@ x-minio-credential: &minio-credential
   MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio-demo}
   MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio-demo}
 services:
-  minio:
-    image: bitnami/minio:2024.10.13-debian-12-r0
-    profiles:
-      - dev
-    container_name: minio
-    restart: always
-    hostname: minio-svc
-    healthcheck:
-      test: [ "CMD","curl","-f","http://127.0.0.1:9000/minio/health/live" ]
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      <<: *minio-credential
-    volumes:
-      - minio-data:/bitnami/minio/data
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
   redis:
     image: redis:alpine3.20
     ports:
@@ -36,14 +18,11 @@ services:
     volumes:
       - bitnami-mongodb:/bitnami/mongodb
     environment:
-      - MONGODB_REPLICA_SET_MODE=primary
-      - MONGODB_REPLICA_SET_KEY=replicaSetKey123
       - MONGODB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD:-root}
       - MONGODB_ROOT_USER=${MONGODB_ROOT_USER:-root}
       - MONGODB_USERNAME=${MONGODB_USERNAME:-dev}
       - MONGODB_PASSWORD=${MONGODB_PASSWORD:-dev}
       - MONGODB_DATABASE=${MONGODB_DATABASE:-se347-backend}
-      - MONGODB_REPLICA_SET_NAME=rs0
       - MONGODB_PORT_NUMBER=27017
     ports:
       - "27017:27017"
