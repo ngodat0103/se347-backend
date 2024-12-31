@@ -33,7 +33,6 @@ public interface WorkspaceService extends BaseService<WorkspaceDto> {
 
   String uploadImageWorkspace(String workspaceId, InputStream inputStream, MediaType mediaType)
       throws IOException;
+
   WorkspaceAnalyticsDto getWorkspaceAnalytics(String workspaceId);
-
-
 }

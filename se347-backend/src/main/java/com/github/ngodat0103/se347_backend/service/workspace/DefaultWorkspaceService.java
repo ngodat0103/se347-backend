@@ -1,9 +1,9 @@
 package com.github.ngodat0103.se347_backend.service.workspace;
 
 import static com.github.ngodat0103.se347_backend.security.SecurityUtil.*;
+import static com.github.ngodat0103.se347_backend.service.ServiceUtil.*;
 
 import com.github.ngodat0103.se347_backend.dto.mapper.WorkspaceMapper;
-import com.github.ngodat0103.se347_backend.dto.project.ProjectAnalyticsDto;
 import com.github.ngodat0103.se347_backend.dto.task.DateRange;
 import com.github.ngodat0103.se347_backend.dto.task.TaskAnalytics;
 import com.github.ngodat0103.se347_backend.dto.workspace.MemberRoleUpdateDto;
@@ -36,10 +36,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
-import javax.swing.text.TabableView;
-
-import static com.github.ngodat0103.se347_backend.service.ServiceUtil.*;
 
 @Service
 @AllArgsConstructor
@@ -257,35 +253,35 @@ public class DefaultWorkspaceService implements WorkspaceService {
   @Override
   public WorkspaceAnalyticsDto getWorkspaceAnalytics(String workspaceId) {
     this.authZService.checkReadWorkspacePermission(workspaceId);
-    DateRange currentMonthRange =getDateRangeForCurrentMonth();
+    DateRange currentMonthRange = getDateRangeForCurrentMonth();
     DateRange lastMonthRange = getDateRangeForLastMonth();
     List<Task> currentMonthTasks =
-            taskRepository.findTaskByWorkspaceIdAndCreatedDateBetween(
-                    workspaceId,currentMonthRange.getStart(), currentMonthRange.getEnd());
+        taskRepository.findTaskByWorkspaceIdAndCreatedDateBetween(
+            workspaceId, currentMonthRange.getStart(), currentMonthRange.getEnd());
     List<Task> lastMonthTasks =
-            taskRepository.findTaskByWorkspaceIdAndCreatedDateBetween(
-                    workspaceId, lastMonthRange.getStart(), lastMonthRange.getEnd());
+        taskRepository.findTaskByWorkspaceIdAndCreatedDateBetween(
+            workspaceId, lastMonthRange.getStart(), lastMonthRange.getEnd());
 
     TaskAnalytics currentMonthAnalytics = computeTaskAnalytics(currentMonthTasks);
     TaskAnalytics lastMonthAnalytics = computeTaskAnalytics(lastMonthTasks);
 
     return WorkspaceAnalyticsDto.builder()
-            .taskCount(currentMonthAnalytics.getTaskCount())
-            .taskDifference(currentMonthAnalytics.getTaskCount() - lastMonthAnalytics.getTaskCount())
-            .assignedTaskCount(currentMonthAnalytics.getAssignedTaskCount())
-            .assignedTaskDifference(
-                    currentMonthAnalytics.getAssignedTaskCount()
-                            - lastMonthAnalytics.getAssignedTaskCount())
-            .completedTaskCount(currentMonthAnalytics.getCompletedTaskCount())
-            .completedTaskDifference(
-                    currentMonthAnalytics.getCompletedTaskCount()
-                            - lastMonthAnalytics.getCompletedTaskCount())
-            .inCompletedTaskCount(
-                    currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
-            .inCompletedTaskDifference(
-                    (currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
-                            - (lastMonthAnalytics.getTaskCount() - lastMonthAnalytics.getCompletedTaskCount()))
-            .build();
+        .taskCount(currentMonthAnalytics.getTaskCount())
+        .taskDifference(currentMonthAnalytics.getTaskCount() - lastMonthAnalytics.getTaskCount())
+        .assignedTaskCount(currentMonthAnalytics.getAssignedTaskCount())
+        .assignedTaskDifference(
+            currentMonthAnalytics.getAssignedTaskCount()
+                - lastMonthAnalytics.getAssignedTaskCount())
+        .completedTaskCount(currentMonthAnalytics.getCompletedTaskCount())
+        .completedTaskDifference(
+            currentMonthAnalytics.getCompletedTaskCount()
+                - lastMonthAnalytics.getCompletedTaskCount())
+        .inCompletedTaskCount(
+            currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
+        .inCompletedTaskDifference(
+            (currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
+                - (lastMonthAnalytics.getTaskCount() - lastMonthAnalytics.getCompletedTaskCount()))
+        .build();
   }
 
   private Workspace getWorkspaceById(String workspaceId) {
@@ -310,12 +306,21 @@ public class DefaultWorkspaceService implements WorkspaceService {
         .getMembers()
         .put(userId, new WorkSpaceMember(WorkspaceRole.MEMBER, WorkSpaceMemberStatus.ACTIVE));
   }
+
   private TaskAnalytics computeTaskAnalytics(List<Task> tasks) {
     int taskCount = tasks.size();
     int assignedTaskCount =
-            (int) tasks.stream().filter(task -> task.getAssigneeId() != null).count();
+        (int) tasks.stream().filter(task -> task.getAssigneeId() != null).count();
     int completedTaskCount =
-            (int) tasks.stream().filter(task -> task.getStatus().equals(TaskStatus.DONE)).count();
-    return new TaskAnalytics(taskCount, assignedTaskCount, completedTaskCount);
+        (int) tasks.stream().filter(task -> task.getStatus().equals(TaskStatus.DONE)).count();
+    int inCompletedTaskCount = taskCount - completedTaskCount;
+    int overdueTaskCount =
+        (int)
+            tasks.stream()
+                .filter(
+                    task -> task.getDueDate() != null && task.getDueDate().isBefore(Instant.now()))
+                .count();
+    return new TaskAnalytics(
+        taskCount, assignedTaskCount, inCompletedTaskCount, completedTaskCount, overdueTaskCount);
   }
 }

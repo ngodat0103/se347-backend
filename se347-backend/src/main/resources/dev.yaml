@@ -1,12 +1,7 @@
-
-
 spring:
   config:
     activate:
       on-profile: dev
-  kafka:
-    producer:
-      bootstrap-servers: kafka-svc
   data:
     mongodb:
       host: 127.0.0.1

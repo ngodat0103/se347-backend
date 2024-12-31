@@ -79,21 +79,15 @@ public class DefaultTaskService implements TaskService {
     callerTask.setName(updateTaskDto.getName());
     callerTask.setDescription(updateTaskDto.getDescription());
     callerTask.setPosition(updateTaskDto.getPosition());
-    Project callerProject =
+    Project updatedTaskProject =
         projectRepository
-            .findById(projectId)
+            .findById(updateTaskDto.getProjectId())
             .orElseThrow(() -> new ProjectNotFoundException("id", projectId));
-    callerTask.setProjectId(projectId);
+    callerTask.setProjectId(updatedTaskProject.getId());
     callerTask.setLastUpdatedDate(Instant.now());
     Task savedTask = taskRepository.save(callerTask);
     log.info("Task with id {} has been updated", taskId);
-    ResponseTaskDto responseTaskDto = taskMapper.toDto(savedTask);
-    responseTaskDto.setProject(projectMapper.toDto(callerProject));
-    if (savedTask.getAssigneeId() != null) {
-      User assignee = userRepository.findById(savedTask.getAssigneeId()).orElse(null);
-      responseTaskDto.setAssignee(userMapper.toDto(assignee));
-    }
-    return responseTaskDto;
+    return this.getTaskDto(savedTask);
   }
 
   @Override
@@ -145,9 +139,10 @@ public class DefaultTaskService implements TaskService {
   }
 
   @Override
-  public Set<ResponseTaskDto> getMyTasks() {
+  public Set<ResponseTaskDto> getMyTasks(String workspaceId) {
     String callerUserId = getUserIdFromAuthentication();
-    List<Task> tasks = taskRepository.findByAssigneeId(callerUserId);
+    this.authZService.checkReadTasksPermission(workspaceId);
+    List<Task> tasks = taskRepository.findByWorkspaceIdAndAssigneeId(workspaceId, callerUserId);
     if (tasks.isEmpty()) {
       return new LinkedHashSet<>();
     }

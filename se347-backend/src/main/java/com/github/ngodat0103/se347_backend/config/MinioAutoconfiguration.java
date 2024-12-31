@@ -1,4 +1,4 @@
-package com.github.ngodat0103.se347_backend.config.minio;
+package com.github.ngodat0103.se347_backend.config;
 
 import io.minio.MinioClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

@@ -22,10 +22,13 @@ public interface TaskRepository extends MongoRepository<Task, String> {
 
   List<Task> findTaskByWorkspaceIdAndProjectIdAndCreatedDateBetween(
       String workspaceId, String projectId, Instant startDayOfMonth, Instant endDayOfMonth);
+
   List<Task> findTaskByWorkspaceIdAndCreatedDateBetween(
       String workspaceId, Instant startDayOfMonth, Instant endDayOfMonth);
 
   List<Task> findByAssigneeId(String assigneeId);
 
   List<Task> findByWorkspaceId(String workspaceId);
+
+  List<Task> findByWorkspaceIdAndAssigneeId(String workspaceId, String assigneeId);
 }

@@ -168,12 +168,13 @@ public class WorkspaceController {
   public Set<WorkspaceMemberDto> getMembers(@PathVariable String workspaceId) {
     return workspaceService.getMembers(workspaceId);
   }
+
   @GetMapping(path = "/{workspaceId}/analytics")
-    @Operation(
-        tags = "Workspace analytics",
-        summary = "Get Workspace Analytics",
-        description = "Get analytics of a workspace")
-    public WorkspaceAnalyticsDto getWorkspaceAnalytics(@PathVariable String workspaceId) {
-        return workspaceService.getWorkspaceAnalytics(workspaceId);
+  @Operation(
+      tags = "Workspace analytics",
+      summary = "Get Workspace Analytics",
+      description = "Get analytics of a workspace")
+  public WorkspaceAnalyticsDto getWorkspaceAnalytics(@PathVariable String workspaceId) {
+    return workspaceService.getWorkspaceAnalytics(workspaceId);
   }
 }

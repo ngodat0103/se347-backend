@@ -11,8 +11,8 @@ springdoc:
   open-api:
     info:
       version: ${APP_VERSION}
-      title: User Service management API
-      description: Contains endpoints for managing users
+      title: se347-backend API
+      description: Contains all the endpoints for the se347-backend API
       contact:
         name: NgoDat0103
         url: https://github.com/NGODAT0103

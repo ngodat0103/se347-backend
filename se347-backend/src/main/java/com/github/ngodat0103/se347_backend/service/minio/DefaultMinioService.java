@@ -1,6 +1,6 @@
 package com.github.ngodat0103.se347_backend.service.minio;
 
-import com.github.ngodat0103.se347_backend.config.minio.MinioProperties;
+import com.github.ngodat0103.se347_backend.config.MinioProperties;
 import io.minio.*;
 import io.minio.errors.*;
 import java.io.IOException;

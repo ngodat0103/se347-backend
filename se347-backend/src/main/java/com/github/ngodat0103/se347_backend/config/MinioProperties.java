@@ -1,4 +1,4 @@
-package com.github.ngodat0103.se347_backend.config.minio;
+package com.github.ngodat0103.se347_backend.config;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;

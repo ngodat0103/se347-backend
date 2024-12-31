@@ -188,11 +188,13 @@ public class DefaultProjectService implements ProjectService {
         .completedTaskDifference(
             currentMonthAnalytics.getCompletedTaskCount()
                 - lastMonthAnalytics.getCompletedTaskCount())
-        .inCompletedTaskCount(
-            currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
+        .inCompletedTaskCount(currentMonthAnalytics.getInCompletedTaskCount())
         .inCompletedTaskDifference(
             (currentMonthAnalytics.getTaskCount() - currentMonthAnalytics.getCompletedTaskCount())
                 - (lastMonthAnalytics.getTaskCount() - lastMonthAnalytics.getCompletedTaskCount()))
+        .overdueTaskCount(currentMonthAnalytics.getOverdueTaskCount())
+        .overdueTaskDifference(
+            currentMonthAnalytics.getOverdueTaskCount() - lastMonthAnalytics.getOverdueTaskCount())
         .build();
   }
 
@@ -202,6 +204,14 @@ public class DefaultProjectService implements ProjectService {
         (int) tasks.stream().filter(task -> task.getAssigneeId() != null).count();
     int completedTaskCount =
         (int) tasks.stream().filter(task -> task.getStatus().equals(TaskStatus.DONE)).count();
-    return new TaskAnalytics(taskCount, assignedTaskCount, completedTaskCount);
+    int inCompletedTaskCount = taskCount - completedTaskCount;
+    int overdueTaskCount =
+        (int)
+            tasks.stream()
+                .filter(
+                    task -> task.getDueDate() != null && task.getDueDate().isBefore(Instant.now()))
+                .count();
+    return new TaskAnalytics(
+        taskCount, assignedTaskCount, completedTaskCount, inCompletedTaskCount, overdueTaskCount);
   }
 }
