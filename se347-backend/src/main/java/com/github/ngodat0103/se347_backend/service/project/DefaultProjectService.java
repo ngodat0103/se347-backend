@@ -108,7 +108,9 @@ public class DefaultProjectService implements ProjectService {
     }
     List<Project> projects = projectRepository.findAllById(projectIds);
 
-    return projects.stream().map(projectMapper::toDto).collect(Collectors.toUnmodifiableSet());
+    return projects.stream().map(projectMapper::toDto)
+            .sorted(Comparator.comparing(ProjectDto::getName))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   @Override
