@@ -16,6 +16,7 @@ public class UpdateTaskDto {
   private TaskStatus status;
 
   private String assigneeId;
+  @NotNull(message = "Project id is required")
   private String projectId;
 
   @NotNull(message = "Task position is required")
