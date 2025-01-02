@@ -263,7 +263,7 @@ jobs:
         run: |
           echo "MONGODB_PASSWORD=${{ env.MONGODB_PASSWORD }}" >> .env
           echo "MONGODB_ROOT_PASSWORD=${{ env.MONGODB_ROOT_PASSWORD }}" >> .env
-          echo "MINIO_API_SERVER=${{ env.MINIO_API_SERVER }}" >> .env 
+          echo "MINIO_API_SERVER=${{ env.MINIO_API_SERVER }}" >> .env
           echo "MINIO_SERVER_ACCESS_KEY=${{ env.MINIO_SERVER_ACCESS_KEY }}" >> .env
           echo "MINIO_SERVER_SECRET_KEY=${{ env.MINIO_SERVER_SECRET_KEY }}" >> .env
       - name: Deploy new Docker image

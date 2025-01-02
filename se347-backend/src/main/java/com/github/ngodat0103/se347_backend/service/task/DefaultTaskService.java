@@ -44,7 +44,7 @@ public class DefaultTaskService implements TaskService {
   @Override
   public ResponseTaskDto createTask(
       String workspaceId, String projectId, CreateTaskDto createTaskDto) {
-
+    this.authZService.checkWriteTasksPermission(workspaceId);
     Task newTask = taskMapper.toDocument(createTaskDto);
     newTask.setWorkspaceId(workspaceId);
     newTask.setProjectId(projectId);
@@ -126,7 +126,8 @@ public class DefaultTaskService implements TaskService {
 
   @Override
   public Set<ResponseTaskDto> getTasks(String workspaceId) {
-    this.authZService.checkReadWorkspacePermission(getUserIdFromAuthentication());
+    log.info("Get all tasks in workspace {}", workspaceId);
+    this.authZService.checkReadWorkspacePermission(workspaceId);
     List<Task> tasks = taskRepository.findByWorkspaceId(workspaceId);
     if (!tasks.isEmpty()) {
       return tasks.stream()

@@ -39,7 +39,7 @@ public class DefaultProjectService implements ProjectService {
   private final WorkspaceRepository workspaceRepository;
   private final TaskRepository taskRepository;
   private final AuthZService authZService;
-  private final ProjectMapper projectMapper = new ProjectMapperImpl();
+  private final ProjectMapper projectMapper;
   private final MinioService minioService;
 
   @Override
@@ -87,6 +87,8 @@ public class DefaultProjectService implements ProjectService {
       projectIds.remove(projectId);
       workspace.setProjects(projectIds);
       workspace.setLastUpdatedDate(Instant.now());
+      Set<Task> tasksAssociatedWithProject = taskRepository.findByWorkspaceIdAndProjectId(workspaceId, projectId);
+      taskRepository.deleteAll(tasksAssociatedWithProject);
       workspaceRepository.save(workspace);
     }
     log.info("User {} delete project {}", callerUserId, projectId);
